@@ -47,6 +47,11 @@
 **/.pnpm-store/
 **/*.tsbuild*
 
+# Next.js
+**/.next/
+**/out/
+next-env.d.ts
+
 # Python
 **/__pycache__/
 *.py[cod]

@@ -1,0 +1,55 @@
+{
+  "name": "BD24News",
+  "short_name": "BD24",
+  "description": "BD24News — Bangladesh's premium news portal covering breaking news, politics, economy, sports, entertainment, technology, and more.",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#E50914",
+  "categories": ["news", "magazines"],
+  "icons": [
+    {
+      "src": "/icons/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Breaking News",
+      "url": "/breaking-news",
+      "description": "Latest breaking news"
+    },
+    {
+      "name": "Live TV",
+      "url": "/live-tv",
+      "description": "Watch BD24News live"
+    },
+    {
+      "name": "Markets",
+      "url": "/markets",
+      "description": "Stock and commodity markets"
+    }
+  ]
+}

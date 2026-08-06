@@ -11,6 +11,7 @@ import type { Article } from "@/types";
 import { formatNumber, timeAgo } from "@/lib/utils";
 import { ImageWithFallback } from "@/components/shared/image-with-fallback";
 import { useLanguage } from "@/providers/language-provider";
+import { useArticles } from "@/hooks/useNews";
 import { cn } from "@/lib/utils";
 
 import "swiper/css";
@@ -22,7 +23,8 @@ export function HeroSlider({ articles }: { articles: Article[] }) {
   const { lang } = useLanguage();
   const [activeIndex, setActiveIndex] = React.useState(0);
   const swiperRef = React.useRef<SwiperType | null>(null);
-  const main = articles.slice(0, 5);
+  const { data } = useArticles({ featured: true, limit: 9, initialData: articles });
+  const main = (data ?? articles).slice(0, 5);
 
   return (
     <section className="container-page grid gap-6 py-6 lg:grid-cols-3" aria-label="Top stories">

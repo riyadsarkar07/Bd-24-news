@@ -7,13 +7,29 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import toast from "react-hot-toast";
-import { ArrowLeft, Bold, Italic, List, ListOrdered, Quote, Link2, Image as ImageIcon, Loader2, Save, Send, Eye, Hash } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import {
+  ArrowLeft,
+  Bold,
+  Italic,
+  List,
+  ListOrdered,
+  Quote,
+  Link2,
+  Image as ImageIcon,
+  Loader2,
+  Save,
+  Send,
+  Eye,
+  Hash,
+} from "lucide-react";
 import { PageHeader } from "@/features/admin/admin-table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
   SelectContent,
@@ -22,9 +38,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { cn } from "@/lib/utils";
 import { categories } from "@/constants/categories";
-import { articles } from "@/data/articles";
+import { saveArticle, getArticleById, type ArticleInput } from "@/services/adminService";
+import { slugify } from "@/services/newsService";
+import { newsKeys } from "@/hooks/useNews";
+import { CoverImageUpload } from "@/features/admin/cover-image-upload";
+import type { Article } from "@/types";
 
 const schema = z.object({
   titleBn: z.string().min(5, "Title is too short"),
@@ -32,7 +51,6 @@ const schema = z.object({
   category: z.string().min(1, "Select a category"),
   excerpt: z.string().min(20, "Excerpt must be at least 20 characters"),
   body: z.string().min(40, "Body must be at least 40 characters"),
-  tags: z.string().optional(),
 });
 
 type Schema = z.infer<typeof schema>;
@@ -49,23 +67,64 @@ const richActions = [
 
 export function NewsEditor({ id }: { id?: string }) {
   const router = useRouter();
-  const existing = id ? articles.find((a) => a.id === id) : undefined;
+  const queryClient = useQueryClient();
+  const [existing, setExisting] = React.useState<Article | undefined>();
+  const [loading, setLoading] = React.useState(Boolean(id));
   const [saving, setSaving] = React.useState<"draft" | "publish" | null>(null);
   const [tagInput, setTagInput] = React.useState("");
-  const [tags, setTags] = React.useState<string[]>(existing?.tags ?? []);
+  const [tags, setTags] = React.useState<string[]>([]);
   const [metaOpen, setMetaOpen] = React.useState(false);
+  const [slug, setSlug] = React.useState("");
+  const [location, setLocation] = React.useState("");
+  const [seoTitle, setSeoTitle] = React.useState("");
+  const [seoDescription, setSeoDescription] = React.useState("");
+  const [coverImage, setCoverImage] = React.useState("");
+  const [featured, setFeatured] = React.useState(false);
+  const [breaking, setBreaking] = React.useState(false);
+  const [trending, setTrending] = React.useState(false);
+  const [editorPick, setEditorPick] = React.useState(false);
 
-  const { register, handleSubmit, control, formState: { errors } } = useForm<Schema>({
+  const { register, handleSubmit, reset, control, formState: { errors } } = useForm<Schema>({
     resolver: zodResolver(schema),
-    defaultValues: {
-      titleBn: existing?.titleBn ?? "",
-      titleEn: existing?.title ?? "",
-      category: existing?.category ?? "bangladesh",
-      excerpt: existing?.excerpt ?? "",
-      body: existing?.body.slice(0, 600) ?? "",
-      tags: existing?.tags.join(", ") ?? "",
-    },
+    defaultValues: { titleBn: "", titleEn: "", category: "bangladesh", excerpt: "", body: "" },
   });
+
+  React.useEffect(() => {
+    if (!id) return;
+    let active = true;
+    getArticleById(id)
+      .then((a) => {
+        if (!active) return;
+        if (a) {
+          setExisting(a);
+          setTags(a.tags ?? []);
+          setSlug(a.slug ?? "");
+          setLocation(a.location ?? "");
+          setSeoTitle(a.seoTitle ?? "");
+          setSeoDescription(a.seoDescription ?? "");
+          setCoverImage(a.coverImage ?? "");
+          setFeatured(a.featured);
+          setBreaking(a.breaking);
+          setTrending(a.trending);
+          setEditorPick(a.editorPick);
+          reset({
+            titleBn: a.titleBn,
+            titleEn: a.title,
+            category: a.category || "bangladesh",
+            excerpt: a.excerpt,
+            body: a.body,
+          });
+        } else {
+          toast.error("Article not found");
+          router.replace("/admin/news");
+        }
+      })
+      .catch(() => toast.error("Failed to load article"))
+      .finally(() => active && setLoading(false));
+    return () => {
+      active = false;
+    };
+  }, [id, reset, router]);
 
   const addTag = () => {
     const t = tagInput.trim().toLowerCase();
@@ -73,20 +132,71 @@ export function NewsEditor({ id }: { id?: string }) {
     setTagInput("");
   };
 
+  const persist = async (values: Schema, status: "published" | "draft") => {
+    const input: ArticleInput = {
+      titleBn: values.titleBn,
+      title: values.titleEn,
+      excerpt: values.excerpt,
+      body: values.body,
+      category: values.category,
+      categoryColor: categories.find((c) => c.slug === values.category)?.color ?? "#E50914",
+      tags,
+      featured,
+      breaking,
+      trending,
+      editorPick,
+      coverImage,
+      slug: slug || slugify(values.titleEn),
+      status,
+      location,
+      seoTitle,
+      seoDescription,
+      author: existing?.author ?? "Riyad",
+      authorNameBn: existing?.authorNameBn ?? "রিয়াদ",
+      authorAvatar: existing?.authorAvatar ?? "",
+      authorRole: existing?.authorRole ?? "Editor",
+    };
+    const result = await saveArticle(input, id);
+    return result;
+  };
+
   const onSubmit = async (values: Schema) => {
     setSaving("publish");
-    await new Promise((r) => setTimeout(r, 900));
-    setSaving(null);
-    toast.success(id ? "Article updated" : "Article published");
-    router.push("/admin/news");
+    try {
+      const result = await persist(values, "published");
+      queryClient.invalidateQueries({ queryKey: ["news"] });
+      queryClient.invalidateQueries({ queryKey: newsKeys.all });
+      toast.success(id ? "Article updated" : "Article published");
+      router.push(`/admin/news/edit/${result.id}`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to publish article");
+    } finally {
+      setSaving(null);
+    }
   };
 
   const onDraft = async (values: Schema) => {
     setSaving("draft");
-    await new Promise((r) => setTimeout(r, 700));
-    setSaving(null);
-    toast.success("Saved as draft");
+    try {
+      await persist(values, "draft");
+      toast.success("Saved as draft");
+      router.push("/admin/news");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to save draft");
+    } finally {
+      setSaving(null);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-10 w-72" />
+        <Skeleton className="h-40 w-full rounded-2xl" />
+        <Skeleton className="h-80 w-full rounded-2xl" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -157,20 +267,20 @@ export function NewsEditor({ id }: { id?: string }) {
               <div className="mt-4 space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="seoTitle">SEO title</Label>
-                  <Input id="seoTitle" placeholder="Custom SEO title (optional)" />
+                  <Input id="seoTitle" placeholder="Custom SEO title (optional)" value={seoTitle} onChange={(e) => setSeoTitle(e.target.value)} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="seoDesc">Meta description</Label>
-                  <Textarea id="seoDesc" rows={2} placeholder="Custom meta description (optional)" />
+                  <Textarea id="seoDesc" rows={2} placeholder="Custom meta description (optional)" value={seoDescription} onChange={(e) => setSeoDescription(e.target.value)} />
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="slug">URL slug</Label>
-                    <Input id="slug" placeholder="auto-generated" defaultValue={existing?.slug} />
+                    <Input id="slug" placeholder="auto-generated" value={slug} onChange={(e) => setSlug(slugify(e.target.value))} />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="location">Location</Label>
-                    <Input id="location" placeholder="Dhaka" />
+                    <Input id="location" placeholder="Dhaka" value={location} onChange={(e) => setLocation(e.target.value)} />
                   </div>
                 </div>
               </div>
@@ -185,8 +295,6 @@ export function NewsEditor({ id }: { id?: string }) {
               <div className="space-y-2">
                 <Label>Category *</Label>
                 <Controller
-                  control={control}
-                  name="category"
                   render={({ field }) => (
                     <Select value={field.value} onValueChange={field.onChange}>
                       <SelectTrigger>
@@ -204,6 +312,7 @@ export function NewsEditor({ id }: { id?: string }) {
                       </SelectContent>
                     </Select>
                   )}
+                  name="category"
                 />
                 {errors.category && <p className="text-xs font-medium text-danger">{errors.category.message}</p>}
               </div>
@@ -229,32 +338,36 @@ export function NewsEditor({ id }: { id?: string }) {
 
               <div className="flex items-center justify-between">
                 <Label htmlFor="featured">Featured</Label>
-                <Switch id="featured" defaultChecked={existing?.featured} />
+                <Switch id="featured" checked={featured} onCheckedChange={setFeatured} />
               </div>
               <div className="flex items-center justify-between">
                 <Label htmlFor="breaking">Breaking</Label>
-                <Switch id="breaking" defaultChecked={existing?.breaking} />
+                <Switch id="breaking" checked={breaking} onCheckedChange={setBreaking} />
               </div>
               <div className="flex items-center justify-between">
                 <Label htmlFor="trending">Trending</Label>
-                <Switch id="trending" defaultChecked={existing?.trending} />
+                <Switch id="trending" checked={trending} onCheckedChange={setTrending} />
+              </div>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="editorPick">Editor's pick</Label>
+                <Switch id="editorPick" checked={editorPick} onCheckedChange={setEditorPick} />
               </div>
             </div>
           </div>
 
           <div className="rounded-2xl border bg-background p-5">
             <Label className="mb-3 block">Cover image</Label>
-            <button
-              type="button"
-              className="flex h-40 w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed text-muted-foreground transition-colors hover:border-brand hover:text-brand"
-            >
-              <ImageIcon className="h-8 w-8" />
-              <span className="text-xs font-semibold">Upload or choose from media library</span>
-            </button>
+            <CoverImageUpload value={coverImage} onChange={setCoverImage} />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <Button type="button" variant="outline" disabled={!!saving} onClick={() => { toast("Opening preview…"); router.push(`/article/${existing?.slug ?? "placeholder"}`); }}>
+            <Button type="button" variant="outline" disabled={!!saving} onClick={() => {
+              if (!slug) {
+                toast("Publish the article first to preview it.");
+                return;
+              }
+              router.push(`/article/${slug}`);
+            }}>
               <Eye className="h-4 w-4" /> Preview
             </Button>
             <Button type="button" variant="secondary" disabled={!!saving} onClick={handleSubmit(onDraft)}>

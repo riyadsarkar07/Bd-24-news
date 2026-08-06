@@ -10,6 +10,8 @@ export const metadata: Metadata = {
   alternates: { canonical: `${siteConfig.url}/breaking-news` },
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function BreakingNewsPage() {
   const initialData = await getArticles({ breaking: true, limit: 12 });
   return (

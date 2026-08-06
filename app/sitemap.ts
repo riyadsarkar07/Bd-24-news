@@ -1,13 +1,14 @@
 import type { MetadataRoute } from "next";
-import { articles } from "@/data/articles";
+import { getPublishedArticles } from "@/services/newsService";
 import { categories } from "@/constants/categories";
 import { siteConfig } from "@/config/site";
 
 export const dynamic = "force-static";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date().toISOString();
   const base = siteConfig.url;
+  const articles = await getPublishedArticles();
 
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: base, lastModified: now, changeFrequency: "hourly", priority: 1 },

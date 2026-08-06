@@ -1,13 +1,23 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { motion } from "framer-motion";
 import { useLanguage } from "@/providers/language-provider";
+import { useArticles } from "@/hooks/useNews";
 import { breakingNewsItems } from "@/constants/widgets";
 
 export function NewsTicker() {
-  const { t } = useLanguage();
-  const items = [...breakingNewsItems, ...breakingNewsItems];
+  const { t, lang } = useLanguage();
+  const { data: breaking } = useArticles({ breaking: true, limit: 10, sort: "latest" });
+  const fallback = breakingNewsItems;
+  const items =
+    breaking && breaking.length > 0
+      ? breaking.map((a) => (lang === "bn" ? a.titleBn : a.title)).filter(Boolean)
+      : fallback;
+  const doubled = [...items, ...items];
+
+  if (doubled.length === 0) return null;
 
   return (
     <div
@@ -28,12 +38,21 @@ export function NewsTicker() {
           animate={{ x: ["0%", "-50%"] }}
           transition={{ x: { duration: 45, ease: "linear", repeat: Infinity } }}
         >
-          {items.map((item, i) => (
-            <span key={i} className="flex items-center gap-3 text-xs font-medium text-white/90">
-              <span className="h-1.5 w-1.5 rounded-full bg-brand-400" />
-              {item}
-            </span>
-          ))}
+          {doubled.map((item, i) => {
+            const target = breaking && breaking.length > 0 ? breaking[i % breaking.length] : undefined;
+            const wrap = target ? (
+              <Link key={`${item}-${i}`} href={`/article/${target.slug}`} className="flex items-center gap-3 text-xs font-medium text-white/90 transition-colors hover:text-brand-300">
+                <span className="h-1.5 w-1.5 rounded-full bg-brand-400" />
+                {item}
+              </Link>
+            ) : (
+              <span key={`${item}-${i}`} className="flex items-center gap-3 text-xs font-medium text-white/90">
+                <span className="h-1.5 w-1.5 rounded-full bg-brand-400" />
+                {item}
+              </span>
+            );
+            return wrap;
+          })}
         </motion.div>
       </div>
     </div>

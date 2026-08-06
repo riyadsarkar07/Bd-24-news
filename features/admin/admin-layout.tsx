@@ -31,6 +31,8 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/providers/language-provider";
+import { onAuthStateChange, signOutAdmin } from "@/services/authService";
+import toast from "react-hot-toast";
 
 const nav = [
   { group: "Main", items: [
@@ -65,6 +67,23 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
   const { lang } = useLanguage();
   const [collapsed, setCollapsed] = React.useState(false);
   const [mobileOpen, setMobileOpen] = React.useState(false);
+  const [adminEmail, setAdminEmail] = React.useState<string>("");
+
+  React.useEffect(() => {
+    return onAuthStateChange((user) => {
+      setAdminEmail(user?.email ?? "");
+    });
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      await signOutAdmin();
+    } finally {
+      localStorage.removeItem("bd24news_user");
+      toast.success(lang === "bn" ? "লগআউট হয়েছে" : "Signed out");
+      router.push("/admin/login");
+    }
+  };
 
   const isActive = (href: string) => (href === "/admin" ? pathname === "/admin" : pathname.startsWith(href));
 
@@ -114,16 +133,13 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
           </Avatar>
           {!collapsed && (
             <span className="min-w-0 flex-1">
-              <span className="block truncate text-sm font-bold">সিটিং অ্যাডমিন</span>
-              <span className="block text-[11px] text-muted-foreground">Administrator</span>
+              <span className="block truncate text-sm font-bold">{adminEmail || "Administrator"}</span>
+              <span className="block text-[11px] text-muted-foreground">Admin</span>
             </span>
           )}
         </Link>
         <button
-          onClick={() => {
-            localStorage.removeItem("bd24news_user");
-            router.push("/");
-          }}
+          onClick={handleLogout}
           className={cn("mt-1 flex w-full items-center gap-3 rounded-xl p-2 text-sm font-semibold text-muted-foreground transition-colors hover:bg-danger/10 hover:text-danger", collapsed && "justify-center")}
         >
           <LogOut className="h-4 w-4" />

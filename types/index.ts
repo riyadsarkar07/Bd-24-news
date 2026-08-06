@@ -80,6 +80,7 @@ export interface Article {
   location?: string;
   seoTitle?: string;
   seoDescription?: string;
+  status?: "published" | "draft";
 }
 
 export interface Comment {

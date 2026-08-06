@@ -1,0 +1,25 @@
+rules_version = '2';
+
+// BD24News Firebase Storage Rules
+// Only the authenticated administrator may upload, overwrite or delete files.
+// Everyone may read/download files so article images render publicly.
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.email in ['bd24news@tensi.org', 'riyadsarkar1243@gmail.com'];
+    }
+
+    match /media/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /{allPaths=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+  }
+}

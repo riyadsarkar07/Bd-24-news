@@ -1,4 +1,4 @@
-import { articles } from "@/data/articles";
+import { getPublishedArticles } from "@/services/newsService";
 import { siteConfig } from "@/config/site";
 
 export const dynamic = "force-static";
@@ -12,7 +12,8 @@ function escapeXml(input: string): string {
     .replace(/'/g, "&apos;");
 }
 
-function buildRss(): string {
+async function buildRss(): Promise<string> {
+  const articles = await getPublishedArticles();
   const items = articles
     .slice(0, 50)
     .map((a) => {
@@ -46,7 +47,7 @@ ${items}
 }
 
 export async function GET() {
-  const rss = buildRss();
+  const rss = await buildRss();
   return new Response(rss, {
     headers: {
       "Content-Type": "application/rss+xml; charset=utf-8",

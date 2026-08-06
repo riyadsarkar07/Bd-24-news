@@ -10,6 +10,8 @@ export const metadata: Metadata = {
   alternates: { canonical: `${siteConfig.url}/latest` },
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function LatestPage() {
   const initialData = await getArticles({ sort: "latest", limit: 12 });
   return (

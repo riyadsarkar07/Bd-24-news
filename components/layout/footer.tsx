@@ -138,6 +138,8 @@ export function Footer() {
         <div className="mt-8 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-6 text-xs text-white/50 sm:flex-row">
           <p>
             © {new Date().getFullYear()} {siteConfig.name} {t("allRightsReserved")}. {lang === "bn" ? `প্রতিষ্ঠিত ${toBn(siteConfig.establishedYear)}` : `Est. ${siteConfig.establishedYear}`}
+            <span className="mx-2 text-white/25">|</span>
+            {lang === "bn" ? `ডেভেলপার: ${siteConfig.developer}` : `Developed by ${siteConfig.developer}`}
           </p>
           <div className="flex items-center gap-4">
             <Link href="/terms" className="hover:text-white">{lang === "bn" ? "শর্তাবলী" : "Terms"}</Link>

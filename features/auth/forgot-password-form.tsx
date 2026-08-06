@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/providers/language-provider";
+import { resetAdminPassword } from "@/services/authService";
 
 const schema = z.object({ email: z.string().email("Enter a valid email") });
 type Schema = z.infer<typeof schema>;
@@ -21,10 +22,14 @@ export function ForgotPasswordForm() {
   const [sent, setSent] = React.useState(false);
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<Schema>({ resolver: zodResolver(schema) });
 
-  const onSubmit = async () => {
-    await new Promise((r) => setTimeout(r, 800));
-    setSent(true);
-    toast.success(lang === "bn" ? "রিসেট লিংক পাঠানো হয়েছে" : "Reset link sent");
+  const onSubmit = async (data: Schema) => {
+    try {
+      await resetAdminPassword(data.email);
+      setSent(true);
+      toast.success(lang === "bn" ? "রিসেট লিংক পাঠানো হয়েছে" : "Reset link sent");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to send reset link");
+    }
   };
 
   return (

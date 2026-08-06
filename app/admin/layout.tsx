@@ -1,5 +1,5 @@
-import { AdminLayout } from "@/features/admin/admin-layout";
+import { AdminRouteHandler } from "@/features/admin/admin-route-handler";
 
 export default function AdminLayoutPage({ children }: { children: React.ReactNode }) {
-  return <AdminLayout>{children}</AdminLayout>;
+  return <AdminRouteHandler>{children}</AdminRouteHandler>;
 }

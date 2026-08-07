@@ -1,8 +1,6 @@
-import { articles as seedArticles } from "@/data/articles";
-import { authors } from "@/data/authors";
 import type { Article, Author, Comment, SearchResult } from "@/types";
 import { getFirebaseDb } from "@/lib/firebase/client";
-import { collection, getDocs, onSnapshot, query, where } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, onSnapshot, query, where } from "firebase/firestore";
 
 export interface ArticleQueryOptions {
   category?: string;
@@ -108,15 +106,14 @@ export function filterAndSort(articles: Article[], options: ArticleQueryOptions 
 
 export async function getPublishedArticles(): Promise<Article[]> {
   const db = getFirebaseDb();
-  if (!db) return seedArticles;
+  if (!db) return [];
   try {
     const q = query(collection(db, "articles"), where("status", "==", "published"));
     const snap = await getDocs(q);
-    const docs = snap.docs.map((d) => mapFirestoreDoc(d.id, d.data() as Record<string, unknown>));
-    return docs;
+    return snap.docs.map((d) => mapFirestoreDoc(d.id, d.data() as Record<string, unknown>));
   } catch (err) {
-    console.error("Firestore read failed — falling back to offline data:", err);
-    return seedArticles;
+    console.error("Firestore read failed:", err);
+    return [];
   }
 }
 
@@ -183,8 +180,38 @@ export async function searchNews(query: string, limit = 10): Promise<SearchResul
   }));
 }
 
+export function mapAuthorDoc(id: string, data: Record<string, unknown>): Author {
+  return {
+    slug: (data.slug as string) ?? id,
+    name: (data.name as string) ?? "",
+    nameBn: (data.nameBn as string) ?? "",
+    role: (data.role as string) ?? "",
+    email: (data.email as string) ?? "",
+    bio: (data.bio as string) ?? "",
+    avatar: (data.avatar as string) ?? "",
+    cover: (data.cover as string) ?? "",
+    followers: Number(data.followers ?? 0),
+    articlesCount: Number(data.articlesCount ?? 0),
+    verified: Boolean(data.verified),
+    social: (data.social as Author["social"]) ?? {},
+  };
+}
+
+export async function getAuthors(): Promise<Author[]> {
+  const db = getFirebaseDb();
+  if (!db) return [];
+  try {
+    const snap = await getDocs(collection(db, "authors"));
+    return snap.docs.map((d) => mapAuthorDoc(d.id, d.data() as Record<string, unknown>));
+  } catch (err) {
+    console.error("Firestore authors read failed:", err);
+    return [];
+  }
+}
+
 export async function getAuthorBySlug(slug: string): Promise<Author | undefined> {
-  return authors.find((a) => a.slug === slug);
+  const all = await getAuthors();
+  return all.find((a) => a.slug === slug);
 }
 
 export async function getAuthorArticles(slug: string): Promise<Article[]> {
@@ -220,54 +247,19 @@ export function subscribeComments(articleId: string, listener: (comments: Commen
 
 export async function getComments(articleId: string): Promise<Comment[]> {
   const db = getFirebaseDb();
-  if (db) {
-    try {
-      const q = query(collection(db, "comments"), where("articleId", "==", articleId));
-      const snap = await getDocs(q);
-      const docs = snap.docs.map((d) => mapCommentDoc(d.id, articleId, d.data() as Record<string, unknown>));
-      if (docs.length > 0) return docs;
-    } catch (err) {
-      console.error("Firestore comments read failed:", err);
-    }
+  if (!db) return [];
+  try {
+    const q = query(collection(db, "comments"), where("articleId", "==", articleId));
+    const snap = await getDocs(q);
+    return snap.docs.map((d) => mapCommentDoc(d.id, articleId, d.data() as Record<string, unknown>));
+  } catch (err) {
+    console.error("Firestore comments read failed:", err);
+    return [];
   }
-  return [
-    {
-      id: `${articleId}-c1`,
-      articleId,
-      author: "সুমন আহমেদ",
-      avatar: "",
-      content:
-        "খুবই তথ্যবহুল এবং সময়োপযোগী প্রতিবেদন। এমন গঠনমূলক সাংবাদিকতা দেশের জন্য দরকার। ধন্যবাদ বিডি২৪নিউজকে।",
-      createdAt: new Date(Date.now() - 3600000 * 2).toISOString(),
-      likes: 24,
-      replies: [
-        {
-          id: `${articleId}-c1r1`,
-          articleId,
-          author: "নাফিসা ইসলাম",
-          avatar: "",
-          content: "একমত। আশা করি বিষয়টি নিয়ে আরও বিস্তারিত প্রতিবেদন আসবে।",
-          createdAt: new Date(Date.now() - 3600000).toISOString(),
-          likes: 8,
-          replies: [],
-        },
-      ],
-    },
-    {
-      id: `${articleId}-c2`,
-      articleId,
-      author: "Rafiul Kabir",
-      avatar: "",
-      content: "Great reporting as always. The data and sources cited here are credible.",
-      createdAt: new Date(Date.now() - 3600000 * 5).toISOString(),
-      likes: 12,
-      replies: [],
-    },
-  ];
 }
 
 export async function getArchiveYears(): Promise<number[]> {
   const all = await getPublishedArticles();
   const years = [...new Set(all.map((a) => new Date(a.publishedAt).getFullYear()))].sort((a, b) => b - a);
-  return years.length > 0 ? years : [2026, 2025, 2024, 2023, 2022];
+  return years;
 }

@@ -2,15 +2,12 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getAuthorBySlug } from "@/services/newsService";
 import { AuthorProfile } from "@/features/authors/author-profile";
-import { authors } from "@/data/authors";
 import { siteConfig } from "@/config/site";
+
+export const dynamic = "force-dynamic";
 
 interface Props {
   params: Promise<{ slug: string }>;
-}
-
-export async function generateStaticParams() {
-  return authors.map((a) => ({ slug: a.slug }));
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

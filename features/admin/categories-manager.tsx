@@ -1,9 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil } from "lucide-react";
 import { PageHeader, Toolbar, AdminTable, StatusBadge, ConfirmDialog, BoolBadge, type AdminColumn } from "@/features/admin/admin-table";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,16 +14,33 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import toast from "react-hot-toast";
-import { adminData, type AdminCategoryRow } from "@/services/adminData";
+import {
+  listCategories,
+  subscribeCategories,
+  saveCategory,
+  deleteCategory,
+  type AdminCategoryRow,
+} from "@/services/cmsService";
 
-type Draft = Omit<AdminCategoryRow, "id" | "articles" | "status"> & { id?: string; status?: AdminCategoryRow["status"] };
+type Draft = Omit<AdminCategoryRow, "id" | "articles"> & { id?: string };
 
 export function CategoriesManager() {
-  const [data, setData] = React.useState<AdminCategoryRow[]>(adminData.categories);
+  const [data, setData] = React.useState<AdminCategoryRow[]>([]);
   const [search, setSearch] = React.useState("");
   const [open, setOpen] = React.useState(false);
   const [deleting, setDeleting] = React.useState<AdminCategoryRow | null>(null);
-  const [draft, setDraft] = React.useState<Draft>({ slug: "", nameBn: "", name: "", color: "#E50914", menu: true, featured: false });
+  const [saving, setSaving] = React.useState(false);
+  const [draft, setDraft] = React.useState<Draft>({ slug: "", nameBn: "", name: "", color: "#E50914", status: "active", menu: true, featured: false });
+
+  React.useEffect(() => {
+    let mounted = true;
+    listCategories().then((rows) => mounted && setData(rows));
+    const unsub = subscribeCategories((rows) => mounted && setData(rows));
+    return () => {
+      mounted = false;
+      unsub();
+    };
+  }, []);
 
   const filtered = data.filter((r) => r.nameBn.toLowerCase().includes(search.toLowerCase()) || r.name.toLowerCase().includes(search.toLowerCase()));
 
@@ -50,24 +66,33 @@ export function CategoriesManager() {
   ];
 
   const openEdit = (row?: AdminCategoryRow) => {
-    setDraft(row ? { ...row } : { slug: "", nameBn: "", name: "", color: "#E50914", menu: true, featured: false });
+    setDraft(row ? { ...row } : { slug: "", nameBn: "", name: "", color: "#E50914", status: "active", menu: true, featured: false });
     setOpen(true);
   };
 
-  const save = () => {
+  const save = async () => {
     if (!draft.nameBn || !draft.name) {
       toast.error("Name is required");
       return;
     }
-    if (draft.id) {
-      setData((d) => d.map((r) => (r.id === draft.id ? { ...r, ...draft, status: draft.status ?? "active" } as AdminCategoryRow : r)));
-      toast.success("Category updated");
-    } else {
-      const row: AdminCategoryRow = { ...draft, id: crypto.randomUUID(), articles: 0, status: (draft.status as AdminCategoryRow["status"]) ?? "active" };
-      setData((d) => [row, ...d]);
-      toast.success("Category created");
+    setSaving(true);
+    try {
+      await saveCategory(draft.id || draft.slug, {
+        slug: draft.slug || draft.name,
+        nameBn: draft.nameBn,
+        name: draft.name,
+        color: draft.color,
+        status: draft.status,
+        menu: draft.menu,
+        featured: draft.featured,
+      });
+      toast.success(draft.id ? "Category updated" : "Category created");
+      setOpen(false);
+    } catch {
+      toast.error("Failed to save category");
+    } finally {
+      setSaving(false);
     }
-    setOpen(false);
   };
 
   return (
@@ -115,7 +140,7 @@ export function CategoriesManager() {
               </div>
               <div className="space-y-2">
                 <Label>Status</Label>
-                <Select value={draft.status ?? "active"} onValueChange={(v) => setDraft({ ...draft, status: v as AdminCategoryRow["status"] })}>
+                <Select value={draft.status} onValueChange={(v) => setDraft({ ...draft, status: v as AdminCategoryRow["status"] })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="active">Active</SelectItem>
@@ -137,7 +162,7 @@ export function CategoriesManager() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-            <Button onClick={save}>{draft.id ? "Save changes" : "Create"}</Button>
+            <Button onClick={save} disabled={saving}>{saving ? "Saving…" : draft.id ? "Save changes" : "Create"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -147,7 +172,17 @@ export function CategoriesManager() {
         onOpenChange={(v) => !v && setDeleting(null)}
         title="Delete category?"
         description={`This will remove "${deleting?.nameBn}". Existing articles will not be deleted.`}
-        onConfirm={() => { if (deleting) { setData((d) => d.filter((r) => r.id !== deleting.id)); toast.success("Category deleted"); } }}
+        onConfirm={async () => {
+          if (deleting) {
+            try {
+              await deleteCategory(deleting.id);
+              setData((d) => d.filter((r) => r.id !== deleting.id));
+              toast.success("Category deleted");
+            } catch {
+              toast.error("Failed to delete category");
+            }
+          }
+        }}
       />
     </div>
   );

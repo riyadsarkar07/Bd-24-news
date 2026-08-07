@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
 import { Check, X, ChevronDown, ChevronUp, MoreHorizontal, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -141,22 +140,20 @@ export function AdminTable<T extends { id: string }>({
                     </div>
                   </td>
                 </tr>
-                <AnimatePresence>
-                  {expanded === row.id && (
-                    <motion.tr initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}>
-                      <td colSpan={columns.length + 1} className="bg-muted/30 px-4 py-4 text-xs leading-relaxed text-muted-foreground">
-                        {Object.entries(row)
-                          .filter(([k, v]) => !["id"].includes(k) && typeof v === "string" && v.length > 40)
-                          .slice(0, 3)
-                          .map(([k, v]) => (
-                            <p key={k} className="mb-1.5">
-                              <span className="font-bold text-foreground">{k}:</span> {String(v).slice(0, 160)}
-                            </p>
-                          ))}
-                      </td>
-                    </motion.tr>
-                  )}
-                </AnimatePresence>
+                {expanded === row.id && (
+                  <tr className="border-b bg-muted/30 last:border-0">
+                    <td colSpan={columns.length + 1} className="px-4 py-4 text-xs leading-relaxed text-muted-foreground">
+                      {Object.entries(row)
+                        .filter(([k, v]) => !["id"].includes(k) && typeof v === "string" && v.length > 40)
+                        .slice(0, 3)
+                        .map(([k, v]) => (
+                          <p key={k} className="mb-1.5">
+                            <span className="font-bold text-foreground">{k}:</span> {String(v).slice(0, 160)}
+                          </p>
+                        ))}
+                    </td>
+                  </tr>
+                )}
               </React.Fragment>
             ))}
           </tbody>

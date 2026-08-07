@@ -12,11 +12,15 @@ import { Progress } from "@/components/ui/progress";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
 import toast from "react-hot-toast";
-import { adminData, type AdminNewsletterRow } from "@/services/adminData";
+import {
+  listNewsletters,
+  subscribeNewsletters,
+  saveNewsletter,
+  listSubscribers,
+  uniqueId,
+  type AdminNewsletterRow,
+} from "@/services/cmsService";
 
 const statusColor: Record<AdminNewsletterRow["status"], string> = {
   sent: "bg-success/15 text-success",
@@ -25,11 +29,25 @@ const statusColor: Record<AdminNewsletterRow["status"], string> = {
 };
 
 export function NewsletterManager() {
-  const [data, setData] = React.useState<AdminNewsletterRow[]>(adminData.newsletters);
+  const [data, setData] = React.useState<AdminNewsletterRow[]>([]);
+  const [subscribersCount, setSubscribersCount] = React.useState(0);
   const [search, setSearch] = React.useState("");
   const [composeOpen, setComposeOpen] = React.useState(false);
   const [subjectBn, setSubjectBn] = React.useState("");
   const [subjectEn, setSubjectEn] = React.useState("");
+  const [body, setBody] = React.useState("");
+  const [sending, setSending] = React.useState(false);
+
+  React.useEffect(() => {
+    let mounted = true;
+    listNewsletters().then((rows) => mounted && setData(rows));
+    const unsub = subscribeNewsletters((rows) => mounted && setData(rows));
+    listSubscribers().then((rows) => mounted && setSubscribersCount(rows.length));
+    return () => {
+      mounted = false;
+      unsub();
+    };
+  }, []);
 
   const filtered = data.filter((r) => r.subjectBn.toLowerCase().includes(search.toLowerCase()) || r.subjectEn.toLowerCase().includes(search.toLowerCase()));
 
@@ -40,7 +58,7 @@ export function NewsletterManager() {
       className: "min-w-[300px]",
       render: (r) => (
         <div>
-          <p className="font-bold">{r.subjectBn}</p>
+          <p className="font-bold">{r.subjectBn || "Untitled"}</p>
           <p className="text-xs text-muted-foreground">{r.subjectEn}</p>
         </div>
       ),
@@ -60,28 +78,55 @@ export function NewsletterManager() {
       ),
     },
     { key: "recipients", header: "Recipients", className: "text-right", render: (r) => <span className="tabular-nums">{r.recipients.toLocaleString()}</span> },
-    { key: "sent", header: "Sent at", render: (r) => <span className="whitespace-nowrap text-xs text-muted-foreground">{r.sentAt}</span> },
+    { key: "sent", header: "Sent at", render: (r) => <span className="whitespace-nowrap text-xs text-muted-foreground">{r.sentAt ? new Date(r.sentAt).toLocaleString() : "—"}</span> },
   ];
 
-  const send = (status: AdminNewsletterRow["status"]) => {
+  const reset = () => {
+    setSubjectBn("");
+    setSubjectEn("");
+    setBody("");
+  };
+
+  const send = async (status: AdminNewsletterRow["status"]) => {
     if (!subjectBn) {
       toast.error("Subject is required");
       return;
     }
-    setData((d) => [{
-      id: crypto.randomUUID(),
-      subjectBn,
-      subjectEn: subjectEn || subjectBn,
-      sentAt: status === "sent" ? new Date().toISOString().slice(0, 16) : new Date(Date.now() + 86400000).toISOString().slice(0, 16),
-      opens: 0,
-      clicks: 0,
-      recipients: 18590,
-      status,
-    }, ...d]);
-    setComposeOpen(false);
-    setSubjectBn("");
-    setSubjectEn("");
-    toast.success(status === "sent" ? "Newsletter sent" : status === "scheduled" ? "Scheduled" : "Saved as draft");
+    setSending(true);
+    try {
+      const id = uniqueId();
+      const sentAt = status === "sent"
+        ? new Date().toISOString()
+        : status === "scheduled"
+          ? new Date(Date.now() + 86400000).toISOString()
+          : new Date().toISOString();
+      await saveNewsletter(id, {
+        subjectBn,
+        subjectEn: subjectEn || subjectBn,
+        body,
+        sentAt,
+        opens: 0,
+        clicks: 0,
+        recipients: subscribersCount,
+        status,
+      });
+      setComposeOpen(false);
+      reset();
+      toast.success(status === "sent" ? "Newsletter sent" : status === "scheduled" ? "Scheduled" : "Saved as draft");
+    } catch {
+      toast.error("Failed to save newsletter");
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const sendDraft = async (row: AdminNewsletterRow) => {
+    try {
+      await saveNewsletter(row.id, { status: "sent", sentAt: new Date().toISOString() });
+      toast.success(`"${row.subjectBn}" sent`);
+    } catch {
+      toast.error("Failed to send newsletter");
+    }
   };
 
   return (
@@ -94,7 +139,7 @@ export function NewsletterManager() {
       <Toolbar search={search} onSearch={setSearch} placeholder="Search campaigns…" />
       <AdminTable columns={columns} data={filtered} actions={(r) => (
         r.status === "draft" && (
-          <Button variant="ghost" size="icon-sm" onClick={() => toast(`Sending "${r.subjectBn}"…`)} aria-label="Send now">
+          <Button variant="ghost" size="icon-sm" onClick={() => sendDraft(r)} aria-label="Send now">
             <Send className="h-4 w-4 text-success" />
           </Button>
         )
@@ -117,24 +162,14 @@ export function NewsletterManager() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="nl-body">Body</Label>
-              <Textarea id="nl-body" rows={6} placeholder="Newsletter content…" />
+              <Textarea id="nl-body" rows={6} value={body} onChange={(e) => setBody(e.target.value)} placeholder="Newsletter content…" />
             </div>
-            <div className="space-y-2">
-              <Label>Audience</Label>
-              <Select defaultValue="all">
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All subscribers (18,590)</SelectItem>
-                  <SelectItem value="active">Active only (15,240)</SelectItem>
-                  <SelectItem value="segment">Tech segment (4,210)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            <p className="text-xs text-muted-foreground">Recipients: {subscribersCount.toLocaleString()} active subscribers</p>
           </div>
           <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => send("draft")}><Mail className="h-4 w-4" /> Draft</Button>
-            <Button variant="secondary" onClick={() => send("scheduled")}>Schedule</Button>
-            <Button onClick={() => send("sent")}><Send className="h-4 w-4" /> Send now</Button>
+            <Button variant="outline" disabled={sending} onClick={() => send("draft")}><Mail className="h-4 w-4" /> Draft</Button>
+            <Button variant="secondary" disabled={sending} onClick={() => send("scheduled")}>Schedule</Button>
+            <Button disabled={sending} onClick={() => send("sent")}><Send className="h-4 w-4" /> Send now</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -28,6 +28,13 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
+    match /subscribers/{subscriberId} {
+      allow read: if true;
+      allow create: if request.auth != null
+        || (request.resource.data.email is string && request.resource.data.email.matches('.*@.*'));
+      allow update, delete: if isAdmin();
+    }
+
     match /{document=**} {
       allow read: if true;
       allow write: if isAdmin();

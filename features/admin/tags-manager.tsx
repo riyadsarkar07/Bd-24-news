@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Plus, Flame, Trash2, Hash } from "lucide-react";
+import { Plus, Flame, Hash } from "lucide-react";
 import { PageHeader, Toolbar, AdminTable, ConfirmDialog, BoolBadge, type AdminColumn } from "@/features/admin/admin-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,14 +9,32 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import toast from "react-hot-toast";
-import { adminData, type AdminTagRow } from "@/services/adminData";
+import {
+  listTags,
+  subscribeTags,
+  saveTag,
+  deleteTag,
+  type AdminTagRow,
+} from "@/services/cmsService";
 
 export function TagsManager() {
-  const [data, setData] = React.useState<AdminTagRow[]>(adminData.tags);
+  const [data, setData] = React.useState<AdminTagRow[]>([]);
   const [search, setSearch] = React.useState("");
   const [open, setOpen] = React.useState(false);
   const [deleting, setDeleting] = React.useState<AdminTagRow | null>(null);
   const [name, setName] = React.useState("");
+  const [trending, setTrending] = React.useState(false);
+  const [saving, setSaving] = React.useState(false);
+
+  React.useEffect(() => {
+    let mounted = true;
+    listTags().then((rows) => mounted && setData(rows));
+    const unsub = subscribeTags((rows) => mounted && setData(rows));
+    return () => {
+      mounted = false;
+      unsub();
+    };
+  }, []);
 
   const filtered = data.filter((r) => r.name.toLowerCase().includes(search.toLowerCase()));
 
@@ -38,16 +56,23 @@ export function TagsManager() {
     { key: "trending", header: "Trending", render: (r) => <BoolBadge value={r.trending} /> },
   ];
 
-  const save = () => {
+  const save = async () => {
     if (!name.trim()) {
       toast.error("Tag name is required");
       return;
     }
-    const slug = name.trim().toLowerCase().replace(/\s+/g, "-");
-    setData((d) => [{ id: crypto.randomUUID(), name: name.trim(), slug, articles: 0, views: 0, trending: false }, ...d]);
-    setName("");
-    setOpen(false);
-    toast.success("Tag created");
+    setSaving(true);
+    try {
+      await saveTag(name.trim(), { name: name.trim(), trending });
+      setName("");
+      setTrending(false);
+      setOpen(false);
+      toast.success("Tag created");
+    } catch {
+      toast.error("Failed to create tag");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -66,14 +91,26 @@ export function TagsManager() {
             <DialogTitle>New Tag</DialogTitle>
             <DialogDescription>Create a new content tag.</DialogDescription>
           </DialogHeader>
-          <div className="space-y-2">
-            <Label htmlFor="tag-name">Tag name</Label>
-            <Input id="tag-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="বৃষ্টি" autoFocus />
-            <p className="text-xs text-muted-foreground">Slug: #{name.trim().toLowerCase().replace(/\s+/g, "-") || "…"}</p>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="tag-name">Tag name</Label>
+              <Input id="tag-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="বৃষ্টি" autoFocus />
+              <p className="text-xs text-muted-foreground">Slug: #{name.trim().toLowerCase().replace(/\s+/g, "-") || "…"}</p>
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="tag-trending">Mark as trending</Label>
+              <input
+                id="tag-trending"
+                type="checkbox"
+                checked={trending}
+                onChange={(e) => setTrending(e.target.checked)}
+                className="h-4 w-4 rounded border-border accent-brand"
+              />
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-            <Button onClick={save}>Create</Button>
+            <Button onClick={save} disabled={saving}>{saving ? "Creating…" : "Create"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -82,8 +119,18 @@ export function TagsManager() {
         open={!!deleting}
         onOpenChange={(v) => !v && setDeleting(null)}
         title="Delete tag?"
-        description={`This will remove the tag "${deleting?.name}" from all articles.`}
-        onConfirm={() => { if (deleting) { setData((d) => d.filter((r) => r.id !== deleting.id)); toast.success("Tag deleted"); } }}
+        description={`This will remove the tag "${deleting?.name}" from the system. Articles keep their tags.`}
+        onConfirm={async () => {
+          if (deleting) {
+            try {
+              await deleteTag(deleting.id);
+              setData((d) => d.filter((r) => r.id !== deleting.id));
+              toast.success("Tag deleted");
+            } catch {
+              toast.error("Failed to delete tag");
+            }
+          }
+        }}
       />
     </div>
   );

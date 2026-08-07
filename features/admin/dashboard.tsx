@@ -17,6 +17,7 @@ import {
 import { motion } from "framer-motion";
 import { ArrowUpRight, Eye, PenSquare, UserPlus, MessageSquare, DollarSign, TrendingUp } from "lucide-react";
 import { adminService } from "@/services/adminService";
+import { getAnalytics } from "@/services/analyticsService";
 import { StatCard } from "@/features/admin/stat-card";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -27,11 +28,13 @@ export function AdminDashboard() {
   const { lang } = useLanguage();
   const [stats, setStats] = React.useState<Awaited<ReturnType<typeof adminService.getStats>> | null>(null);
   const [chart, setChart] = React.useState<Awaited<ReturnType<typeof adminService.getChart>> | null>(null);
+  const [engagement, setEngagement] = React.useState<{ comments: number; subscribers: number; drafts: number } | null>(null);
 
   React.useEffect(() => {
-    Promise.all([adminService.getStats(), adminService.getChart()]).then(([s, c]) => {
+    Promise.all([adminService.getStats(), adminService.getChart(), getAnalytics()]).then(([s, c, a]) => {
       setStats(s);
       setChart(c);
+      setEngagement({ comments: a.totalComments, subscribers: a.totalSubscribers, drafts: a.draftArticles });
     });
   }, []);
 
@@ -144,25 +147,27 @@ export function AdminDashboard() {
       </Card>
 
       <div className="grid gap-6 md:grid-cols-3">
-        {[
-          { icon: MessageSquare, label: lang === "bn" ? "মন্তব্য" : "Comments", value: "1,284" },
-          { icon: DollarSign, label: lang === "bn" ? "বিজ্ঞাপন আয়" : "Ad Revenue", value: "৳84,500" },
-          { icon: UserPlus, label: lang === "bn" ? "নতুন ব্যবহারকারী" : "New Users", value: "+320" },
-        ].map((item, i) => (
-          <motion.div key={item.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 * i }}>
-            <Card>
-              <CardContent className="flex items-center gap-4 p-5">
-                <span className="rounded-xl bg-accentblue/10 p-3 text-accentblue">
-                  <item.icon className="h-5 w-5" />
-                </span>
-                <div>
-                  <p className="text-sm font-semibold text-muted-foreground">{item.label}</p>
-                  <p className="text-xl font-black tabular-nums">{item.value}</p>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        ))}
+        {engagement
+          ? [
+              { icon: MessageSquare, label: lang === "bn" ? "মন্তব্য" : "Comments", value: engagement.comments.toLocaleString() },
+              { icon: DollarSign, label: lang === "bn" ? "ড্রাফট" : "Drafts", value: engagement.drafts.toLocaleString() },
+              { icon: UserPlus, label: lang === "bn" ? "সাবস্ক্রাইবার" : "Subscribers", value: engagement.subscribers.toLocaleString() },
+            ].map((item, i) => (
+              <motion.div key={item.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 * i }}>
+                <Card>
+                  <CardContent className="flex items-center gap-4 p-5">
+                    <span className="rounded-xl bg-accentblue/10 p-3 text-accentblue">
+                      <item.icon className="h-5 w-5" />
+                    </span>
+                    <div>
+                      <p className="text-sm font-semibold text-muted-foreground">{item.label}</p>
+                      <p className="text-xl font-black tabular-nums">{item.value}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))
+          : Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-2xl" />)}
       </div>
     </div>
   );

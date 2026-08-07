@@ -32,6 +32,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/providers/language-provider";
 import { onAuthStateChange, signOutAdmin } from "@/services/authService";
+import { ensureInitialData } from "@/services/seedService";
 import toast from "react-hot-toast";
 
 const nav = [
@@ -72,6 +73,13 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
   React.useEffect(() => {
     return onAuthStateChange((user) => {
       setAdminEmail(user?.email ?? "");
+      if (user) {
+        ensureInitialData().then((result) => {
+          if (result.seeded.length > 0) {
+            toast.success(`Initialized: ${result.seeded.join(", ")}`);
+          }
+        });
+      }
     });
   }, []);
 

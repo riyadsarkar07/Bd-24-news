@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Plus, ShieldCheck, Lock, Trash2, Check, X } from "lucide-react";
+import { Plus, ShieldCheck, Lock } from "lucide-react";
 import { PageHeader, AdminTable, ConfirmDialog, type AdminColumn } from "@/features/admin/admin-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,13 @@ import {
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import toast from "react-hot-toast";
-import { adminData, type AdminRoleRow } from "@/services/adminData";
+import {
+  listRoles,
+  subscribeRoles,
+  saveRole,
+  deleteRole,
+  type AdminRoleRow,
+} from "@/services/cmsService";
 
 const permissionPool = [
   "news:write", "news:publish", "news:delete", "comments:moderate", "media:upload",
@@ -22,12 +28,23 @@ const permissionPool = [
 ];
 
 export function RolesManager() {
-  const [data, setData] = React.useState<AdminRoleRow[]>(adminData.roles);
+  const [data, setData] = React.useState<AdminRoleRow[]>([]);
   const [deleting, setDeleting] = React.useState<AdminRoleRow | null>(null);
   const [creating, setCreating] = React.useState(false);
   const [name, setName] = React.useState("");
   const [description, setDescription] = React.useState("");
   const [perms, setPerms] = React.useState<string[]>([]);
+  const [saving, setSaving] = React.useState(false);
+
+  React.useEffect(() => {
+    let mounted = true;
+    listRoles().then((rows) => mounted && setData(rows));
+    const unsub = subscribeRoles((rows) => mounted && setData(rows));
+    return () => {
+      mounted = false;
+      unsub();
+    };
+  }, []);
 
   const togglePerm = (p: string) => setPerms((prev) => (prev.includes(p) ? prev.filter((x) => x !== p) : [...prev, p]));
 
@@ -64,17 +81,24 @@ export function RolesManager() {
     { key: "users", header: "Users", className: "text-right", render: (r) => <span className="tabular-nums">{r.users.toLocaleString()}</span> },
   ];
 
-  const create = () => {
+  const create = async () => {
     if (!name) {
       toast.error("Role name is required");
       return;
     }
-    setData((d) => [...d, { id: crypto.randomUUID(), name, description, users: 0, permissions: perms, system: false }]);
-    setCreating(false);
-    setName("");
-    setDescription("");
-    setPerms([]);
-    toast.success("Role created");
+    setSaving(true);
+    try {
+      await saveRole(name.trim().toLowerCase(), { slug: name.trim().toLowerCase(), name, description, permissions: perms, system: false });
+      setCreating(false);
+      setName("");
+      setDescription("");
+      setPerms([]);
+      toast.success("Role created");
+    } catch {
+      toast.error("Failed to create role");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -82,7 +106,7 @@ export function RolesManager() {
       <PageHeader
         title="Roles & Permissions"
         description={`${data.length} roles configured`}
-        action={<Button onClick={() => setCreating(true)} disabled={data.some((r) => r.permissions.includes("*")) && !name}><Plus className="h-4 w-4" /> New Role</Button>}
+        action={<Button onClick={() => setCreating(true)}><Plus className="h-4 w-4" /> New Role</Button>}
       />
       <AdminTable columns={columns} data={data} onDelete={(r) => !r.system && setDeleting(r)} />
 
@@ -115,7 +139,7 @@ export function RolesManager() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setCreating(false)}>Cancel</Button>
-            <Button onClick={create}>Create</Button>
+            <Button onClick={create} disabled={saving}>{saving ? "Creating…" : "Create"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -125,7 +149,17 @@ export function RolesManager() {
         onOpenChange={(v) => !v && setDeleting(null)}
         title="Delete role?"
         description={`This will remove the "${deleting?.name}" role. Users with this role will lose access.`}
-        onConfirm={() => { if (deleting) { setData((d) => d.filter((r) => r.id !== deleting.id)); toast.success("Role deleted"); } }}
+        onConfirm={async () => {
+          if (deleting) {
+            try {
+              await deleteRole(deleting.id);
+              setData((d) => d.filter((r) => r.id !== deleting.id));
+              toast.success("Role deleted");
+            } catch {
+              toast.error("Failed to delete role");
+            }
+          }
+        }}
       />
     </div>
   );

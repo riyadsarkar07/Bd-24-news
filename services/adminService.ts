@@ -111,28 +111,23 @@ function buildArticleDoc(input: ArticleInput, existing?: Article): Record<string
 
 export async function listAllArticles(): Promise<Article[]> {
   const db = getFirebaseDb();
-  if (!db) {
-    return seedArticles.map((a) => ({ ...a, status: (a.slug === "constitutional-issues" || a.slug === "flood-forecast" ? "draft" : "published") as Article["status"] }));
-  }
+  if (!db) return [];
   try {
     const q = query(collection(db, "articles"), orderBy("updatedAt", "desc"));
     const snap = await getDocs(q);
-    const docs = snap.docs.map((d) => {
+    return snap.docs.map((d) => {
       const data = d.data() as Record<string, unknown>;
       return { ...mapFirestoreDoc(d.id, data), status: (data.status as ArticleStatus) ?? "published" };
     });
-    return docs;
   } catch (err) {
     console.error("Firestore articles read failed:", err);
-    return seedArticles.map((a) => ({ ...a, status: "published" as Article["status"] }));
+    return [];
   }
 }
 
 export async function getArticleById(id: string): Promise<Article | undefined> {
   const db = getFirebaseDb();
-  if (!db) {
-    return seedArticles.find((a) => a.id === id || a.slug === id);
-  }
+  if (!db) return undefined;
   try {
     const ref = doc(db, "articles", id);
     const snap = await getDoc(ref);
@@ -144,7 +139,7 @@ export async function getArticleById(id: string): Promise<Article | undefined> {
     return all.find((a) => a.slug === id);
   } catch (err) {
     console.error("Firestore article read failed:", err);
-    return seedArticles.find((a) => a.id === id || a.slug === id);
+    return undefined;
   }
 }
 
@@ -206,6 +201,7 @@ export async function seedSampleArticles(): Promise<number> {
     const ref = doc(db, "articles", a.slug);
     batch.set(ref, {
       ...a,
+      id: a.slug,
       status: "published",
       createdAt: a.publishedAt,
     });
@@ -214,51 +210,42 @@ export async function seedSampleArticles(): Promise<number> {
   return seedArticles.length;
 }
 
-const MOCK_STATS: AdminStat[] = [
-  { key: "views", value: 2841936, delta: 12.4 },
-  { key: "visitors", value: 412560, delta: 8.1 },
-  { key: "articles", value: 2480, delta: 4.2 },
-  { key: "subscribers", value: 18590, delta: -1.8 },
-];
-
-const MOCK_CHART: ChartPoint[] = [
-  { label: "Mon", views: 68210, articles: 62 },
-  { label: "Tue", views: 74930, articles: 71 },
-  { label: "Wed", views: 61480, articles: 58 },
-  { label: "Thu", views: 82450, articles: 79 },
-  { label: "Fri", views: 93880, articles: 84 },
-  { label: "Sat", views: 101420, articles: 92 },
-  { label: "Sun", views: 88660, articles: 77 },
-];
-
 export const adminService = {
   async getStats(): Promise<AdminStat[]> {
     const db = getFirebaseDb();
-    if (!db) return MOCK_STATS;
+    if (!db) return [];
     try {
-      const snap = await getDocs(collection(db, "articles"));
-      const published = snap.docs.filter((d) => (d.data().status ?? "published") === "published");
+      const [articlesSnap, usersSnap, subscribersSnap] = await Promise.all([
+        getDocs(collection(db, "articles")),
+        getDocs(collection(db, "users")),
+        getDocs(collection(db, "subscribers")),
+      ]);
+      const published = articlesSnap.docs.filter((d) => (d.data().status ?? "published") === "published");
       const views = published.reduce((sum, d) => sum + Number(d.data().views ?? 0), 0);
+      const articles = published.length;
+      const users = usersSnap.size;
+      const subscribers = subscribersSnap.size;
       return [
-        { key: "views", value: views || snap.size * 1200, delta: 12.4 },
-        { key: "articles", value: published.length, delta: 4.2 },
-        { key: "visitors", value: Math.round((views || snap.size * 1200) / 6.9), delta: 8.1 },
-        { key: "subscribers", value: 18590, delta: -1.8 },
+        { key: "views", value: views, delta: 0 },
+        { key: "articles", value: articles, delta: 0 },
+        { key: "users", value: users, delta: 0 },
+        { key: "subscribers", value: subscribers, delta: 0 },
       ];
-    } catch {
-      return MOCK_STATS;
+    } catch (err) {
+      console.error("Failed to load dashboard stats:", err);
+      return [];
     }
   },
 
   async getChart(): Promise<ChartPoint[]> {
     const db = getFirebaseDb();
-    if (!db) return MOCK_CHART;
+    if (!db) return [];
     try {
       const snap = await getDocs(collection(db, "articles"));
       const published = snap.docs.filter((d) => (d.data().status ?? "published") === "published");
       const dayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
       const now = new Date();
-      const counts = Array.from({ length: 7 }, (_, i) => {
+      return Array.from({ length: 7 }, (_, i) => {
         const d = new Date(now);
         d.setDate(d.getDate() - (6 - i));
         d.setHours(0, 0, 0, 0);
@@ -270,13 +257,13 @@ export const adminService = {
         });
         return {
           label: dayLabels[d.getDay()]!,
-          views: articlesInDay.reduce((sum, doc) => sum + Number(doc.data().views ?? 0), 0) || articlesInDay.length * 1200,
+          views: articlesInDay.reduce((sum, doc) => sum + Number(doc.data().views ?? 0), 0),
           articles: articlesInDay.length,
         };
       });
-      return counts;
-    } catch {
-      return MOCK_CHART;
+    } catch (err) {
+      console.error("Failed to load dashboard chart:", err);
+      return [];
     }
   },
 };

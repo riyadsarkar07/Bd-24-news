@@ -8,8 +8,8 @@ import type { AdminStat } from "@/services/adminService";
 
 const labels: Record<string, string> = {
   views: "Total Views",
-  visitors: "Unique Visitors",
   articles: "Published Articles",
+  users: "Registered Users",
   subscribers: "Subscribers",
 };
 

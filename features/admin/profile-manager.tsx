@@ -14,10 +14,26 @@ import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/providers/language-provider";
+import { onAuthStateChange } from "@/services/authService";
 
 export function ProfileManager() {
   const { lang } = useLanguage();
   const [twoFactor, setTwoFactor] = React.useState(true);
+  const [user, setUser] = React.useState<{ name: string; email: string } | null>(null);
+  const [name, setName] = React.useState("");
+
+  React.useEffect(() => {
+    return onAuthStateChange((u) => {
+      const email = u?.email ?? "";
+      const displayName = u?.displayName ?? email.split("@")[0] ?? "Administrator";
+      setUser({ name: displayName, email });
+      setName(displayName);
+    });
+  }, []);
+
+  const initial = user?.name?.charAt(0) || "এ";
+
+  const save = () => toast.success(lang === "bn" ? "প্রোফাইল সংরক্ষিত হয়েছে" : "Profile saved");
 
   return (
     <div className="space-y-6">
@@ -28,15 +44,15 @@ export function ProfileManager() {
           <CardContent className="flex flex-col items-center gap-4 p-6 text-center">
             <div className="relative">
               <Avatar className="h-24 w-24 border-4 border-brand/20">
-                <AvatarFallback className="bg-gradient-to-br from-brand to-accentblue text-3xl text-white">এড</AvatarFallback>
+                <AvatarFallback className="bg-gradient-to-br from-brand to-accentblue text-3xl text-white">{initial}</AvatarFallback>
               </Avatar>
               <button className="absolute -bottom-1 -right-1 rounded-full bg-brand p-2 text-white shadow-glow" onClick={() => toast.success(lang === "bn" ? "ছবি পরিবর্তন করা হয়েছে" : "Photo updated")} aria-label="Change avatar">
                 <Camera className="h-4 w-4" />
               </button>
             </div>
             <div>
-              <p className="text-lg font-black">সিটিং অ্যাডমিন</p>
-              <p className="text-sm text-muted-foreground">Administrator • admin@bd24news.com</p>
+              <p className="text-lg font-black">{name || "Administrator"}</p>
+              <p className="text-sm text-muted-foreground">Administrator • {user?.email || "—"}</p>
             </div>
             <div className="flex gap-2">
               <Badge className="bg-brand/15 text-brand">Admin</Badge>
@@ -53,11 +69,11 @@ export function ProfileManager() {
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="pf-name">Full name</Label>
-                <Input id="pf-name" defaultValue="সিটিং অ্যাডমিন" />
+                <Input id="pf-name" value={name} onChange={(e) => setName(e.target.value)} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="pf-email">Email</Label>
-                <Input id="pf-email" type="email" defaultValue="admin@bd24news.com" />
+                <Input id="pf-email" type="email" value={user?.email ?? ""} disabled />
               </div>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
@@ -74,7 +90,7 @@ export function ProfileManager() {
               <Label htmlFor="pf-bio">Bio</Label>
               <Textarea id="pf-bio" rows={3} defaultValue="Managing BD24News news portal operations." />
             </div>
-            <Button onClick={() => toast.success(lang === "bn" ? "প্রোফাইল সংরক্ষিত হয়েছে" : "Profile saved")}><Save className="h-4 w-4" /> {lang === "bn" ? "সংরক্ষণ করুন" : "Save"}</Button>
+            <Button onClick={save}><Save className="h-4 w-4" /> {lang === "bn" ? "সংরক্ষণ করুন" : "Save"}</Button>
           </CardContent>
         </Card>
       </div>
@@ -83,12 +99,9 @@ export function ProfileManager() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2"><KeyRound className="h-5 w-5 text-brand" /> {lang === "bn" ? "পাসওয়ার্ড পরিবর্তন" : "Change Password"}</CardTitle>
+            <CardDescription className="flex items-center gap-2"><Mail className="h-3.5 w-3.5" /> Password reset is sent to your verified email.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="pw-current">Current password</Label>
-              <Input id="pw-current" type="password" placeholder="••••••••" />
-            </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="pw-new">New password</Label>
@@ -99,7 +112,7 @@ export function ProfileManager() {
                 <Input id="pw-confirm" type="password" placeholder="••••••••" />
               </div>
             </div>
-            <Button variant="outline" onClick={() => toast.success(lang === "bn" ? "পাসওয়ার্ড পরিবর্তন হয়েছে" : "Password changed")}>Update password</Button>
+            <Button variant="outline" onClick={() => toast.success(lang === "bn" ? "রিসেট ইমেইল পাঠানো হয়েছে" : "Reset email sent")}>Update password</Button>
           </CardContent>
         </Card>
 
@@ -128,7 +141,7 @@ export function ProfileManager() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="font-semibold">{lang === "bn" ? "লগইন ডিভাইস" : "Active sessions"}</p>
-                <p className="text-xs text-muted-foreground">2 sessions active</p>
+                <p className="text-xs text-muted-foreground">Managed by Firebase Authentication</p>
               </div>
               <Button variant="outline" size="sm" onClick={() => toast.success(lang === "bn" ? "সব সেশন থেকে লগআউট হয়েছে" : "Signed out of all sessions")}>
                 {lang === "bn" ? "সব লগআউট" : "Sign out all"}

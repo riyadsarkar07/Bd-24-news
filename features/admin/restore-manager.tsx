@@ -6,24 +6,38 @@ import { PageHeader } from "@/features/admin/admin-table";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmDialog } from "@/features/admin/admin-table";
 import toast from "react-hot-toast";
 import { useLanguage } from "@/providers/language-provider";
-
-const restorePoints = [
-  { id: "r1", label: "Full site backup", date: "2026-08-05 03:00", scope: "Articles, categories, media, settings", status: "Ready" as const },
-  { id: "r2", label: "Database dump", date: "2026-08-04 03:00", scope: "Articles, users, comments", status: "Ready" as const },
-  { id: "r3", label: "Media library", date: "2026-08-03 03:00", scope: "Images and videos", status: "Ready" as const },
-];
+import { listBackups, restoreBackup, type BackupRow } from "@/services/backupService";
 
 export function RestoreManager() {
   const { lang } = useLanguage();
-  const [pending, setPending] = React.useState<typeof restorePoints[number] | null>(null);
+  const [backups, setBackups] = React.useState<BackupRow[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [pending, setPending] = React.useState<BackupRow | null>(null);
+  const [running, setRunning] = React.useState(false);
 
-  const restore = () => {
-    if (!pending) return;
-    toast.success(lang === "bn" ? "রিস্টোর শুরু হয়েছে" : "Restore started");
-    setPending(null);
+  React.useEffect(() => {
+    listBackups()
+      .then(setBackups)
+      .catch(() => setBackups([]))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const restore = async () => {
+    if (!pending || running) return;
+    setRunning(true);
+    try {
+      const written = await restoreBackup(pending.id);
+      toast.success(`${written} documents restored`);
+      setPending(null);
+    } catch {
+      toast.error(lang === "bn" ? "রিস্টোর ব্যর্থ হয়েছে" : "Restore failed");
+    } finally {
+      setRunning(false);
+    }
   };
 
   return (
@@ -45,21 +59,31 @@ export function RestoreManager() {
       </Card>
 
       <div className="space-y-3">
-        {restorePoints.map((r) => (
-          <Card key={r.id}>
-            <CardContent className="flex flex-wrap items-center gap-4 p-4">
-              <span className="rounded-xl bg-accentblue/10 p-3 text-accentblue"><Database className="h-5 w-5" /></span>
-              <div className="min-w-0 flex-1">
-                <p className="font-bold">{r.label}</p>
-                <p className="text-xs text-muted-foreground">{r.date} • {r.scope}</p>
-              </div>
-              <Badge variant="outline" className="bg-success/10 text-success">{r.status}</Badge>
-              <Button variant="outline" onClick={() => setPending(r)}>
-                <RotateCcw className="h-4 w-4" /> {lang === "bn" ? "রিস্টোর করুন" : "Restore"}
-              </Button>
+        {loading ? (
+          <Skeleton className="h-20 rounded-2xl" />
+        ) : backups.length === 0 ? (
+          <Card>
+            <CardContent className="p-8 text-center text-sm text-muted-foreground">
+              {lang === "bn" ? "কোনো ব্যাকআপ নেই" : "No backups available"}
             </CardContent>
           </Card>
-        ))}
+        ) : (
+          backups.map((r) => (
+            <Card key={r.id}>
+              <CardContent className="flex flex-wrap items-center gap-4 p-4">
+                <span className="rounded-xl bg-accentblue/10 p-3 text-accentblue"><Database className="h-5 w-5" /></span>
+                <div className="min-w-0 flex-1">
+                  <p className="font-bold">{r.label}</p>
+                  <p className="text-xs text-muted-foreground">{r.createdAt ? new Date(r.createdAt).toLocaleString() : "—"} • {r.collections.length} collections • {r.size}</p>
+                </div>
+                <Badge variant="outline" className="bg-success/10 text-success">Ready</Badge>
+                <Button variant="outline" disabled={running} onClick={() => setPending(r)}>
+                  <RotateCcw className="h-4 w-4" /> {lang === "bn" ? "রিস্টোর করুন" : "Restore"}
+                </Button>
+              </CardContent>
+            </Card>
+          ))
+        )}
       </div>
 
       <Card className="border-dashed">

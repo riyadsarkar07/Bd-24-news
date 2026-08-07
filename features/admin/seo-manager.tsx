@@ -13,15 +13,30 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLanguage } from "@/providers/language-provider";
+import { getSeoSettings, saveSeoSettings, DEFAULT_SEO, type SeoSettings } from "@/services/settingsService";
 
 export function SeoManager() {
   const { lang } = useLanguage();
-  const [autoIndex, setAutoIndex] = React.useState(true);
-  const [sitemap, setSitemap] = React.useState(true);
-  const [ogImage, setOgImage] = React.useState(true);
-  const [jsonLd, setJsonLd] = React.useState(true);
+  const [seo, setSeo] = React.useState<SeoSettings>(DEFAULT_SEO);
+  const [saving, setSaving] = React.useState(false);
 
-  const save = () => toast.success(lang === "bn" ? "সেটিংস সংরক্ষিত হয়েছে" : "Settings saved");
+  React.useEffect(() => {
+    getSeoSettings().then(setSeo).catch(() => setSeo(DEFAULT_SEO));
+  }, []);
+
+  const set = <K extends keyof SeoSettings>(key: K, value: SeoSettings[K]) => setSeo((s) => ({ ...s, [key]: value }));
+
+  const save = async () => {
+    setSaving(true);
+    try {
+      await saveSeoSettings(seo);
+      toast.success(lang === "bn" ? "সেটিংস সংরক্ষিত হয়েছে" : "Settings saved");
+    } catch {
+      toast.error(lang === "bn" ? "সংরক্ষণ ব্যর্থ হয়েছে" : "Failed to save settings");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const title = (t: string) => <CardTitle>{t}</CardTitle>;
   const desc = (d: string) => <CardDescription>{d}</CardDescription>;
@@ -44,16 +59,16 @@ export function SeoManager() {
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="seo-title">Default SEO title</Label>
-                  <Input id="seo-title" defaultValue="BD24News — Bangladesh's Leading News Portal" />
+                  <Input id="seo-title" value={seo.defaultTitle} onChange={(e) => set("defaultTitle", e.target.value)} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="seo-desc">Default meta description</Label>
-                  <Input id="seo-desc" defaultValue="Latest Bangladeshi news, sports, economy, technology and more." />
+                  <Input id="seo-desc" value={seo.defaultDescription} onChange={(e) => set("defaultDescription", e.target.value)} />
                 </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="seo-keywords">Keywords</Label>
-                <Input id="seo-keywords" defaultValue="bangladesh news, cricket, economy, technology, sports, dhaka" />
+                <Input id="seo-keywords" value={seo.keywords} onChange={(e) => set("keywords", e.target.value)} />
               </div>
             </CardContent>
           </Card>
@@ -66,7 +81,7 @@ export function SeoManager() {
                   <p className="font-semibold">Allow search engine indexing</p>
                   <p className="text-xs text-muted-foreground">Respect robots.txt and allow crawlers</p>
                 </div>
-                <Switch checked={autoIndex} onCheckedChange={setAutoIndex} />
+                <Switch checked={seo.allowIndexing} onCheckedChange={(v) => set("allowIndexing", v)} />
               </div>
               <Separator />
               <div className="flex items-center justify-between">
@@ -74,7 +89,7 @@ export function SeoManager() {
                   <p className="font-semibold">Auto-generate sitemap</p>
                   <p className="text-xs text-muted-foreground">Submit updated sitemap to search engines</p>
                 </div>
-                <Switch checked={sitemap} onCheckedChange={setSitemap} />
+                <Switch checked={seo.autoSitemap} onCheckedChange={(v) => set("autoSitemap", v)} />
               </div>
               <Separator />
               <div className="flex items-center justify-between">
@@ -82,7 +97,7 @@ export function SeoManager() {
                   <p className="font-semibold">Structured data (JSON-LD)</p>
                   <p className="text-xs text-muted-foreground">Emit NewsArticle and Breadcrumb markup</p>
                 </div>
-                <Switch checked={jsonLd} onCheckedChange={setJsonLd} />
+                <Switch checked={seo.jsonLd} onCheckedChange={(v) => set("jsonLd", v)} />
               </div>
             </CardContent>
           </Card>
@@ -95,20 +110,20 @@ export function SeoManager() {
               <div className="grid gap-4 sm:grid-cols-3">
                 <div className="space-y-2">
                   <Label htmlFor="cat-seo">Category pages</Label>
-                  <Input id="cat-seo" defaultValue="dynamic" />
+                  <Input id="cat-seo" value={seo.categoryPages} onChange={(e) => set("categoryPages", e.target.value)} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="tag-seo">Tag pages</Label>
-                  <Input id="tag-seo" defaultValue="noindex" />
+                  <Input id="tag-seo" value={seo.tagPages} onChange={(e) => set("tagPages", e.target.value)} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="auth-seo">Author pages</Label>
-                  <Input id="auth-seo" defaultValue="index" />
+                  <Input id="auth-seo" value={seo.authorPages} onChange={(e) => set("authorPages", e.target.value)} />
                 </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="seo-canonical">Canonical URL base</Label>
-                <Input id="seo-canonical" defaultValue="https://bd24news.vercel.app" />
+                <Input id="seo-canonical" value={seo.canonicalBase} onChange={(e) => set("canonicalBase", e.target.value)} />
               </div>
             </CardContent>
           </Card>
@@ -123,20 +138,20 @@ export function SeoManager() {
                   <p className="font-semibold">Default Open Graph image</p>
                   <p className="text-xs text-muted-foreground">Shown when sharing articles on Facebook/LinkedIn</p>
                 </div>
-                <Switch checked={ogImage} onCheckedChange={setOgImage} />
+                <Switch checked={seo.ogImageEnabled} onCheckedChange={(v) => set("ogImageEnabled", v)} />
               </div>
               <Separator />
               <div className="space-y-2">
                 <Label htmlFor="og-title">Default OG title</Label>
-                <Input id="og-title" defaultValue="BD24News" />
+                <Input id="og-title" value={seo.ogTitle} onChange={(e) => set("ogTitle", e.target.value)} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="og-desc">Default OG description</Label>
-                <Textarea id="og-desc" rows={2} defaultValue="Breaking news from Bangladesh and around the world." />
+                <Textarea id="og-desc" rows={2} value={seo.ogDescription} onChange={(e) => set("ogDescription", e.target.value)} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="twitter-handle">Twitter handle</Label>
-                <Input id="twitter-handle" defaultValue="@bd24news" />
+                <Input id="twitter-handle" value={seo.twitterHandle} onChange={(e) => set("twitterHandle", e.target.value)} />
               </div>
             </CardContent>
           </Card>
@@ -144,10 +159,7 @@ export function SeoManager() {
       </Tabs>
 
       <div className="flex items-center gap-3">
-        <Button onClick={save}><Save className="h-4 w-4" /> {lang === "bn" ? "সংরক্ষণ করুন" : "Save changes"}</Button>
-        <Button variant="outline" onClick={() => toast.success(lang === "bn" ? "পরীক্ষা চলছে…" : "Running crawl test…")}>
-          <Search className="h-4 w-4" /> Test crawl
-        </Button>
+        <Button onClick={save} disabled={saving}><Save className="h-4 w-4" /> {lang === "bn" ? "সংরক্ষণ করুন" : "Save changes"}</Button>
       </div>
     </div>
   );

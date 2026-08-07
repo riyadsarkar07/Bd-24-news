@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil } from "lucide-react";
 import { PageHeader, Toolbar, AdminTable, StatusBadge, ConfirmDialog, type AdminColumn } from "@/features/admin/admin-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,7 +15,14 @@ import {
 } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import toast from "react-hot-toast";
-import { adminData, type AdminAdRow } from "@/services/adminData";
+import {
+  listAds,
+  subscribeAds,
+  saveAd,
+  deleteAd,
+  uniqueId,
+  type AdminAdRow,
+} from "@/services/cmsService";
 
 const typeColor: Record<AdminAdRow["type"], string> = {
   banner: "bg-accentblue/15 text-accentblue",
@@ -25,16 +32,26 @@ const typeColor: Record<AdminAdRow["type"], string> = {
 };
 
 export function AdsManager() {
-  const [data, setData] = React.useState<AdminAdRow[]>(adminData.ads);
+  const [data, setData] = React.useState<AdminAdRow[]>([]);
   const [search, setSearch] = React.useState("");
   const [deleting, setDeleting] = React.useState<AdminAdRow | null>(null);
   const [editing, setEditing] = React.useState<AdminAdRow | null>(null);
-  const [name, setName] = React.useState("");
+  const [saving, setSaving] = React.useState(false);
+
+  React.useEffect(() => {
+    let mounted = true;
+    listAds().then((rows) => mounted && setData(rows));
+    const unsub = subscribeAds((rows) => mounted && setData(rows));
+    return () => {
+      mounted = false;
+      unsub();
+    };
+  }, []);
 
   const filtered = data.filter((r) => r.name.toLowerCase().includes(search.toLowerCase()) || r.position.toLowerCase().includes(search.toLowerCase()));
 
   const columns: AdminColumn<AdminAdRow>[] = [
-    { key: "name", header: "Ad unit", render: (r) => <span className="font-bold">{r.name}</span> },
+    { key: "name", header: "Ad unit", render: (r) => <span className="font-bold">{r.name || "Untitled ad"}</span> },
     { key: "position", header: "Position", render: (r) => <span className="text-sm">{r.position}</span> },
     {
       key: "type",
@@ -64,9 +81,28 @@ export function AdsManager() {
     { key: "status", header: "Status", render: (r) => <StatusBadge status={r.status} /> },
   ];
 
-  const toggle = (row: AdminAdRow) => {
-    setData((d) => d.map((r) => (r.id === row.id ? { ...r, status: r.status === "active" ? "inactive" : "active" } : r)));
-    toast.success(row.status === "active" ? "Ad paused" : "Ad activated");
+  const toggle = async (row: AdminAdRow) => {
+    const next: AdminAdRow["status"] = row.status === "active" ? "inactive" : "active";
+    try {
+      await saveAd(row.id, { ...row, status: next });
+      toast.success(next === "active" ? "Ad activated" : "Ad paused");
+    } catch {
+      toast.error("Failed to update ad status");
+    }
+  };
+
+  const save = async () => {
+    if (!editing) return;
+    setSaving(true);
+    try {
+      await saveAd(editing.id, { ...editing });
+      setEditing(null);
+      toast.success("Ad unit saved");
+    } catch {
+      toast.error("Failed to save ad unit");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -74,7 +110,7 @@ export function AdsManager() {
       <PageHeader
         title="Advertisements"
         description={`${data.filter((r) => r.status === "active").length} active ad units`}
-        action={<Button onClick={() => { setEditing(null); setName(""); setDeleting(null); setEditing({ id: crypto.randomUUID(), name: "", position: "Sidebar", size: "300×250", type: "banner", impressions: 0, clicks: 0, ctr: 0, status: "inactive" }); }}><Plus className="h-4 w-4" /> New Ad Unit</Button>}
+        action={<Button onClick={() => setEditing({ id: uniqueId(), name: "", position: "Sidebar", size: "300×250", type: "banner", impressions: 0, clicks: 0, ctr: 0, status: "inactive" })}><Plus className="h-4 w-4" /> New Ad Unit</Button>}
       />
       <Toolbar search={search} onSearch={setSearch} placeholder="Search ad units…" />
       <AdminTable
@@ -86,7 +122,7 @@ export function AdsManager() {
             <Button variant="ghost" size="icon-sm" onClick={() => toggle(r)} aria-label="Toggle status">
               {r.status === "active" ? <StatusBadge status="inactive" /> : <StatusBadge status="active" />}
             </Button>
-            <Button variant="ghost" size="icon-sm" onClick={() => { setEditing(r); setName(r.name); }} aria-label="Edit">
+            <Button variant="ghost" size="icon-sm" onClick={() => setEditing(r)} aria-label="Edit">
               <Pencil className="h-4 w-4" />
             </Button>
           </>
@@ -135,9 +171,7 @@ export function AdsManager() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditing(null)}>Cancel</Button>
-            <Button onClick={() => { setData((d) => (editing && d.some((r) => r.id === editing.id) ? d.map((r) => (r.id === editing.id ? editing : r)) : (editing ? [...d, editing] : d))); setEditing(null); toast.success("Ad unit saved"); }}>
-              Save
-            </Button>
+            <Button onClick={save} disabled={saving}>{saving ? "Saving…" : "Save"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -147,7 +181,17 @@ export function AdsManager() {
         onOpenChange={(v) => !v && setDeleting(null)}
         title="Delete ad unit?"
         description={`This will remove "${deleting?.name}".`}
-        onConfirm={() => { if (deleting) { setData((d) => d.filter((r) => r.id !== deleting.id)); toast.success("Ad unit deleted"); } }}
+        onConfirm={async () => {
+          if (deleting) {
+            try {
+              await deleteAd(deleting.id);
+              setData((d) => d.filter((r) => r.id !== deleting.id));
+              toast.success("Ad unit deleted");
+            } catch {
+              toast.error("Failed to delete ad unit");
+            }
+          }
+        }}
       />
     </div>
   );

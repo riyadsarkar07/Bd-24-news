@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useLanguage } from "@/providers/language-provider";
 import { cn } from "@/lib/utils";
+import { addSubscriber } from "@/services/cmsService";
 
 const schema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -26,10 +27,14 @@ export function NewsletterForm({ variant = "default" }: { variant?: "default" | 
     formState: { errors, isSubmitting },
   } = useForm<Schema>({ resolver: zodResolver(schema) });
 
-  const onSubmit = async () => {
-    await new Promise((resolve) => setTimeout(resolve, 800));
-    toast.success(lang === "bn" ? "সাবস্ক্রিপশন সফল হয়েছে!" : "Subscription successful!");
-    reset();
+  const onSubmit = async ({ email }: Schema) => {
+    try {
+      await addSubscriber(email);
+      toast.success(lang === "bn" ? "সাবস্ক্রিপশন সফল হয়েছে!" : "Subscription successful!");
+      reset();
+    } catch {
+      toast.error(lang === "bn" ? "সাবস্ক্রিপশন ব্যর্থ হয়েছে, আবার চেষ্টা করুন" : "Subscription failed, please try again");
+    }
   };
 
   return (

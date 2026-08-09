@@ -9,7 +9,7 @@ service firebase.storage {
 
     function isAdmin() {
       return request.auth != null
-        && request.auth.token.email in ['bd24news@tensi.org', 'riyadsarkar1243@gmail.com'];
+        && request.auth.uid in ['8HTfUJOKIgZxbd9PuQAjr1HhuUa', '45StAH7WmbPt1l0tfJplfu2GSa33'];
     }
 
     match /media/{allPaths=**} {

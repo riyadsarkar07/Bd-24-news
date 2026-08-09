@@ -8,15 +8,23 @@ import {
 import { getFirebaseAuth, getFirebaseDb } from "@/lib/firebase/client";
 import { collection, query, where, getDocs } from "firebase/firestore";
 
-export const ADMIN_EMAILS = (process.env.NEXT_PUBLIC_ADMIN_EMAILS ?? "bd24news@tensi.org,riyadsarkar1243@gmail.com")
-  .split(",")
-  .map((e) => e.trim().toLowerCase())
-  .filter(Boolean);
+export const ADMIN_ACCOUNTS: Array<{ email: string; uid: string }> = [
+  { email: "bd24news@tensi.org", uid: "8HTfUJOKIgZxbd9PuQAjr1HhuUa" },
+  { email: "riyadsarkar1243@gmail.com", uid: "45StAH7WmbPt1l0tfJplfu2GSa33" },
+];
+
+export const ADMIN_EMAILS = ADMIN_ACCOUNTS.map((a) => a.email);
+
+export const ADMIN_UIDS = ADMIN_ACCOUNTS.map((a) => a.uid);
 
 export const ADMIN_EMAIL = ADMIN_EMAILS[0] ?? "bd24news@tensi.org";
 
 export function isAdminEmail(email: string): boolean {
   return ADMIN_EMAILS.includes(email.trim().toLowerCase());
+}
+
+export function isAdminUid(uid: string): boolean {
+  return ADMIN_UIDS.includes(uid);
 }
 
 export async function isRegisteredUser(email: string): Promise<boolean> {
@@ -39,8 +47,7 @@ export async function signInAdmin(email: string, password: string): Promise<User
   if (!auth) throw new Error("Firebase is not configured. Add NEXT_PUBLIC_FIREBASE_* environment variables.");
   const normalized = email.trim().toLowerCase();
   const credential = await signInWithEmailAndPassword(auth, normalized, password);
-  const allowed = await isRegisteredUser(credential.user.email ?? "");
-  if (!allowed) {
+  if (!isAdminUid(credential.user.uid)) {
     await fbSignOut(auth);
     throw new Error("This account does not have access to the admin panel.");
   }

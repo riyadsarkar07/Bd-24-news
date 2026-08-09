@@ -3,7 +3,7 @@
 import * as React from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
-import { onAuthStateChange } from "@/services/authService";
+import { onAuthStateChange, isAdminUid } from "@/services/authService";
 import { AdminLayout } from "@/features/admin/admin-layout";
 
 function FullScreenLoader() {
@@ -29,7 +29,7 @@ export function AdminRouteHandler({ children }: { children: React.ReactNode }) {
       return;
     }
     return onAuthStateChange((user) => {
-      setState(user ? "authed" : "unauth");
+      setState(user && isAdminUid(user.uid) ? "authed" : "unauth");
     });
   }, [isLogin]);
 

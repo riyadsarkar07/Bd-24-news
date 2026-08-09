@@ -12,7 +12,7 @@ import {
 import { categories } from "@/constants/categories";
 import { articles as seedArticleList } from "@/data/articles";
 import { authors as seedAuthorList } from "@/data/authors";
-import { ADMIN_EMAILS } from "@/services/authService";
+import { ADMIN_ACCOUNTS } from "@/services/authService";
 import { DEFAULT_ROLES, type AdminRoleRow } from "@/services/cmsService";
 import { slugify } from "@/services/newsService";
 
@@ -50,8 +50,9 @@ async function seedRoles(db: Firestore): Promise<void> {
 async function seedUsers(db: Firestore): Promise<void> {
   const batch = writeBatch(db);
   const now = new Date().toISOString();
-  ADMIN_EMAILS.forEach((email) => {
-    batch.set(doc(db, "users", slugify(email)), {
+  ADMIN_ACCOUNTS.forEach(({ email, uid }) => {
+    batch.set(doc(db, "users", uid), {
+      uid,
       email,
       name: email.split("@")[0] ?? email,
       avatar: "",

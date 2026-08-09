@@ -25,7 +25,8 @@ export function ProfileManager() {
   React.useEffect(() => {
     return onAuthStateChange((u) => {
       const email = u?.email ?? "";
-      const displayName = u?.displayName ?? email.split("@")[0] ?? "Administrator";
+      const metaName = (u?.user_metadata as { name?: string } | undefined)?.name;
+      const displayName = metaName || email.split("@")[0] || "Administrator";
       setUser({ name: displayName, email });
       setName(displayName);
     });

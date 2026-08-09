@@ -29,7 +29,7 @@ export function AdminRouteHandler({ children }: { children: React.ReactNode }) {
       return;
     }
     return onAuthStateChange((user) => {
-      setState(user && isAdminUid(user.uid) ? "authed" : "unauth");
+      setState(user && isAdminUid(user.id) ? "authed" : "unauth");
     });
   }, [isLogin]);
 

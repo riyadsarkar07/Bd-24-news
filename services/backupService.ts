@@ -1,15 +1,4 @@
-import { getFirebaseDb } from "@/lib/firebase/client";
-import {
-  collection,
-  deleteDoc,
-  doc,
-  getDoc,
-  getDocs,
-  orderBy,
-  query,
-  setDoc,
-  writeBatch,
-} from "firebase/firestore";
+import { getSupabase } from "@/lib/supabase/client";
 
 export interface BackupRow {
   id: string;
@@ -24,7 +13,7 @@ const COLLECTIONS = [
   "categories",
   "tags",
   "authors",
-  "users",
+  "profiles",
   "roles",
   "ads",
   "subscribers",
@@ -42,24 +31,24 @@ function formatBytes(bytes: number): string {
 }
 
 export async function exportSnapshot(): Promise<Record<string, unknown[]>> {
-  const db = getFirebaseDb();
-  if (!db) return {};
+  const supabase = getSupabase();
+  if (!supabase) return {};
   const snapshot: Record<string, unknown[]> = {};
-  for (const name of COLLECTIONS) {
+  for (const table of COLLECTIONS) {
     try {
-      const snap = await getDocs(collection(db, name));
-      snapshot[name] = snap.docs.map((d) => ({ _id: d.id, ...d.data() }));
+      const { data } = await supabase.from(table).select("*");
+      snapshot[table] = (data ?? []).map((r) => ({ _id: (r as Record<string, unknown>).id, ...(r as Record<string, unknown>) }));
     } catch (err) {
-      console.error(`Failed to export ${name}:`, err);
-      snapshot[name] = [];
+      console.error(`Failed to export ${table}:`, err);
+      snapshot[table] = [];
     }
   }
   return snapshot;
 }
 
 export async function createBackup(label: string): Promise<BackupRow> {
-  const db = getFirebaseDb();
-  if (!db) throw new Error("Firebase is not configured.");
+  const supabase = getSupabase();
+  if (!supabase) throw new Error("Supabase is not configured.");
   const snapshot = await exportSnapshot();
   const json = JSON.stringify(snapshot);
   const id = `backup-${Date.now()}`;
@@ -70,23 +59,24 @@ export async function createBackup(label: string): Promise<BackupRow> {
     size: formatBytes(new Blob([json]).size),
     collections: COLLECTIONS,
   };
-  await setDoc(doc(db, "backups", id), { ...row, data: json });
+  const { error } = await supabase.from("backups").insert({ ...row, data: JSON.parse(json) });
+  if (error) throw error;
   return row;
 }
 
 export async function listBackups(): Promise<BackupRow[]> {
-  const db = getFirebaseDb();
-  if (!db) return [];
+  const supabase = getSupabase();
+  if (!supabase) return [];
   try {
-    const snap = await getDocs(query(collection(db, "backups"), orderBy("createdAt", "desc")));
-    return snap.docs.map((d) => {
-      const data = d.data();
+    const { data } = await supabase.from("backups").select("id,label,created_at,size,collections,data").order("created_at", { ascending: false });
+    return (data ?? []).map((d) => {
+      const raw = d as Record<string, unknown>;
       return {
-        id: d.id,
-        label: (data.label as string) ?? "Backup",
-        createdAt: (data.createdAt as string) ?? "",
-        size: (data.size as string) ?? formatBytes(String(data.data ?? "").length),
-        collections: Array.isArray(data.collections) ? (data.collections as string[]) : [],
+        id: typeof raw.id === "string" ? raw.id : String(raw.id ?? ""),
+        label: typeof raw.label === "string" ? raw.label : "Backup",
+        createdAt: typeof raw.created_at === "string" ? raw.created_at : "",
+        size: typeof raw.size === "string" ? raw.size : formatBytes(String(JSON.stringify(raw.data ?? "")).length),
+        collections: Array.isArray(raw.collections) ? (raw.collections as string[]) : [],
       };
     });
   } catch (err) {
@@ -96,35 +86,36 @@ export async function listBackups(): Promise<BackupRow[]> {
 }
 
 export async function deleteBackup(id: string): Promise<void> {
-  const db = getFirebaseDb();
-  if (!db) return;
-  await deleteDoc(doc(db, "backups", id));
+  const supabase = getSupabase();
+  if (!supabase) return;
+  await supabase.from("backups").delete().eq("id", id);
 }
 
 export async function restoreBackup(id: string): Promise<number> {
-  const db = getFirebaseDb();
-  if (!db) throw new Error("Firebase is not configured.");
-  const snap = await getDoc(doc(db, "backups", id));
-  if (!snap.exists()) throw new Error("Backup not found");
-  const snapshot = JSON.parse((snap.data().data as string) ?? "{}") as Record<string, unknown[]>;
-  return restoreSnapshot(snapshot);
+  const supabase = getSupabase();
+  if (!supabase) throw new Error("Supabase is not configured.");
+  const { data } = await supabase.from("backups").select("data").eq("id", id).limit(1).maybeSingle();
+  if (!data?.data) throw new Error("Backup not found");
+  return restoreSnapshot(data.data as Record<string, unknown[]>);
 }
 
 export async function restoreSnapshot(snapshot: Record<string, unknown[]>): Promise<number> {
-  const db = getFirebaseDb();
-  if (!db) throw new Error("Firebase is not configured.");
+  const supabase = getSupabase();
+  if (!supabase) throw new Error("Supabase is not configured.");
   let written = 0;
-  for (const name of COLLECTIONS) {
-    const rows = snapshot[name];
+  for (const table of COLLECTIONS) {
+    const rows = snapshot[table];
     if (!Array.isArray(rows) || rows.length === 0) continue;
-    const batch = writeBatch(db);
-    rows.forEach((row) => {
+    const cleaned = rows.map((row) => {
       const { _id, ...rest } = row as { _id?: string } & Record<string, unknown>;
-      const id = typeof _id === "string" && _id ? _id : `doc-${written}-${Date.now()}`;
-      batch.set(doc(db, name, id), { ...rest, updatedAt: new Date().toISOString() });
-      written += 1;
+      return rest;
     });
-    await batch.commit();
+    const { error } = await supabase.from(table).upsert(cleaned);
+    if (error) {
+      console.error(`Failed to restore ${table}:`, error);
+    } else {
+      written += cleaned.length;
+    }
   }
   return written;
 }

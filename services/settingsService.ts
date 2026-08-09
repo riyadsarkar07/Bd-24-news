@@ -1,5 +1,4 @@
-import { getFirebaseDb } from "@/lib/firebase/client";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { getSupabase } from "@/lib/supabase/client";
 
 export interface SiteSettings {
   siteName: string;
@@ -104,40 +103,43 @@ function mergeSeo(data: Record<string, unknown> | undefined, defaults: SeoSettin
   return { ...defaults, ...(data as Partial<SeoSettings>) };
 }
 
-export async function getSettings(): Promise<SiteSettings> {
-  const db = getFirebaseDb();
-  if (!db) return DEFAULT_SETTINGS;
+async function getSettingJson(key: string): Promise<Record<string, unknown> | undefined> {
+  const supabase = getSupabase();
+  if (!supabase) return undefined;
   try {
-    const snap = await getDoc(doc(db, "settings", "general"));
-    return mergeSettings(snap.data() as Record<string, unknown> | undefined, DEFAULT_SETTINGS);
+    const { data } = await supabase.from("settings").select("value").eq("key", key).limit(1).maybeSingle();
+    return (data?.value as Record<string, unknown> | undefined) ?? undefined;
   } catch (err) {
-    console.error("Firestore settings read failed:", err);
-    return DEFAULT_SETTINGS;
+    console.error("Supabase settings read failed:", err);
+    return undefined;
   }
+}
+
+async function saveSettingJson(key: string, value: Record<string, unknown>): Promise<void> {
+  const supabase = getSupabase();
+  if (!supabase) throw new Error("Supabase is not configured.");
+  const { error } = await supabase
+    .from("settings")
+    .upsert({ key, value, updated_at: new Date().toISOString() }, { onConflict: "key" });
+  if (error) throw error;
+}
+
+export async function getSettings(): Promise<SiteSettings> {
+  const data = await getSettingJson("general");
+  return mergeSettings(data, DEFAULT_SETTINGS);
 }
 
 export async function saveSettings(input: Partial<SiteSettings>): Promise<void> {
-  const db = getFirebaseDb();
-  if (!db) throw new Error("Firebase is not configured.");
   const current = await getSettings();
-  await setDoc(doc(db, "settings", "general"), { ...current, ...input, updatedAt: new Date().toISOString() }, { merge: true });
+  await saveSettingJson("general", { ...current, ...input, updatedAt: new Date().toISOString() } as Record<string, unknown>);
 }
 
 export async function getSeoSettings(): Promise<SeoSettings> {
-  const db = getFirebaseDb();
-  if (!db) return DEFAULT_SEO;
-  try {
-    const snap = await getDoc(doc(db, "settings", "seo"));
-    return mergeSeo(snap.data() as Record<string, unknown> | undefined, DEFAULT_SEO);
-  } catch (err) {
-    console.error("Firestore seo read failed:", err);
-    return DEFAULT_SEO;
-  }
+  const data = await getSettingJson("seo");
+  return mergeSeo(data, DEFAULT_SEO);
 }
 
 export async function saveSeoSettings(input: Partial<SeoSettings>): Promise<void> {
-  const db = getFirebaseDb();
-  if (!db) throw new Error("Firebase is not configured.");
   const current = await getSeoSettings();
-  await setDoc(doc(db, "settings", "seo"), { ...current, ...input, updatedAt: new Date().toISOString() }, { merge: true });
+  await saveSettingJson("seo", { ...current, ...input, updatedAt: new Date().toISOString() } as Record<string, unknown>);
 }

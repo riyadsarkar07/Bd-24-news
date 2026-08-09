@@ -1,9 +1,8 @@
-import { getFirebaseDb } from "@/lib/firebase/client";
-import { addDoc, collection } from "firebase/firestore";
+import { getSupabase } from "@/lib/supabase/client";
 import type { Comment } from "@/types";
 
 export async function addComment(articleId: string, content: string): Promise<Comment> {
-  const db = getFirebaseDb();
+  const supabase = getSupabase();
   const comment: Comment = {
     id: `new-${Date.now()}`,
     articleId,
@@ -14,17 +13,15 @@ export async function addComment(articleId: string, content: string): Promise<Co
     likes: 0,
     replies: [],
   };
-  if (db) {
+  if (supabase) {
     try {
-      const ref = await addDoc(collection(db, "comments"), {
-        articleId,
-        author: comment.author,
-        avatar: "",
-        content,
-        createdAt: comment.createdAt,
-        likes: 0,
-      });
-      comment.id = ref.id;
+      const { data, error } = await supabase
+        .from("comments")
+        .insert({ article_id: articleId, author: comment.author, avatar: "", content, created_at: comment.createdAt, likes: 0, status: "published" })
+        .select("id")
+        .single();
+      if (error) throw error;
+      if (data?.id) comment.id = String(data.id);
     } catch (err) {
       console.error("Failed to save comment:", err);
     }

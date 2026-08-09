@@ -127,7 +127,7 @@ export function CoverImageUpload({ value, onChange, className }: CoverImageUploa
       {!value && (
         <p className="flex items-center gap-1 text-[11px] text-muted-foreground">
           <RefreshCw className="h-3 w-3" />
-          Images are stored in Firebase Storage and saved to the media library.
+          Images are stored in Supabase Storage and saved to the media library.
         </p>
       )}
     </div>

@@ -1,5 +1,4 @@
-import { getFirebaseDb } from "@/lib/firebase/client";
-import { collection, getDocs } from "firebase/firestore";
+import { getSupabase } from "@/lib/supabase/client";
 
 export interface AnalyticsData {
   totalViews: number;
@@ -27,20 +26,21 @@ const EMPTY: AnalyticsData = {
   contentStatus: [],
 };
 
-export async function getAnalytics(): Promise<AnalyticsData> {
-  const db = getFirebaseDb();
-  if (!db) return EMPTY;
-  try {
-    const [articleSnap, userSnap, subscriberSnap, commentSnap] = await Promise.all([
-      getDocs(collection(db, "articles")),
-      getDocs(collection(db, "users")),
-      getDocs(collection(db, "subscribers")),
-      getDocs(collection(db, "comments")),
-    ]);
+type ArticleRow = { status?: string; views?: number; published_at?: string; category?: string; category_color?: string; slug?: string; title_bn?: string; title?: string };
 
-    const published = articleSnap.docs.filter((d) => (d.data().status ?? "published") === "published");
-    const drafts = articleSnap.docs.filter((d) => d.data().status === "draft");
-    const totalViews = published.reduce((sum, d) => sum + Number(d.data().views ?? 0), 0);
+export async function getAnalytics(): Promise<AnalyticsData> {
+  const supabase = getSupabase();
+  if (!supabase) return EMPTY;
+  try {
+    const { data: articles } = await supabase.from("articles").select("status,views,published_at,category,category_color,slug,title_bn,title");
+    const { count: userCount } = await supabase.from("profiles").select("id", { count: "exact", head: true });
+    const { count: subscriberCount } = await supabase.from("subscribers").select("id", { count: "exact", head: true });
+    const { count: commentCount } = await supabase.from("comments").select("id", { count: "exact", head: true });
+
+    const all = (articles ?? []) as ArticleRow[];
+    const published = all.filter((d) => (d.status ?? "published") === "published");
+    const drafts = all.filter((d) => d.status === "draft");
+    const totalViews = published.reduce((sum, d) => sum + Number(d.views ?? 0), 0);
 
     const monthLabel = (d: Date) => d.toLocaleString("en-US", { month: "short" });
     const now = new Date();
@@ -48,12 +48,12 @@ export async function getAnalytics(): Promise<AnalyticsData> {
       const d = new Date(now.getFullYear(), now.getMonth() - (5 - i), 1);
       const next = new Date(d.getFullYear(), d.getMonth() + 1, 1);
       const inMonth = published.filter((doc) => {
-        const ts = new Date((doc.data().publishedAt as string) ?? "");
+        const ts = new Date(doc.published_at ?? "");
         return !Number.isNaN(ts.getTime()) && ts >= d && ts < next;
       });
       return {
         label: monthLabel(d),
-        views: inMonth.reduce((sum, doc) => sum + Number(doc.data().views ?? 0), 0),
+        views: inMonth.reduce((sum, doc) => sum + Number(doc.views ?? 0), 0),
         articles: inMonth.length,
       };
     });
@@ -61,9 +61,9 @@ export async function getAnalytics(): Promise<AnalyticsData> {
     const categoryColors = new Map<string, string>();
     const categoryCounts = new Map<string, number>();
     published.forEach((d) => {
-      const cat = (d.data().category as string) ?? "bangladesh";
+      const cat = d.category ?? "bangladesh";
       categoryCounts.set(cat, (categoryCounts.get(cat) ?? 0) + 1);
-      if (!categoryColors.has(cat)) categoryColors.set(cat, (d.data().categoryColor as string) ?? "#E50914");
+      if (!categoryColors.has(cat)) categoryColors.set(cat, d.category_color ?? "#E50914");
     });
     const categoryDistribution = [...categoryCounts.entries()].map(([name, value]) => ({
       name,
@@ -72,12 +72,12 @@ export async function getAnalytics(): Promise<AnalyticsData> {
     }));
 
     const topPages = [...published]
-      .sort((a, b) => Number(b.data().views ?? 0) - Number(a.data().views ?? 0))
+      .sort((a, b) => Number(b.views ?? 0) - Number(a.views ?? 0))
       .slice(0, 5)
       .map((d) => ({
-        page: `/article/${(d.data().slug as string) ?? d.id}`,
-        title: (d.data().titleBn as string) || (d.data().title as string) || d.id,
-        views: Number(d.data().views ?? 0),
+        page: `/article/${d.slug ?? d.title_bn ?? ""}`,
+        title: d.title_bn || d.title || "",
+        views: Number(d.views ?? 0),
       }));
 
     const contentStatus = [
@@ -89,9 +89,9 @@ export async function getAnalytics(): Promise<AnalyticsData> {
       totalViews,
       totalArticles: published.length,
       draftArticles: drafts.length,
-      totalUsers: userSnap.size,
-      totalSubscribers: subscriberSnap.size,
-      totalComments: commentSnap.size,
+      totalUsers: userCount ?? 0,
+      totalSubscribers: subscriberCount ?? 0,
+      totalComments: commentCount ?? 0,
       monthlyTrend: monthly,
       categoryDistribution,
       topPages,

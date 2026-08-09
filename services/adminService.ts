@@ -1,18 +1,7 @@
 import { articles as seedArticles } from "@/data/articles";
 import type { Article } from "@/types";
-import { getFirebaseDb } from "@/lib/firebase/client";
-import {
-  collection,
-  deleteDoc,
-  doc,
-  getDoc,
-  getDocs,
-  query,
-  orderBy,
-  setDoc,
-  writeBatch,
-} from "firebase/firestore";
-import { mapFirestoreDoc, slugify } from "@/services/newsService";
+import { getSupabase } from "@/lib/supabase/client";
+import { mapArticleRow, slugify } from "@/services/newsService";
 
 export type AdminStat = {
   key: string;
@@ -58,7 +47,7 @@ export interface ArticleInput {
 
 const DEFAULT_AUTHOR = { name: "Riyad", nameBn: "রিয়াদ", role: "Editor" };
 
-function buildArticleDoc(input: ArticleInput, existing?: Article): Record<string, unknown> {
+function buildArticlePayload(input: ArticleInput, existing?: Article): Record<string, unknown> {
   const now = new Date().toISOString();
   const slug = input.slug?.trim() || slugify(input.title) || `article-${Date.now()}`;
   const category = input.category || "bangladesh";
@@ -72,91 +61,102 @@ function buildArticleDoc(input: ArticleInput, existing?: Article): Record<string
   const words = body.split(/\s+/).filter(Boolean).length;
 
   return {
-    id: input.id || slug,
     slug,
-    titleBn: input.titleBn,
+    title_bn: input.titleBn,
     title: input.title,
     excerpt: input.excerpt,
     body,
     category,
-    categoryColor,
+    category_color: categoryColor,
     tags: input.tags || [],
     author: authorName,
-    authorNameBn,
-    authorSlug: slugify(authorName),
-    authorAvatar: input.authorAvatar || "",
-    authorRole,
-    coverImage: input.coverImage || "",
+    author_name_bn: authorNameBn,
+    author_slug: slugify(authorName),
+    author_avatar: input.authorAvatar || "",
+    author_role: authorRole,
+    cover_image: input.coverImage || "",
     images: input.images && input.images.length > 0 ? input.images : input.coverImage ? [input.coverImage] : [],
-    publishedAt,
-    updatedAt: now,
-    createdAt: existing?.publishedAt ?? now,
+    published_at: publishedAt || now,
+    updated_at: now,
     views: existing?.views ?? 0,
     likes: existing?.likes ?? 0,
-    commentsCount: existing?.commentsCount ?? 0,
-    readingMinutes: Math.max(1, Math.round(words / 220)),
+    comments_count: existing?.commentsCount ?? 0,
+    reading_minutes: Math.max(1, Math.round(words / 220)),
     featured: Boolean(input.featured),
     breaking: Boolean(input.breaking),
     trending: Boolean(input.trending),
-    editorPick: Boolean(input.editorPick),
-    isVideo: existing?.isVideo ?? false,
-    isGallery: existing?.isGallery ?? false,
-    videoUrl: existing?.videoUrl ?? null,
+    editor_pick: Boolean(input.editorPick),
+    is_video: existing?.isVideo ?? false,
+    is_gallery: existing?.isGallery ?? false,
+    video_url: existing?.videoUrl ?? null,
     location: input.location || "",
-    seoTitle: input.seoTitle || "",
-    seoDescription: input.seoDescription || "",
+    seo_title: input.seoTitle || "",
+    seo_description: input.seoDescription || "",
     status,
   };
 }
 
 export async function listAllArticles(): Promise<Article[]> {
-  const db = getFirebaseDb();
-  if (!db) return [];
+  const supabase = getSupabase();
+  if (!supabase) return [];
   try {
-    const q = query(collection(db, "articles"), orderBy("updatedAt", "desc"));
-    const snap = await getDocs(q);
-    return snap.docs.map((d) => {
-      const data = d.data() as Record<string, unknown>;
-      return { ...mapFirestoreDoc(d.id, data), status: (data.status as ArticleStatus) ?? "published" };
+    const { data } = await supabase.from("articles").select("*").order("updated_at", { ascending: false });
+    return (data ?? []).map((r) => {
+      const article = mapArticleRow(r as Record<string, unknown>);
+      article.status = (r.status as ArticleStatus) ?? "published";
+      return article;
     });
   } catch (err) {
-    console.error("Firestore articles read failed:", err);
+    console.error("Supabase articles read failed:", err);
     return [];
   }
 }
 
 export async function getArticleById(id: string): Promise<Article | undefined> {
-  const db = getFirebaseDb();
-  if (!db) return undefined;
+  const supabase = getSupabase();
+  if (!supabase) return undefined;
   try {
-    const ref = doc(db, "articles", id);
-    const snap = await getDoc(ref);
-    if (snap.exists()) {
-      const data = snap.data() as Record<string, unknown>;
-      return { ...mapFirestoreDoc(snap.id, data), status: (data.status as ArticleStatus) ?? "published" };
+    const { data: bySlug } = await supabase.from("articles").select("*").eq("slug", id).limit(1).maybeSingle();
+    if (bySlug) {
+      const article = mapArticleRow(bySlug as Record<string, unknown>);
+      article.status = (bySlug.status as ArticleStatus) ?? "published";
+      return article;
     }
-    const all = await listAllArticles();
-    return all.find((a) => a.slug === id);
+    const { data: byId } = await supabase.from("articles").select("*").eq("id", id).limit(1).maybeSingle();
+    if (byId) {
+      const article = mapArticleRow(byId as Record<string, unknown>);
+      article.status = (byId.status as ArticleStatus) ?? "published";
+      return article;
+    }
+    return undefined;
   } catch (err) {
-    console.error("Firestore article read failed:", err);
+    console.error("Supabase article read failed:", err);
     return undefined;
   }
 }
 
 export async function saveArticle(input: ArticleInput, existingId?: string): Promise<{ id: string; slug: string }> {
-  const db = getFirebaseDb();
-  if (!db) throw new Error("Firebase is not configured. Add NEXT_PUBLIC_FIREBASE_* environment variables.");
-  const id = existingId || input.id || slugify(input.title) || `article-${Date.now()}`;
+  const supabase = getSupabase();
+  if (!supabase) throw new Error("Supabase is not configured. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY environment variables.");
   const existing = existingId ? await getArticleById(existingId) : undefined;
-  const payload = buildArticleDoc(input, existing);
-  await setDoc(doc(db, "articles", id), payload, { merge: false });
-  return { id, slug: payload.slug as string };
+  const payload = buildArticlePayload(input, existing);
+  const { data, error } = await supabase
+    .from("articles")
+    .upsert(payload, { onConflict: "slug" })
+    .select("id,slug")
+    .single();
+  if (error) throw error;
+  return { id: str(data.slug, str(data.id)), slug: str(data.slug, str(data.id)) };
+}
+
+function str(v: unknown, fallback = ""): string {
+  return typeof v === "string" ? v : fallback;
 }
 
 export async function deleteArticle(id: string): Promise<void> {
-  const db = getFirebaseDb();
-  if (!db) return;
-  await deleteDoc(doc(db, "articles", id));
+  const supabase = getSupabase();
+  if (!supabase) return;
+  await supabase.from("articles").delete().or(`slug.eq.${id},id.eq.${id}`);
 }
 
 export async function duplicateArticle(id: string): Promise<{ id: string; slug: string }> {
@@ -194,42 +194,30 @@ export async function duplicateArticle(id: string): Promise<{ id: string; slug: 
 }
 
 export async function seedSampleArticles(): Promise<number> {
-  const db = getFirebaseDb();
-  if (!db) throw new Error("Firebase is not configured.");
-  const batch = writeBatch(db);
-  seedArticles.forEach((a) => {
-    const ref = doc(db, "articles", a.slug);
-    batch.set(ref, {
-      ...a,
-      id: a.slug,
-      status: "published",
-      createdAt: a.publishedAt,
-    });
-  });
-  await batch.commit();
+  const supabase = getSupabase();
+  if (!supabase) throw new Error("Supabase is not configured.");
+  const rows = seedArticles.map((a) => buildArticlePayload({ ...a, status: "published", publishedAt: a.publishedAt }));
+  const { error } = await supabase.from("articles").upsert(rows, { onConflict: "slug" });
+  if (error) throw error;
   return seedArticles.length;
 }
 
 export const adminService = {
   async getStats(): Promise<AdminStat[]> {
-    const db = getFirebaseDb();
-    if (!db) return [];
+    const supabase = getSupabase();
+    if (!supabase) return [];
     try {
-      const [articlesSnap, usersSnap, subscribersSnap] = await Promise.all([
-        getDocs(collection(db, "articles")),
-        getDocs(collection(db, "users")),
-        getDocs(collection(db, "subscribers")),
-      ]);
-      const published = articlesSnap.docs.filter((d) => (d.data().status ?? "published") === "published");
-      const views = published.reduce((sum, d) => sum + Number(d.data().views ?? 0), 0);
-      const articles = published.length;
-      const users = usersSnap.size;
-      const subscribers = subscribersSnap.size;
+      const { data: articles } = await supabase.from("articles").select("status,views");
+      const { count: users } = await supabase.from("profiles").select("id", { count: "exact", head: true });
+      const { count: subscribers } = await supabase.from("subscribers").select("id", { count: "exact", head: true });
+      const all = articles ?? [];
+      const published = all.filter((d) => (d.status ?? "published") === "published");
+      const views = published.reduce((sum, d) => sum + Number(d.views ?? 0), 0);
       return [
         { key: "views", value: views, delta: 0 },
-        { key: "articles", value: articles, delta: 0 },
-        { key: "users", value: users, delta: 0 },
-        { key: "subscribers", value: subscribers, delta: 0 },
+        { key: "articles", value: published.length, delta: 0 },
+        { key: "users", value: users ?? 0, delta: 0 },
+        { key: "subscribers", value: subscribers ?? 0, delta: 0 },
       ];
     } catch (err) {
       console.error("Failed to load dashboard stats:", err);
@@ -238,11 +226,11 @@ export const adminService = {
   },
 
   async getChart(): Promise<ChartPoint[]> {
-    const db = getFirebaseDb();
-    if (!db) return [];
+    const supabase = getSupabase();
+    if (!supabase) return [];
     try {
-      const snap = await getDocs(collection(db, "articles"));
-      const published = snap.docs.filter((d) => (d.data().status ?? "published") === "published");
+      const { data } = await supabase.from("articles").select("status,views,published_at");
+      const published = (data ?? []).filter((d) => (d.status ?? "published") === "published");
       const dayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
       const now = new Date();
       return Array.from({ length: 7 }, (_, i) => {
@@ -252,12 +240,12 @@ export const adminService = {
         const next = new Date(d);
         next.setDate(next.getDate() + 1);
         const articlesInDay = published.filter((doc) => {
-          const ts = new Date((doc.data().publishedAt as string) ?? "");
+          const ts = new Date(doc.published_at ?? "");
           return !Number.isNaN(ts.getTime()) && ts >= d && ts < next;
         });
         return {
           label: dayLabels[d.getDay()]!,
-          views: articlesInDay.reduce((sum, doc) => sum + Number(doc.data().views ?? 0), 0),
+          views: articlesInDay.reduce((sum, doc) => sum + Number(doc.views ?? 0), 0),
           articles: articlesInDay.length,
         };
       });

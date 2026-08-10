@@ -1,9 +1,7 @@
-Wrote migration to /workspace/supabase/migrations/20260809000000_initial_schema.sql
-Articles seeded: 50
-Authors seeded: 9
-Categories seeded: 15
-Tags seeded: 114
-base Dashboard > SQL Editor > paste > Run
+-- ================================================================
+-- BD24News CMS — complete Supabase migration
+-- Project: pvqtsaiccfweearaltgo
+-- Run: Supabase Dashboard > SQL Editor > paste > Run
 -- This creates the full CMS schema, enables RLS, secures storage,
 -- and seeds the existing demo/news content without duplicates.
 -- ================================================================
@@ -1465,7 +1463,7 @@ insert into public.settings (key, value)
 values ('general', '{"siteName":"BD24News","siteTagline":"Bangladesh''s Leading News Portal","description":"Latest Bangladeshi news, sports, economy, technology and more, updated 24/7.","siteUrl":"https://bd24news.vercel.app","timezone":"asia/dhaka","locale":"bn","defaultDarkMode":true,"accentColor":"#E50914","primaryFont":"hind","enableEnglish":true,"defaultLanguage":"bn","pushNotifications":true,"breakingAlerts":true,"emailOnComment":false,"forceHttps":true,"csp":"default-src ''self''; img-src ''self'' data: https:; script-src ''self'' ''unsafe-inline'';","social":{"facebook":"https://facebook.com/bd24news","twitter":"https://x.com/bd24news","youtube":"https://youtube.com/@bd24news","instagram":"https://instagram.com/bd24news","tiktok":"https://tiktok.com/@bd24news","telegram":"https://t.me/bd24news"}}'::jsonb), ('seo', '{"defaultTitle":"BD24News — Bangladesh''s Leading News Portal","defaultDescription":"Latest Bangladeshi news, sports, economy, technology and more.","keywords":"bangladesh news, cricket, economy, technology, sports, dhaka","allowIndexing":true,"autoSitemap":true,"jsonLd":true,"categoryPages":"dynamic","tagPages":"noindex","authorPages":"index","canonicalBase":"https://bd24news.vercel.app","ogImageEnabled":true,"ogTitle":"BD24News","ogDescription":"Breaking news from Bangladesh and around the world.","twitterHandle":"@bd24news"}'::jsonb)
 on conflict (key) do nothing;
 insert into public.meta (key, value)
-values ('init', '{"initializedAt":"2026-08-09T05:49:40.982Z","version":1}'::jsonb)
+values ('init', '{"initializedAt":"2026-08-10T04:18:58.621Z","version":1}'::jsonb)
 on conflict (key) do nothing;
 
 -- ================================================================

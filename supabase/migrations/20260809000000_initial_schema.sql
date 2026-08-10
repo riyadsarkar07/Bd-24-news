@@ -75,7 +75,7 @@ create table if not exists public.articles (
 create index if not exists articles_status_idx on public.articles(status);
 create index if not exists articles_published_at_idx on public.articles(published_at desc);
 create index if not exists articles_category_idx on public.articles(category);
-create trigger articles_set_updated_at before update on public.articles for each row execute function public.set_updated_at();
+create or replace trigger articles_set_updated_at before update on public.articles for each row execute function public.set_updated_at();
 
 -- ================================================================
 -- categories
@@ -91,7 +91,7 @@ create table if not exists public.categories (
   featured boolean not null default false,
   updated_at timestamptz not null default now()
 );
-create trigger categories_set_updated_at before update on public.categories for each row execute function public.set_updated_at();
+create or replace trigger categories_set_updated_at before update on public.categories for each row execute function public.set_updated_at();
 
 -- ================================================================
 -- tags
@@ -104,7 +104,7 @@ create table if not exists public.tags (
   views bigint not null default 0,
   updated_at timestamptz not null default now()
 );
-create trigger tags_set_updated_at before update on public.tags for each row execute function public.set_updated_at();
+create or replace trigger tags_set_updated_at before update on public.tags for each row execute function public.set_updated_at();
 
 -- ================================================================
 -- authors
@@ -126,7 +126,7 @@ create table if not exists public.authors (
   social jsonb not null default '{}'::jsonb,
   updated_at timestamptz not null default now()
 );
-create trigger authors_set_updated_at before update on public.authors for each row execute function public.set_updated_at();
+create or replace trigger authors_set_updated_at before update on public.authors for each row execute function public.set_updated_at();
 
 -- ================================================================
 -- profiles (application users; admin UIDs are seeded)
@@ -143,7 +143,7 @@ create table if not exists public.profiles (
   posts bigint not null default 0,
   updated_at timestamptz not null default now()
 );
-create trigger profiles_set_updated_at before update on public.profiles for each row execute function public.set_updated_at();
+create or replace trigger profiles_set_updated_at before update on public.profiles for each row execute function public.set_updated_at();
 
 -- ================================================================
 -- roles
@@ -158,7 +158,7 @@ create table if not exists public.roles (
   users bigint not null default 0,
   updated_at timestamptz not null default now()
 );
-create trigger roles_set_updated_at before update on public.roles for each row execute function public.set_updated_at();
+create or replace trigger roles_set_updated_at before update on public.roles for each row execute function public.set_updated_at();
 
 -- ================================================================
 -- comments
@@ -176,7 +176,7 @@ create table if not exists public.comments (
   updated_at timestamptz not null default now()
 );
 create index if not exists comments_article_id_idx on public.comments(article_id);
-create trigger comments_set_updated_at before update on public.comments for each row execute function public.set_updated_at();
+create or replace trigger comments_set_updated_at before update on public.comments for each row execute function public.set_updated_at();
 
 -- ================================================================
 -- subscribers
@@ -190,7 +190,7 @@ create table if not exists public.subscribers (
   subscribed_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
-create trigger subscribers_set_updated_at before update on public.subscribers for each row execute function public.set_updated_at();
+create or replace trigger subscribers_set_updated_at before update on public.subscribers for each row execute function public.set_updated_at();
 
 -- ================================================================
 -- newsletters
@@ -207,7 +207,7 @@ create table if not exists public.newsletters (
   status text not null default 'draft' check (status in ('sent', 'scheduled', 'draft')),
   updated_at timestamptz not null default now()
 );
-create trigger newsletters_set_updated_at before update on public.newsletters for each row execute function public.set_updated_at();
+create or replace trigger newsletters_set_updated_at before update on public.newsletters for each row execute function public.set_updated_at();
 
 -- ================================================================
 -- advertisements
@@ -224,7 +224,7 @@ create table if not exists public.ads (
   status text not null default 'inactive' check (status in ('active', 'inactive')),
   updated_at timestamptz not null default now()
 );
-create trigger ads_set_updated_at before update on public.ads for each row execute function public.set_updated_at();
+create or replace trigger ads_set_updated_at before update on public.ads for each row execute function public.set_updated_at();
 
 -- ================================================================
 -- settings (key/value; keys 'general' and 'seo')
@@ -234,7 +234,7 @@ create table if not exists public.settings (
   value jsonb not null,
   updated_at timestamptz not null default now()
 );
-create trigger settings_set_updated_at before update on public.settings for each row execute function public.set_updated_at();
+create or replace trigger settings_set_updated_at before update on public.settings for each row execute function public.set_updated_at();
 
 -- ================================================================
 -- backups
@@ -264,7 +264,7 @@ create table if not exists public.media (
   used_in text not null default '',
   updated_at timestamptz not null default now()
 );
-create trigger media_set_updated_at before update on public.media for each row execute function public.set_updated_at();
+create or replace trigger media_set_updated_at before update on public.media for each row execute function public.set_updated_at();
 
 -- ================================================================
 -- meta (initialization marker)
@@ -308,51 +308,81 @@ drop policy if exists articles_admin_delete on public.articles;
 create policy articles_admin_delete on public.articles for delete using (public.is_admin());
 
 -- categories / tags / authors: public read, admin write
+drop policy if exists categories_public_read on public.categories;
 create policy categories_public_read on public.categories for select using (true);
+drop policy if exists categories_admin_write on public.categories;
 create policy categories_admin_write on public.categories for all using (public.is_admin()) with check (public.is_admin());
+drop policy if exists tags_public_read on public.tags;
 create policy tags_public_read on public.tags for select using (true);
+drop policy if exists tags_admin_write on public.tags;
 create policy tags_admin_write on public.tags for all using (public.is_admin()) with check (public.is_admin());
+drop policy if exists authors_public_read on public.authors;
 create policy authors_public_read on public.authors for select using (true);
+drop policy if exists authors_admin_write on public.authors;
 create policy authors_admin_write on public.authors for all using (public.is_admin()) with check (public.is_admin());
 
 -- profiles: admin manages; users may read/update their own profile
+drop policy if exists profiles_select on public.profiles;
 create policy profiles_select on public.profiles for select using (public.is_admin() or auth.uid() = id);
+drop policy if exists profiles_insert on public.profiles;
 create policy profiles_insert on public.profiles for insert with check (public.is_admin());
+drop policy if exists profiles_update on public.profiles;
 create policy profiles_update on public.profiles for update using (public.is_admin() or auth.uid() = id) with check (public.is_admin() or auth.uid() = id);
+drop policy if exists profiles_delete on public.profiles;
 create policy profiles_delete on public.profiles for delete using (public.is_admin());
 
 -- roles / newsletters / backups: admin only
+drop policy if exists roles_admin_all on public.roles;
 create policy roles_admin_all on public.roles for all using (public.is_admin()) with check (public.is_admin());
+drop policy if exists newsletters_admin_all on public.newsletters;
 create policy newsletters_admin_all on public.newsletters for all using (public.is_admin()) with check (public.is_admin());
+drop policy if exists backups_admin_all on public.backups;
 create policy backups_admin_all on public.backups for all using (public.is_admin()) with check (public.is_admin());
 
 -- comments: public read + post; admin moderates
+drop policy if exists comments_public_read on public.comments;
 create policy comments_public_read on public.comments for select using (true);
+drop policy if exists comments_public_insert on public.comments;
 create policy comments_public_insert on public.comments for insert with check (true);
+drop policy if exists comments_admin_update on public.comments;
 create policy comments_admin_update on public.comments for update using (public.is_admin()) with check (public.is_admin());
+drop policy if exists comments_admin_delete on public.comments;
 create policy comments_admin_delete on public.comments for delete using (public.is_admin());
 
 -- subscribers: public may subscribe (valid email); admin manages
+drop policy if exists subscribers_admin_read on public.subscribers;
 create policy subscribers_admin_read on public.subscribers for select using (public.is_admin());
+drop policy if exists subscribers_public_insert on public.subscribers;
 create policy subscribers_public_insert on public.subscribers for insert with check (email ~* '^[^@]+@[^@]+$');
+drop policy if exists subscribers_admin_update on public.subscribers;
 create policy subscribers_admin_update on public.subscribers for update using (public.is_admin()) with check (public.is_admin());
+drop policy if exists subscribers_admin_delete on public.subscribers;
 create policy subscribers_admin_delete on public.subscribers for delete using (public.is_admin());
 
 -- ads: admin only
+drop policy if exists ads_admin_all on public.ads;
 create policy ads_admin_all on public.ads for all using (public.is_admin()) with check (public.is_admin());
 
 -- settings: public read (site config), admin write
+drop policy if exists settings_public_read on public.settings;
 create policy settings_public_read on public.settings for select using (true);
+drop policy if exists settings_admin_write on public.settings;
 create policy settings_admin_write on public.settings for all using (public.is_admin()) with check (public.is_admin());
 
 -- media: public read (image URLs), admin manage
+drop policy if exists media_public_read on public.media;
 create policy media_public_read on public.media for select using (true);
+drop policy if exists media_admin_insert on public.media;
 create policy media_admin_insert on public.media for insert with check (public.is_admin());
+drop policy if exists media_admin_update on public.media;
 create policy media_admin_update on public.media for update using (public.is_admin()) with check (public.is_admin());
+drop policy if exists media_admin_delete on public.media;
 create policy media_admin_delete on public.media for delete using (public.is_admin());
 
 -- meta: public read, admin write
+drop policy if exists meta_public_read on public.meta;
 create policy meta_public_read on public.meta for select using (true);
+drop policy if exists meta_admin_write on public.meta;
 create policy meta_admin_write on public.meta for all using (public.is_admin()) with check (public.is_admin());
 
 

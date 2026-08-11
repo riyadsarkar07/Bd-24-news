@@ -52,21 +52,25 @@ export function UsersManager() {
   );
 
   const changeRole = async (row: AdminUserRow, role: UserRole) => {
+    const previous = row.role;
+    setData((d) => d.map((r) => (r.id === row.id ? { ...r, role } : r)));
     try {
       await updateUser(row.id, { role });
-      setData((d) => d.map((r) => (r.id === row.id ? { ...r, role } : r)));
       toast.success(`${row.name} is now ${role}`);
     } catch {
+      setData((d) => d.map((r) => (r.id === row.id ? { ...r, role: previous } : r)));
       toast.error("Failed to update role");
     }
   };
 
   const changeStatus = async (row: AdminUserRow, status: UserStatus) => {
+    const previous = row.status;
+    setData((d) => d.map((r) => (r.id === row.id ? { ...r, status } : r)));
     try {
       await updateUser(row.id, { status });
-      setData((d) => d.map((r) => (r.id === row.id ? { ...r, status } : r)));
       toast.success(status === "banned" ? `${row.email} banned` : `${row.email} ${status}`);
     } catch {
+      setData((d) => d.map((r) => (r.id === row.id ? { ...r, status: previous } : r)));
       toast.error("Failed to update status");
     }
   };

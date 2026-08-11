@@ -259,7 +259,7 @@ export function ArticlePage({ article: initialArticle }: { article: Article }) {
                   viewport={{ once: true, margin: "-40px" }}
                   transition={{ duration: 0.45, delay: i * 0.03 }}
                 >
-                  {lang === "bn" ? para : `[${i + 1}] ${article.excerpt} — ${article.title}.`}
+                  {para}
                 </motion.p>
               ))}
             </div>

@@ -170,26 +170,28 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
 
       <AnimatePresence>
         {mobileOpen && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50 bg-black/60 lg:hidden"
-              onClick={() => setMobileOpen(false)}
-            />
-            <motion.aside
-              initial={{ x: "-100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "-100%" }}
-              className="fixed inset-y-0 left-0 z-50 w-72 bg-background shadow-2xl lg:hidden"
-            >
-              <button onClick={() => setMobileOpen(false)} className="absolute right-3 top-4 rounded-full p-1.5 hover:bg-muted" aria-label="Close">
-                <X className="h-5 w-5" />
-              </button>
-              {SidebarContent}
-            </motion.aside>
-          </>
+          <motion.div
+            key="mobile-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black/60 lg:hidden"
+            onClick={() => setMobileOpen(false)}
+          />
+        )}
+        {mobileOpen && (
+          <motion.aside
+            key="mobile-sidebar"
+            initial={{ x: "-100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "-100%" }}
+            className="fixed inset-y-0 left-0 z-50 w-72 bg-background shadow-2xl lg:hidden"
+          >
+            <button onClick={() => setMobileOpen(false)} className="absolute right-3 top-4 rounded-full p-1.5 hover:bg-muted" aria-label="Close">
+              <X className="h-5 w-5" />
+            </button>
+            {SidebarContent}
+          </motion.aside>
         )}
       </AnimatePresence>
 

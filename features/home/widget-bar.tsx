@@ -20,8 +20,7 @@ import { toBanglaNumerals } from "@/lib/utils";
 import { useLanguage } from "@/providers/language-provider";
 import { cn } from "@/lib/utils";
 
-function getNextPrayer() {
-  const now = new Date();
+function getNextPrayer(now: Date) {
   const hm = now.getHours() * 60 + now.getMinutes();
   const parsed = prayerTimes.map((p) => {
     const parts = p.time.replace(/ AM| PM/, "").split(":").map(Number);
@@ -40,11 +39,11 @@ function getNextPrayer() {
 export function WidgetBar() {
   const { lang } = useLanguage();
   const now = useClock(1000);
-  const nextPrayer = getNextPrayer();
-  const diffMins = nextPrayer.diff;
+  const nextPrayer = now ? getNextPrayer(now) : undefined;
+  const diffMins = nextPrayer?.diff ?? 0;
   const hh = Math.floor(diffMins / 60);
   const mm = diffMins % 60;
-  const ss = 60 - now.getSeconds();
+  const ss = now ? 60 - now.getSeconds() : 0;
 
   const widgetClass =
     "group relative flex h-full flex-col justify-between overflow-hidden rounded-2xl border border-border/60 bg-card p-4 shadow-card transition-all duration-300 hover:-translate-y-1 hover:shadow-soft-lg";
@@ -82,14 +81,15 @@ export function WidgetBar() {
         </div>
         <div className="mt-3">
           <p className="font-bengali text-sm font-bold">
-            {lang === "bn" ? nextPrayer.nameBn : nextPrayer.name}
+            {nextPrayer ? (lang === "bn" ? nextPrayer.nameBn : nextPrayer.name) : lang === "bn" ? "নামাজ" : "Prayer"}
             <span className="ml-1 text-[10px] font-medium text-success">
-              {lang === "bn" ? `বাকি ${toBanglaNumerals(hh)}:${toBanglaNumerals(String(mm).padStart(2, "0"))}` : `${hh}:${String(mm).padStart(2, "0")} left`}
+              {nextPrayer ? (lang === "bn" ? `বাকি ${toBanglaNumerals(hh)}:${toBanglaNumerals(String(mm).padStart(2, "0"))}` : `${hh}:${String(mm).padStart(2, "0")} left`) : ""}
             </span>
           </p>
           <p className="font-mono text-2xl font-black text-brand">
-            {toBanglaNumerals(String(hh).padStart(2, "0"))}:{toBanglaNumerals(String(mm).padStart(2, "0"))}:
-            {toBanglaNumerals(String(ss).padStart(2, "0"))}
+            {now
+              ? `${toBanglaNumerals(String(hh).padStart(2, "0"))}:${toBanglaNumerals(String(mm).padStart(2, "0"))}:${toBanglaNumerals(String(ss).padStart(2, "0"))}`
+              : "--:--:--"}
           </p>
         </div>
       </div>

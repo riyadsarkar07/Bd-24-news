@@ -79,6 +79,7 @@ export function NewsEditor({ id }: { id?: string }) {
   const [seoTitle, setSeoTitle] = React.useState("");
   const [seoDescription, setSeoDescription] = React.useState("");
   const [coverImage, setCoverImage] = React.useState("");
+  const [author, setAuthor] = React.useState("Riyad");
   const [featured, setFeatured] = React.useState(false);
   const [breaking, setBreaking] = React.useState(false);
   const [trending, setTrending] = React.useState(false);
@@ -103,6 +104,7 @@ export function NewsEditor({ id }: { id?: string }) {
           setSeoTitle(a.seoTitle ?? "");
           setSeoDescription(a.seoDescription ?? "");
           setCoverImage(a.coverImage ?? "");
+          setAuthor(a.author || "Riyad");
           setFeatured(a.featured);
           setBreaking(a.breaking);
           setTrending(a.trending);
@@ -151,7 +153,7 @@ export function NewsEditor({ id }: { id?: string }) {
       location,
       seoTitle,
       seoDescription,
-      author: existing?.author ?? "Riyad",
+      author: author || existing?.author || "Riyad",
       authorNameBn: existing?.authorNameBn ?? "রিয়াদ",
       authorAvatar: existing?.authorAvatar ?? "",
       authorRole: existing?.authorRole ?? "Editor",
@@ -293,8 +295,14 @@ export function NewsEditor({ id }: { id?: string }) {
             <Label className="mb-2 block">Publish settings</Label>
             <div className="space-y-4">
               <div className="space-y-2">
+                <Label htmlFor="author">Author</Label>
+                <Input id="author" placeholder="Riyad" value={author} onChange={(e) => setAuthor(e.target.value)} />
+              </div>
+
+              <div className="space-y-2">
                 <Label>Category *</Label>
                 <Controller
+                  control={control}
                   render={({ field }) => (
                     <Select value={field.value} onValueChange={field.onChange}>
                       <SelectTrigger>

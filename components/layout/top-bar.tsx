@@ -17,9 +17,13 @@ export function TopBar() {
   const { setTheme, resolvedTheme } = useTheme();
 
   const dateStr =
-    lang === "bn" ? toBanglaNumerals(format(now, "eeee, d MMMM yyyy")) : format(now, "EEEE, do MMMM yyyy");
+    now == null
+      ? ""
+      : lang === "bn"
+        ? toBanglaNumerals(format(now, "eeee, d MMMM yyyy"))
+        : format(now, "EEEE, do MMMM yyyy");
   const timeStr =
-    lang === "bn" ? toBanglaNumerals(format(now, "h:mm:ss a")) : format(now, "h:mm:ss a");
+    now == null ? "" : lang === "bn" ? toBanglaNumerals(format(now, "h:mm:ss a")) : format(now, "h:mm:ss a");
 
   return (
     <div className="hidden border-b border-border/50 bg-navy-950 text-white lg:block">

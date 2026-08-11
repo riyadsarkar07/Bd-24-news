@@ -26,8 +26,8 @@ export function PrayerPage() {
     return h * 60 + m;
   };
 
-  const currentMin = now.getHours() * 60 + now.getMinutes();
-  const next = prayerTimes.find((p) => timeToMinutes(p.time) > currentMin);
+  const currentMin = now ? now.getHours() * 60 + now.getMinutes() : -1;
+  const next = now ? prayerTimes.find((p) => timeToMinutes(p.time) > currentMin) : undefined;
 
   return (
     <div className="container-page py-8">
@@ -44,7 +44,8 @@ export function PrayerPage() {
           <p className="font-bengali text-5xl font-black">{next?.nameBn}</p>
           <p className="font-mono text-4xl font-black text-emerald-400">{next?.time}</p>
           <p className="text-sm text-white/50">
-            {lang === "bn" ? "ঢাকা, বাংলাদেশ" : "Dhaka, Bangladesh"} · {toBanglaNumerals(now.getDate())}-{toBanglaNumerals(now.getMonth() + 1)}-{toBanglaNumerals(now.getFullYear())}
+            {lang === "bn" ? "ঢাকা, বাংলাদেশ" : "Dhaka, Bangladesh"} ·{" "}
+            {now ? `${toBanglaNumerals(now.getDate())}-${toBanglaNumerals(now.getMonth() + 1)}-${toBanglaNumerals(now.getFullYear())}` : ""}
           </p>
         </div>
       </div>

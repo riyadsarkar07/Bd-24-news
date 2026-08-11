@@ -166,9 +166,6 @@
     @apply space-y-5 text-lg leading-relaxed text-foreground/90;
   }
 
-  .prose-news p {
-    @apply first-letter:float-left first-letter:mr-3 first-letter:font-bengali first-letter:text-6xl first-letter:font-bold first-letter:leading-[0.85] first-letter:text-brand;
-  }
 }
 
 @layer utilities {

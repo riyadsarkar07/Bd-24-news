@@ -24,13 +24,13 @@ type ArticleRow = Record<string, unknown>;
 
 export function mapArticleRow(row: ArticleRow): Article {
   return {
-    id: (row.slug as string) ?? (row.id as string) ?? "",
+    id: (row.id as string) ?? (row.slug as string) ?? "",
     slug: (row.slug as string) ?? (row.id as string) ?? "",
     title: (row.title as string) ?? "",
     titleBn: (row.title_bn as string) ?? "",
     excerpt: (row.excerpt as string) ?? "",
     body: (row.body as string) ?? "",
-    category: (row.category as string) ?? "bangladesh",
+    category: String(row.category ?? "bangladesh").trim() || "bangladesh",
     categoryColor: (row.category_color as string) ?? "#E50914",
     tags: Array.isArray(row.tags) ? (row.tags as string[]) : [],
     author: (row.author as string) ?? "Riyad",
@@ -141,6 +141,24 @@ export function subscribeArticles(listener: (articles: Article[]) => void): () =
 }
 
 export async function getArticles(options: ArticleQueryOptions = {}): Promise<Article[]> {
+  const supabase = getSupabase();
+  if (supabase && options.category) {
+    try {
+      const { data } = await supabase
+        .from("articles")
+        .select("*")
+        .eq("status", "published")
+        .eq("category", options.category)
+        .order("published_at", { ascending: false });
+      if (data) {
+        const rest = { ...options };
+        delete rest.category;
+        return filterAndSort((data as ArticleRow[]).map((r) => mapArticleRow(r)), rest);
+      }
+    } catch (err) {
+      console.error("Supabase category articles read failed:", err);
+    }
+  }
   const all = await getPublishedArticles();
   return filterAndSort(all, options);
 }

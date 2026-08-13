@@ -14,7 +14,6 @@ import {
 } from "@/components/ui/dialog";
 import toast from "react-hot-toast";
 import {
-  listNewsletters,
   subscribeNewsletters,
   saveNewsletter,
   listSubscribers,
@@ -40,7 +39,6 @@ export function NewsletterManager() {
 
   React.useEffect(() => {
     let mounted = true;
-    listNewsletters().then((rows) => mounted && setData(rows));
     const unsub = subscribeNewsletters((rows) => mounted && setData(rows));
     listSubscribers().then((rows) => mounted && setSubscribersCount(rows.length));
     return () => {

@@ -32,12 +32,18 @@ export async function getAnalytics(): Promise<AnalyticsData> {
   const supabase = getSupabase();
   if (!supabase) return EMPTY;
   try {
-    const { data: articles } = await supabase.from("articles").select("status,views,published_at,category,category_color,slug,title_bn,title");
-    const { count: userCount } = await supabase.from("profiles").select("id", { count: "exact", head: true });
-    const { count: subscriberCount } = await supabase.from("subscribers").select("id", { count: "exact", head: true });
-    const { count: commentCount } = await supabase.from("comments").select("id", { count: "exact", head: true });
+    const [articlesRes, userRes, subscriberRes, commentRes] = await Promise.all([
+      supabase.from("articles").select("status,views,published_at,category,category_color,slug,title_bn,title"),
+      supabase.from("profiles").select("id", { count: "exact", head: true }),
+      supabase.from("subscribers").select("id", { count: "exact", head: true }),
+      supabase.from("comments").select("id", { count: "exact", head: true }),
+    ]);
+    const articles = articlesRes.data ?? [];
+    const userCount = userRes.count;
+    const subscriberCount = subscriberRes.count;
+    const commentCount = commentRes.count;
 
-    const all = (articles ?? []) as ArticleRow[];
+    const all = articles as ArticleRow[];
     const published = all.filter((d) => (d.status ?? "published") === "published");
     const drafts = all.filter((d) => d.status === "draft");
     const totalViews = published.reduce((sum, d) => sum + Number(d.views ?? 0), 0);

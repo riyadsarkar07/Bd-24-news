@@ -31,9 +31,14 @@ export function AdminDashboard() {
   const [engagement, setEngagement] = React.useState<{ comments: number; subscribers: number; drafts: number } | null>(null);
 
   React.useEffect(() => {
-    Promise.all([adminService.getStats(), adminService.getChart(), getAnalytics()]).then(([s, c, a]) => {
-      setStats(s);
+    Promise.all([adminService.getChart(), getAnalytics()]).then(([c, a]) => {
       setChart(c);
+      setStats([
+        { key: "views", value: a.totalViews, delta: 0 },
+        { key: "articles", value: a.totalArticles, delta: 0 },
+        { key: "users", value: a.totalUsers, delta: 0 },
+        { key: "subscribers", value: a.totalSubscribers, delta: 0 },
+      ]);
       setEngagement({ comments: a.totalComments, subscribers: a.totalSubscribers, drafts: a.draftArticles });
     });
   }, []);

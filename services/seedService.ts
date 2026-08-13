@@ -141,7 +141,16 @@ async function seedTags(): Promise<void> {
   if (error) throw error;
 }
 
-export async function ensureInitialData(): Promise<{ initialized: boolean; seeded: string[] }> {
+let initCache: Promise<{ initialized: boolean; seeded: string[] }> | null = null;
+
+export function ensureInitialData(): Promise<{ initialized: boolean; seeded: string[] }> {
+  if (!initCache) {
+    initCache = runEnsureInitialData();
+  }
+  return initCache;
+}
+
+async function runEnsureInitialData(): Promise<{ initialized: boolean; seeded: string[] }> {
   const supabase = getSupabase();
   if (!supabase) return { initialized: false, seeded: [] };
   const seeded: string[] = [];
@@ -154,16 +163,15 @@ export async function ensureInitialData(): Promise<{ initialized: boolean; seede
       ["articles", seedArticles],
       ["tags", seedTags],
     ];
-    for (const [table, fn] of checks) {
-      try {
-        if (await isEmpty(table)) {
-          await fn();
-          seeded.push(table);
-        }
-      } catch (err) {
-        console.error(`Failed to seed ${table}:`, err);
-      }
-    }
+    const emptyFlags = await Promise.all(checks.map(([table]) => isEmpty(table)));
+    await Promise.all(
+      checks.map(([table, fn], i) => {
+        if (!emptyFlags[i]) return Promise.resolve();
+        return fn()
+          .then(() => seeded.push(table))
+          .catch((err) => console.error(`Failed to seed ${table}:`, err));
+      }),
+    );
     try {
       const { data: meta } = await supabase.from("meta").select("key").eq("key", "init").limit(1).maybeSingle();
       if (!meta) {

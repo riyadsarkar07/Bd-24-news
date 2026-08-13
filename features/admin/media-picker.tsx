@@ -10,7 +10,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { listMedia, subscribeMedia, type MediaItem } from "@/services/mediaService";
+import { subscribeMedia, type MediaItem } from "@/services/mediaService";
 import { cn } from "@/lib/utils";
 
 interface MediaPickerProps {
@@ -27,14 +27,7 @@ export function MediaPicker({ open, onOpenChange, onSelect }: MediaPickerProps) 
   React.useEffect(() => {
     if (!open) return;
     setLoading(true);
-    let unsub: (() => void) | undefined;
-    listMedia()
-      .then((data) => {
-        setItems(data);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-    unsub = subscribeMedia((data) => {
+    const unsub = subscribeMedia((data) => {
       setItems(data);
       setLoading(false);
     });

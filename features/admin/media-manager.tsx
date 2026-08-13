@@ -10,7 +10,6 @@ import { Progress } from "@/components/ui/progress";
 import toast from "react-hot-toast";
 import {
   uploadMediaFile,
-  listMedia,
   deleteMediaItem,
   subscribeMedia,
   type MediaItem,
@@ -30,12 +29,6 @@ export function MediaManager() {
   const inputRef = React.useRef<HTMLInputElement>(null);
 
   React.useEffect(() => {
-    listMedia()
-      .then((items) => {
-        setData(items);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
     return subscribeMedia((items) => {
       setData(items);
       setLoading(false);

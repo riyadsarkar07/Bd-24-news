@@ -19,19 +19,22 @@ export function CoverImageUpload({ value, onChange, className }: CoverImageUploa
   const [dragging, setDragging] = React.useState(false);
   const [progress, setProgress] = React.useState<number | null>(null);
   const [uploading, setUploading] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
   const [pickerOpen, setPickerOpen] = React.useState(false);
 
   const handleFile = async (file: File) => {
     if (!file.type.startsWith("image/")) {
+      setError("Please choose an image file.");
       return;
     }
     setUploading(true);
     setProgress(0);
+    setError(null);
     try {
       const item = await uploadMediaFile(file, (p) => setProgress(p));
       onChange(item.src);
     } catch (err) {
-      console.error("Cover upload failed:", err);
+      setError(err instanceof Error ? err.message : "Upload failed. Please try again.");
     } finally {
       setUploading(false);
       setProgress(null);
@@ -128,6 +131,12 @@ export function CoverImageUpload({ value, onChange, className }: CoverImageUploa
         <p className="flex items-center gap-1 text-[11px] text-muted-foreground">
           <RefreshCw className="h-3 w-3" />
           Images are stored in Supabase Storage and saved to the media library.
+        </p>
+      )}
+
+      {error && (
+        <p className="rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-xs font-semibold text-danger">
+          {error}
         </p>
       )}
     </div>

@@ -6,7 +6,6 @@ import { PageHeader, Toolbar, AdminTable, StatusBadge, ConfirmDialog, type Admin
 import { Button } from "@/components/ui/button";
 import toast from "react-hot-toast";
 import {
-  listSubscribers,
   subscribeSubscribers,
   deleteSubscriber,
   type AdminSubscriberRow,
@@ -19,7 +18,6 @@ export function SubscribersManager() {
 
   React.useEffect(() => {
     let mounted = true;
-    listSubscribers().then((rows) => mounted && setData(rows));
     const unsub = subscribeSubscribers((rows) => mounted && setData(rows));
     return () => {
       mounted = false;

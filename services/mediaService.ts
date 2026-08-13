@@ -53,6 +53,7 @@ function uploadWithProgress(
     xhr.setRequestHeader("apikey", key);
     xhr.setRequestHeader("Authorization", `Bearer ${token}`);
     xhr.setRequestHeader("Content-Type", file.type || "application/octet-stream");
+    xhr.timeout = 120000;
     xhr.upload.onprogress = (e) => {
       if (e.lengthComputable && onProgress) onProgress(Math.round((e.loaded / e.total) * 100));
     };
@@ -61,7 +62,25 @@ function uploadWithProgress(
       else reject(new Error(`Upload failed: ${xhr.status} ${xhr.responseText}`));
     };
     xhr.onerror = () => reject(new Error("Upload failed: network error"));
+    xhr.ontimeout = () => reject(new Error("Upload timed out. Please try again."));
+    xhr.onabort = () => reject(new Error("Upload was cancelled."));
     xhr.send(file);
+  });
+}
+
+function withTimeout<T>(promise: Promise<T>, ms: number, message: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = window.setTimeout(() => reject(new Error(message)), ms);
+    promise.then(
+      (v) => {
+        window.clearTimeout(timer);
+        resolve(v);
+      },
+      (e) => {
+        window.clearTimeout(timer);
+        reject(e);
+      },
+    );
   });
 }
 
@@ -79,8 +98,11 @@ export async function uploadMediaFile(file: File, onProgress?: (percent: number)
   if (token) {
     await uploadWithProgress(endpointUrl, endpointKey, path, file, token, onProgress);
   } else {
-    const { error } = await supabase.storage.from("media").upload(path, file, { upsert: true, contentType: file.type });
-    if (error) throw error;
+    await withTimeout(
+      supabase.storage.from("media").upload(path, file, { upsert: true, contentType: file.type }),
+      120000,
+      "Upload timed out. Please try again.",
+    );
   }
 
   const { data: publicData } = supabase.storage.from("media").getPublicUrl(path);

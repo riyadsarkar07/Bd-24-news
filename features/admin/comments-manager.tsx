@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import toast from "react-hot-toast";
 import {
-  listComments,
   subscribeCommentsAdmin,
   updateComment,
   deleteComment,
@@ -22,7 +21,6 @@ export function CommentsManager() {
 
   React.useEffect(() => {
     let mounted = true;
-    listComments().then((rows) => mounted && setData(rows));
     const unsub = subscribeCommentsAdmin((rows) => mounted && setData(rows));
     return () => {
       mounted = false;

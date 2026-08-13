@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/dialog";
 import toast from "react-hot-toast";
 import {
-  listAuthors,
   subscribeAuthors,
   saveAuthor,
   deleteAuthor,
@@ -31,7 +30,6 @@ export function AuthorsManager() {
 
   React.useEffect(() => {
     let mounted = true;
-    listAuthors().then((rows) => mounted && setData(rows));
     const unsub = subscribeAuthors((rows) => mounted && setData(rows));
     return () => {
       mounted = false;

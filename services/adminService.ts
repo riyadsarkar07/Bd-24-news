@@ -116,16 +116,11 @@ export async function getArticleById(id: string): Promise<Article | undefined> {
   const supabase = getSupabase();
   if (!supabase) return undefined;
   try {
-    const { data: bySlug } = await supabase.from("articles").select("*").eq("slug", id).limit(1).maybeSingle();
-    if (bySlug) {
-      const article = mapArticleRow(bySlug as Record<string, unknown>);
-      article.status = (bySlug.status as ArticleStatus) ?? "published";
-      return article;
-    }
-    const { data: byId } = await supabase.from("articles").select("*").eq("id", id).limit(1).maybeSingle();
-    if (byId) {
-      const article = mapArticleRow(byId as Record<string, unknown>);
-      article.status = (byId.status as ArticleStatus) ?? "published";
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+    const { data } = await supabase.from("articles").select("*").eq(isUuid ? "id" : "slug", id).limit(1).maybeSingle();
+    if (data) {
+      const article = mapArticleRow(data as Record<string, unknown>);
+      article.status = (data.status as ArticleStatus) ?? "published";
       return article;
     }
     return undefined;
@@ -207,17 +202,19 @@ export const adminService = {
     const supabase = getSupabase();
     if (!supabase) return [];
     try {
-      const { data: articles } = await supabase.from("articles").select("status,views");
-      const { count: users } = await supabase.from("profiles").select("id", { count: "exact", head: true });
-      const { count: subscribers } = await supabase.from("subscribers").select("id", { count: "exact", head: true });
-      const all = articles ?? [];
+      const [articlesRes, usersRes, subscribersRes] = await Promise.all([
+        supabase.from("articles").select("status,views"),
+        supabase.from("profiles").select("id", { count: "exact", head: true }),
+        supabase.from("subscribers").select("id", { count: "exact", head: true }),
+      ]);
+      const all = articlesRes.data ?? [];
       const published = all.filter((d) => (d.status ?? "published") === "published");
       const views = published.reduce((sum, d) => sum + Number(d.views ?? 0), 0);
       return [
         { key: "views", value: views, delta: 0 },
         { key: "articles", value: published.length, delta: 0 },
-        { key: "users", value: users ?? 0, delta: 0 },
-        { key: "subscribers", value: subscribers ?? 0, delta: 0 },
+        { key: "users", value: usersRes.count ?? 0, delta: 0 },
+        { key: "subscribers", value: subscribersRes.count ?? 0, delta: 0 },
       ];
     } catch (err) {
       console.error("Failed to load dashboard stats:", err);

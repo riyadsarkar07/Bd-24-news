@@ -15,7 +15,6 @@ import {
 } from "@/components/ui/dialog";
 import toast from "react-hot-toast";
 import {
-  listUsers,
   subscribeUsers,
   updateUser,
   saveUser,
@@ -39,7 +38,6 @@ export function UsersManager() {
 
   React.useEffect(() => {
     let mounted = true;
-    listUsers().then((rows) => mounted && setData(rows));
     const unsub = subscribeUsers((rows) => mounted && setData(rows));
     return () => {
       mounted = false;

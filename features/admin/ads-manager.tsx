@@ -16,7 +16,6 @@ import {
 import { Progress } from "@/components/ui/progress";
 import toast from "react-hot-toast";
 import {
-  listAds,
   subscribeAds,
   saveAd,
   deleteAd,
@@ -40,7 +39,6 @@ export function AdsManager() {
 
   React.useEffect(() => {
     let mounted = true;
-    listAds().then((rows) => mounted && setData(rows));
     const unsub = subscribeAds((rows) => mounted && setData(rows));
     return () => {
       mounted = false;

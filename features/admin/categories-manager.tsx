@@ -15,7 +15,6 @@ import {
 } from "@/components/ui/select";
 import toast from "react-hot-toast";
 import {
-  listCategories,
   subscribeCategories,
   saveCategory,
   deleteCategory,
@@ -34,7 +33,6 @@ export function CategoriesManager() {
 
   React.useEffect(() => {
     let mounted = true;
-    listCategories().then((rows) => mounted && setData(rows));
     const unsub = subscribeCategories((rows) => mounted && setData(rows));
     return () => {
       mounted = false;

@@ -14,7 +14,6 @@ import {
 import { cn } from "@/lib/utils";
 import toast from "react-hot-toast";
 import {
-  listRoles,
   subscribeRoles,
   saveRole,
   deleteRole,
@@ -38,7 +37,6 @@ export function RolesManager() {
 
   React.useEffect(() => {
     let mounted = true;
-    listRoles().then((rows) => mounted && setData(rows));
     const unsub = subscribeRoles((rows) => mounted && setData(rows));
     return () => {
       mounted = false;

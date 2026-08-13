@@ -4,6 +4,7 @@ import * as React from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { onAuthStateChange, isAdminUid } from "@/services/authService";
+import { getSupabase } from "@/lib/supabase/client";
 import { AdminLayout } from "@/features/admin/admin-layout";
 
 function FullScreenLoader() {
@@ -28,9 +29,30 @@ export function AdminRouteHandler({ children }: { children: React.ReactNode }) {
       setState("authed");
       return;
     }
-    return onAuthStateChange((user) => {
-      setState(user && isAdminUid(user.id) ? "authed" : "unauth");
+    let active = true;
+    const supabase = getSupabase();
+    if (supabase) {
+      supabase.auth
+        .getSession()
+        .then(({ data }) => {
+          if (active) {
+            const user = data.session?.user ?? null;
+            setState(user && isAdminUid(user.id) ? "authed" : "unauth");
+          }
+        })
+        .catch(() => {
+          if (active) setState("unauth");
+        });
+    } else {
+      setState("unauth");
+    }
+    const unsub = onAuthStateChange((user) => {
+      if (active) setState(user && isAdminUid(user.id) ? "authed" : "unauth");
     });
+    return () => {
+      active = false;
+      unsub();
+    };
   }, [isLogin]);
 
   React.useEffect(() => {

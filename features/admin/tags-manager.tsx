@@ -10,7 +10,6 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import toast from "react-hot-toast";
 import {
-  listTags,
   subscribeTags,
   saveTag,
   deleteTag,
@@ -28,7 +27,6 @@ export function TagsManager() {
 
   React.useEffect(() => {
     let mounted = true;
-    listTags().then((rows) => mounted && setData(rows));
     const unsub = subscribeTags((rows) => mounted && setData(rows));
     return () => {
       mounted = false;

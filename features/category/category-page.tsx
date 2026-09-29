@@ -37,7 +37,7 @@ export function CategoryPage({ slug, initialData }: { slug: string; initialData?
     if (sortParam === "popular") setSort("popular");
   }, [sortParam]);
 
-  const { data: articles, isLoading } = useArticles({ category: slug, sort, initialData });
+  const { data: articles, isLoading, isError } = useArticles({ category: slug, sort, initialData });
   const { data: mostRead } = useMostRead(6);
   const { data: trending } = useTrending(5);
 
@@ -83,7 +83,7 @@ export function CategoryPage({ slug, initialData }: { slug: string; initialData?
             </div>
           </div>
 
-          {isLoading ? (
+          {isLoading && !pageArticles.length && !isError ? (
             <div className={view === "grid" ? "grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3" : "space-y-4"}>
               {[0, 1, 2, 3, 4, 5].map((i) => (
                 <Skeleton key={i} className={cn(view === "grid" ? "h-72 w-full" : "h-28 w-full")} />

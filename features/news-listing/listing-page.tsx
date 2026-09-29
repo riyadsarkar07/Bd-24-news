@@ -45,7 +45,7 @@ export function NewsListing({
 
   const active = filters.find((f) => f.value === activeFilter);
   const queryOpts = active?.opts ?? {};
-  const { data: articles, isLoading } = useArticles({ ...queryOpts, initialData });
+  const { data: articles, isLoading, isError } = useArticles({ ...queryOpts, initialData });
   const { data: mostRead } = useMostRead(6);
   const { data: trending } = useTrending(5);
 
@@ -78,7 +78,7 @@ export function NewsListing({
             </div>
           )}
 
-          {isLoading ? (
+          {isLoading && !list.length && !isError ? (
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
               {[0, 1, 2, 3, 4, 5].map((i) => (
                 <Skeleton key={i} className="h-72 w-full" />

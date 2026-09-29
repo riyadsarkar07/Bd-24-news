@@ -24,7 +24,8 @@ export function HeroSlider({ articles }: { articles: Article[] }) {
   const [activeIndex, setActiveIndex] = React.useState(0);
   const swiperRef = React.useRef<SwiperType | null>(null);
   const { data } = useArticles({ featured: true, limit: 9, initialData: articles });
-  const main = (data ?? articles).slice(0, 5);
+  const source = data && data.length > 0 ? data : articles;
+  const main = source.slice(0, 5);
 
   return (
     <section className="container-page grid gap-6 py-6 lg:grid-cols-3" aria-label="Top stories">
@@ -133,7 +134,7 @@ export function HeroSlider({ articles }: { articles: Article[] }) {
       </div>
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-1">
-        {articles.slice(5, 9).map((a, i) => (
+        {source.slice(5, 9).map((a, i) => (
           <Link
             key={a.id}
             href={`/article/${a.slug}`}

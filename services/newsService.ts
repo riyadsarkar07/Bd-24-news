@@ -30,7 +30,7 @@ export function mapArticleRow(row: ArticleRow): Article {
     titleBn: (row.title_bn as string) ?? "",
     excerpt: (row.excerpt as string) ?? "",
     body: (row.body as string) ?? "",
-    category: String(row.category ?? "bangladesh").trim() || "bangladesh",
+    category: String(row.category ?? "bangladesh").trim().toLowerCase() || "bangladesh",
     categoryColor: (row.category_color as string) ?? "#E50914",
     tags: Array.isArray(row.tags) ? (row.tags as string[]) : [],
     author: (row.author as string) ?? "Riyad",
@@ -106,19 +106,69 @@ export function filterAndSort(articles: Article[], options: ArticleQueryOptions 
   return result;
 }
 
-export async function getPublishedArticles(): Promise<Article[]> {
-  const supabase = getSupabase();
-  if (!supabase) return [];
-  try {
-    const { data } = await supabase.from("articles").select("*").eq("status", "published");
-    return (data ?? []).map((r) => mapArticleRow(r as ArticleRow));
-  } catch (err) {
-    console.error("Supabase articles read failed:", err);
-    return [];
-  }
+const LIST_COLUMNS =
+  "id,slug,title,title_bn,excerpt,category,category_color,tags,author,author_name_bn,author_slug,author_avatar,author_role,cover_image,images,published_at,updated_at,views,likes,comments_count,reading_minutes,featured,breaking,trending,editor_pick,is_video,is_gallery,video_url,location,seo_title,seo_description,status";
+
+const FETCH_TIMEOUT_MS = 8000;
+
+function withTimeout<T>(promise: PromiseLike<T>, ms = FETCH_TIMEOUT_MS): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error("Supabase query timed out")), ms);
+    Promise.resolve(promise).then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (err) => {
+        clearTimeout(timer);
+        reject(err);
+      },
+    );
+  });
 }
 
-const POLL_MS = 15000;
+function mapRows(data: unknown): Article[] {
+  if (!Array.isArray(data)) return [];
+  return data.map((r) => mapArticleRow(r as ArticleRow));
+}
+
+let publishedCache: { at: number; data: Article[] } | null = null;
+const PUBLISHED_CACHE_MS = 30_000;
+let publishedInFlight: Promise<Article[]> | null = null;
+
+export async function getPublishedArticles(): Promise<Article[]> {
+  const now = Date.now();
+  if (publishedCache && now - publishedCache.at < PUBLISHED_CACHE_MS) {
+    return publishedCache.data;
+  }
+  if (publishedInFlight) return publishedInFlight;
+
+  publishedInFlight = (async () => {
+    const supabase = getSupabase();
+    if (!supabase) return publishedCache?.data ?? [];
+    try {
+      const { data, error } = await withTimeout(
+        supabase.from("articles").select(LIST_COLUMNS).eq("status", "published").order("published_at", { ascending: false }),
+      );
+      if (error) {
+        console.error("Supabase articles read failed:", error.message);
+        return publishedCache?.data ?? [];
+      }
+      const articles = mapRows(data);
+      publishedCache = { at: Date.now(), data: articles };
+      return articles;
+    } catch (err) {
+      console.error("Supabase articles read failed:", err);
+      return publishedCache?.data ?? [];
+    } finally {
+      publishedInFlight = null;
+    }
+  })();
+
+  return publishedInFlight;
+}
+
+const POLL_MS = 60000;
 
 export function subscribeArticles(listener: (articles: Article[]) => void): () => void {
   if (typeof window === "undefined") return () => {};
@@ -127,7 +177,7 @@ export function subscribeArticles(listener: (articles: Article[]) => void): () =
     if (stopped) return;
     try {
       const articles = await getPublishedArticles();
-      if (!stopped) listener(articles);
+      if (!stopped && articles.length > 0) listener(articles);
     } catch (err) {
       console.error("Supabase articles poll error:", err);
     }
@@ -140,30 +190,81 @@ export function subscribeArticles(listener: (articles: Article[]) => void): () =
   };
 }
 
-export async function getArticles(options: ArticleQueryOptions = {}): Promise<Article[]> {
+async function queryArticles(options: ArticleQueryOptions = {}): Promise<Article[] | null> {
   const supabase = getSupabase();
-  if (supabase && options.category) {
-    try {
-      const { data } = await supabase
-        .from("articles")
-        .select("*")
-        .eq("status", "published")
-        .eq("category", options.category)
-        .order("published_at", { ascending: false });
-      if (data) {
-        const rest = { ...options };
-        delete rest.category;
-        return filterAndSort((data as ArticleRow[]).map((r) => mapArticleRow(r)), rest);
-      }
-    } catch (err) {
-      console.error("Supabase category articles read failed:", err);
+  if (!supabase) return null;
+  try {
+    let q = supabase.from("articles").select(LIST_COLUMNS).eq("status", "published");
+    if (options.category) q = q.eq("category", options.category);
+    if (options.featured !== undefined) q = q.eq("featured", options.featured);
+    if (options.breaking !== undefined) q = q.eq("breaking", options.breaking);
+    if (options.trending !== undefined) q = q.eq("trending", options.trending);
+    if (options.editorPick !== undefined) q = q.eq("editor_pick", options.editorPick);
+    if (options.tag) q = q.contains("tags", [options.tag]);
+    if (options.search) {
+      const term = options.search.replace(/[%_,]/g, " ").trim();
+      if (term) q = q.or(`title.ilike.%${term}%,title_bn.ilike.%${term}%,excerpt.ilike.%${term}%`);
     }
+    if (options.sort === "popular") q = q.order("views", { ascending: false });
+    else if (options.sort === "oldest") q = q.order("published_at", { ascending: true });
+    else q = q.order("published_at", { ascending: false });
+    if (options.limit) {
+      q = q.limit(Math.min(Math.max(options.limit, 1), 100));
+    }
+    const { data, error } = await withTimeout(q);
+    if (error) {
+      console.error("Supabase articles query failed:", error.message);
+      return null;
+    }
+    return mapRows(data);
+  } catch (err) {
+    console.error("Supabase articles query failed:", err);
+    return null;
   }
+}
+
+export async function getArticles(options: ArticleQueryOptions = {}): Promise<Article[]> {
+  const queried = await queryArticles(options);
+  if (queried) return queried;
   const all = await getPublishedArticles();
   return filterAndSort(all, options);
 }
 
+export async function getHomepageData() {
+  const all = await getPublishedArticles();
+  const featured = filterAndSort(all, { featured: true, limit: 9 });
+  const latest = filterAndSort(all, { sort: "latest", limit: 8 });
+  return {
+    heroArticles: featured.length > 0 ? featured : filterAndSort(all, { sort: "latest", limit: 9 }),
+    breakingArticles: filterAndSort(all, { breaking: true, limit: 5 }),
+    latest,
+    editorPicks: filterAndSort(all, { editorPick: true, limit: 4 }),
+    tech: filterAndSort(all, { category: "technology", limit: 6 }),
+    sports: filterAndSort(all, { category: "sports", limit: 6 }),
+    entertainment: filterAndSort(all, { category: "entertainment", limit: 6 }),
+    politics: filterAndSort(all, { category: "politics", limit: 6 }),
+    economy: filterAndSort(all, { category: "economy", limit: 6 }),
+    health: filterAndSort(all, { category: "health", limit: 6 }),
+    international: filterAndSort(all, { category: "international", limit: 6 }),
+    education: filterAndSort(all, { category: "education", limit: 6 }),
+    opinion: filterAndSort(all, { category: "opinion", limit: 6 }),
+    videos: filterAndSort(all, { category: "entertainment", limit: 4 }),
+    gallery: filterAndSort(all, { category: "travel", limit: 5 }),
+  };
+}
+
 export async function getArticleBySlug(slug: string): Promise<Article | undefined> {
+  const supabase = getSupabase();
+  if (supabase) {
+    try {
+      const { data, error } = await withTimeout(
+        supabase.from("articles").select("*").eq("status", "published").eq("slug", slug).limit(1).maybeSingle(),
+      );
+      if (!error && data) return mapArticleRow(data as ArticleRow);
+    } catch (err) {
+      console.error("Supabase article by slug read failed:", err);
+    }
+  }
   const all = await getPublishedArticles();
   return all.find((a) => a.slug === slug);
 }

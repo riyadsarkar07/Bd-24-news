@@ -13,12 +13,13 @@ import { cn } from "@/lib/utils";
 
 export function CategorySection({ slug, priority = false, initialData }: { slug: string; priority?: boolean; initialData?: Article[] }) {
   const { lang } = useLanguage();
-  const { data: articles, isLoading } = useArticles({ category: slug, limit: 6, initialData });
+  const { data, isLoading, isError } = useArticles({ category: slug, limit: 6, initialData });
+  const articles = data ?? [];
   const cat = getCategory(slug);
   const Icon = icons[cat?.icon as keyof typeof icons] ?? icons.newspaper;
   const link = `/category/${slug}`;
 
-  if (isLoading) {
+  if (isLoading && articles.length === 0 && !isError) {
     return (
       <div>
         <Skeleton className="h-10 w-56" />

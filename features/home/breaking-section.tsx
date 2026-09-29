@@ -10,14 +10,15 @@ import { Zap } from "lucide-react";
 import type { Article } from "@/types";
 
 export function BreakingSpotlight({ initialData }: { initialData?: Article[] }) {
-  const { data: breaking, isLoading } = useArticles({ breaking: true, limit: 5, initialData });
+  const { data, isLoading, isError } = useArticles({ breaking: true, limit: 5, initialData });
   const { lang } = useLanguage();
+  const breaking = data ?? [];
 
-  if (isLoading) {
+  if (isLoading && breaking.length === 0 && !isError) {
     return <Skeleton className="h-72 w-full rounded-3xl" />;
   }
 
-  if (!breaking || breaking.length === 0) return null;
+  if (breaking.length === 0) return null;
 
   const lead = breaking[0]!;
   const rest = breaking.slice(1, 5);

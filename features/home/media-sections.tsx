@@ -10,8 +10,10 @@ import { useLanguage } from "@/providers/language-provider";
 import { Images, PlayCircle } from "lucide-react";
 
 export function VideoSection({ initialData }: { initialData?: Article[] }) {
-  const { data: videos, isLoading } = useArticles({ category: "entertainment", limit: 4, initialData });
+  const { data: videoData, isLoading, isError } = useArticles({ category: "entertainment", limit: 4, initialData });
   const { lang } = useLanguage();
+  const videos = videoData ?? [];
+  const showSkeleton = isLoading && videos.length === 0 && !isError;
 
   return (
     <section className="relative overflow-hidden bg-gradient-to-b from-transparent via-navy-50/60 to-transparent py-10 dark:via-navy-950/40">
@@ -24,7 +26,7 @@ export function VideoSection({ initialData }: { initialData?: Article[] }) {
           color="#DC2626"
         />
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {isLoading
+          {showSkeleton
             ? [0, 1, 2, 3].map((i) => <Skeleton key={i} className="aspect-video w-full rounded-2xl" />)
             : videos?.map((a) => <ArticleCard key={a.id} article={a} variant="video" />)}
         </div>
@@ -34,8 +36,10 @@ export function VideoSection({ initialData }: { initialData?: Article[] }) {
 }
 
 export function GallerySection({ initialData }: { initialData?: Article[] }) {
-  const { data: galleries, isLoading } = useArticles({ category: "travel", limit: 5, initialData });
+  const { data: galleryData, isLoading, isError } = useArticles({ category: "travel", limit: 5, initialData });
   const { lang } = useLanguage();
+  const galleries = galleryData ?? [];
+  const showSkeleton = isLoading && galleries.length === 0 && !isError;
 
   return (
     <section className="container-page py-10">
@@ -47,7 +51,7 @@ export function GallerySection({ initialData }: { initialData?: Article[] }) {
         color="#2563EB"
       />
       <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
-        {isLoading
+        {showSkeleton
           ? [0, 1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-44 w-full rounded-2xl" />)
           : galleries?.map((a, i) => (
               <Link

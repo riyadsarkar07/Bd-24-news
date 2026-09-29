@@ -13,16 +13,18 @@ import { useLanguage } from "@/providers/language-provider";
 import { timeAgo, toBanglaNumerals } from "@/lib/utils";
 
 export function LatestSection({ initialData }: { initialData?: { latest?: Article[]; editorPicks?: Article[] } }) {
-  const { data: latest, isLoading } = useArticles({ sort: "latest", limit: 8, initialData: initialData?.latest });
+  const { data, isLoading, isError } = useArticles({ sort: "latest", limit: 8, initialData: initialData?.latest });
   const { data: editorPicks } = useEditorPicks(4, initialData?.editorPicks);
   const { lang } = useLanguage();
+  const latest = data ?? [];
+  const showSkeleton = isLoading && latest.length === 0 && !isError;
 
   return (
     <section className="container-page grid gap-8 py-8 lg:grid-cols-3">
       <div className="lg:col-span-2">
         <SectionHeading title="Latest News" titleBn="সর্বশেষ খবর" icon={<Zap className="h-4 w-4" />} link="/latest" />
         <div className="grid gap-5 sm:grid-cols-2">
-          {isLoading
+          {showSkeleton
             ? [0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-64 w-full" />)
             : latest?.map((a, i) => (
                 <motion.div

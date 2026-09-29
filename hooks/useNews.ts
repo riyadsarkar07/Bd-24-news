@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useMutation, type UseQueryResult } from "@tanstack/react-query";
 import * as React from "react";
 import {
   getArticles,
@@ -37,7 +37,9 @@ function useRealtimeArticles(queryKey: readonly unknown[], options: ArticleQuery
   React.useEffect(() => {
     if (typeof window === "undefined") return;
     return subscribeArticles((all) => {
-      queryClient.setQueryData(queryKey, filterAndSort(all, options));
+      const next = filterAndSort(all, options);
+      if (next.length === 0) return;
+      queryClient.setQueryData(queryKey, next);
     });
   }, [queryClient, JSON.stringify(queryKey), JSON.stringify(options)]);
 }
@@ -73,16 +75,21 @@ function useRealtimeRelated(queryKey: readonly unknown[], slug: string) {
   }, [queryClient, JSON.stringify(queryKey), slug]);
 }
 
-export function useArticles(options?: ArticleQueryOptions & { initialData?: Article[] }) {
+export function useArticles(options?: ArticleQueryOptions & { initialData?: Article[] }): UseQueryResult<Article[], Error> {
   const { initialData, ...queryOptions } = options ?? {};
-  const queryKey = newsKeys.articles(options ?? {});
+  const queryKey = newsKeys.articles(queryOptions);
   useRealtimeArticles(queryKey, queryOptions);
+  const hasInitial = Array.isArray(initialData) && initialData.length > 0;
   return useQuery({
     queryKey,
     queryFn: () => getArticles(queryOptions),
-    staleTime: 60 * 1000,
-    initialData,
-  });
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    initialData: hasInitial ? initialData : undefined,
+    refetchOnMount: hasInitial ? false : "always",
+    refetchOnWindowFocus: false,
+    retry: 1,
+  }) as UseQueryResult<Article[], Error>;
 }
 
 export function useArticle(slug: string, initialData?: Article | undefined) {
@@ -92,7 +99,9 @@ export function useArticle(slug: string, initialData?: Article | undefined) {
     queryKey,
     queryFn: () => getArticleBySlug(slug),
     staleTime: 5 * 60 * 1000,
-    initialData,
+    ...(initialData ? { initialData, placeholderData: initialData } : {}),
+    refetchOnMount: initialData ? false : "always",
+    refetchOnWindowFocus: false,
   });
 }
 
@@ -107,40 +116,51 @@ export function useRelatedArticles(slug: string, initialData?: Article[]) {
       return getRelatedArticles(article);
     },
     staleTime: 5 * 60 * 1000,
-    initialData,
+    ...(initialData?.length ? { initialData, placeholderData: initialData } : {}),
+    refetchOnMount: initialData?.length ? false : "always",
+    refetchOnWindowFocus: false,
   });
 }
 
-export function useMostRead(limit?: number, initialData?: Article[]) {
+export function useMostRead(limit?: number, initialData?: Article[]): UseQueryResult<Article[], Error> {
   const queryKey = [...newsKeys.mostRead, limit];
   useRealtimeArticles(queryKey, { sort: "popular", limit });
+  const hasInitial = Array.isArray(initialData) && initialData.length > 0;
   return useQuery({
     queryKey,
     queryFn: () => getMostRead(limit),
-    staleTime: 60 * 1000,
-    initialData,
+    staleTime: 5 * 60 * 1000,
+    initialData: hasInitial ? initialData : undefined,
+    refetchOnMount: hasInitial ? false : "always",
+    refetchOnWindowFocus: false,
   });
 }
 
-export function useTrending(limit?: number, initialData?: Article[]) {
+export function useTrending(limit?: number, initialData?: Article[]): UseQueryResult<Article[], Error> {
   const queryKey = [...newsKeys.trending, limit];
   useRealtimeArticles(queryKey, { trending: true, limit });
+  const hasInitial = Array.isArray(initialData) && initialData.length > 0;
   return useQuery({
     queryKey,
     queryFn: () => getTrending(limit),
-    staleTime: 60 * 1000,
-    initialData,
+    staleTime: 5 * 60 * 1000,
+    initialData: hasInitial ? initialData : undefined,
+    refetchOnMount: hasInitial ? false : "always",
+    refetchOnWindowFocus: false,
   });
 }
 
-export function useEditorPicks(limit?: number, initialData?: Article[]) {
+export function useEditorPicks(limit?: number, initialData?: Article[]): UseQueryResult<Article[], Error> {
   const queryKey = [...newsKeys.editorPicks, limit];
   useRealtimeArticles(queryKey, { editorPick: true, limit });
+  const hasInitial = Array.isArray(initialData) && initialData.length > 0;
   return useQuery({
     queryKey,
     queryFn: () => getEditorPicks(limit),
-    staleTime: 60 * 1000,
-    initialData,
+    staleTime: 5 * 60 * 1000,
+    initialData: hasInitial ? initialData : undefined,
+    refetchOnMount: hasInitial ? false : "always",
+    refetchOnWindowFocus: false,
   });
 }
 

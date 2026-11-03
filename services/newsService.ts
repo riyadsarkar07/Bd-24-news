@@ -136,6 +136,22 @@ let publishedCache: { at: number; data: Article[] } | null = null;
 const PUBLISHED_CACHE_MS = 30_000;
 let publishedInFlight: Promise<Article[]> | null = null;
 
+const FETCH_ATTEMPTS = 2;
+const FETCH_RETRY_DELAY_MS = 250;
+
+async function fetchPublishedOnce(): Promise<Article[] | null> {
+  const supabase = getSupabase();
+  if (!supabase) return null;
+  const { data, error } = await withTimeout(
+    supabase.from("articles").select(LIST_COLUMNS).eq("status", "published").order("published_at", { ascending: false }),
+  );
+  if (error) {
+    console.error("Supabase articles read failed:", error.message);
+    return null;
+  }
+  return mapRows(data);
+}
+
 export async function getPublishedArticles(): Promise<Article[]> {
   const now = Date.now();
   if (publishedCache && now - publishedCache.at < PUBLISHED_CACHE_MS) {
@@ -144,28 +160,39 @@ export async function getPublishedArticles(): Promise<Article[]> {
   if (publishedInFlight) return publishedInFlight;
 
   publishedInFlight = (async () => {
-    const supabase = getSupabase();
-    if (!supabase) return publishedCache?.data ?? [];
-    try {
-      const { data, error } = await withTimeout(
-        supabase.from("articles").select(LIST_COLUMNS).eq("status", "published").order("published_at", { ascending: false }),
-      );
-      if (error) {
-        console.error("Supabase articles read failed:", error.message);
-        return publishedCache?.data ?? [];
+    for (let attempt = 1; attempt <= FETCH_ATTEMPTS; attempt += 1) {
+      try {
+        const articles = await fetchPublishedOnce();
+        if (articles === null) {
+          if (attempt < FETCH_ATTEMPTS) {
+            await new Promise((r) => setTimeout(r, FETCH_RETRY_DELAY_MS));
+            continue;
+          }
+          // Never cache a failed lookup: keep serving the last known good data
+          // (if any) so a transient outage cannot poison the cache.
+          return publishedCache?.data ?? [];
+        }
+        // Only cache non-empty successful results. An empty payload can be a
+        // transient backend/propagation issue and must not be frozen in place.
+        if (articles.length > 0) {
+          publishedCache = { at: Date.now(), data: articles };
+        }
+        return articles;
+      } catch (err) {
+        console.error(`Supabase articles read failed (attempt ${attempt}):`, err);
+        if (attempt < FETCH_ATTEMPTS) {
+          await new Promise((r) => setTimeout(r, FETCH_RETRY_DELAY_MS));
+        }
       }
-      const articles = mapRows(data);
-      publishedCache = { at: Date.now(), data: articles };
-      return articles;
-    } catch (err) {
-      console.error("Supabase articles read failed:", err);
-      return publishedCache?.data ?? [];
-    } finally {
-      publishedInFlight = null;
     }
+    return publishedCache?.data ?? [];
   })();
 
-  return publishedInFlight;
+  try {
+    return await publishedInFlight;
+  } finally {
+    publishedInFlight = null;
+  }
 }
 
 const POLL_MS = 60000;

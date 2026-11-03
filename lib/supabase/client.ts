@@ -28,6 +28,7 @@ function timedFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Respo
 }
 
 let browserClient: SupabaseClient | null = null;
+let serverClient: SupabaseClient | null = null;
 
 export function getSupabase(): SupabaseClient | null {
   if (!isSupabaseConfigured()) return null;
@@ -45,14 +46,17 @@ export function getSupabase(): SupabaseClient | null {
     }
     return browserClient;
   }
-  return createClient(supabaseUrl, supabaseKey, {
-    auth: {
-      persistSession: false,
-      autoRefreshToken: false,
-      detectSessionInUrl: false,
-    },
-    global: { fetch: timedFetch },
-  });
+  if (!serverClient) {
+    serverClient = createClient(supabaseUrl, supabaseKey, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false,
+      },
+      global: { fetch: timedFetch },
+    });
+  }
+  return serverClient;
 }
 
 export function getSupabaseEndpoints(): { url: string; key: string } {

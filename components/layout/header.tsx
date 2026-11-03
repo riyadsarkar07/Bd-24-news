@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import { Search, Radio, Menu, UserRound, Newspaper } from "lucide-react";
 import { Logo } from "@/components/shared/logo";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
@@ -17,11 +17,10 @@ export function Header({ onOpenMobile }: { onOpenMobile: () => void }) {
   const { setOpen } = useSearchDialog();
   const { t } = useLanguage();
   const { scrolled } = useScroll();
-  const reduce = useReducedMotion();
 
   return (
     <motion.header
-      initial={{ y: reduce ? 0 : -100, opacity: 0 }}
+      initial={false}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
       className={cn(

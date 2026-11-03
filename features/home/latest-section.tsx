@@ -29,9 +29,9 @@ export function LatestSection({ initialData }: { initialData?: { latest?: Articl
             : latest?.map((a, i) => (
                 <motion.div
                   key={a.id}
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={false}
                   whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
+                  viewport={{ once: true, margin: "-40px" }}
                   transition={{ delay: i * 0.06, duration: 0.5 }}
                 >
                   <ArticleCard article={a} variant="default" priority={i < 2} />

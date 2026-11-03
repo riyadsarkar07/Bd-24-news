@@ -64,7 +64,7 @@ export function HeroSlider({ articles }: { articles: Article[] }) {
                 )}
                 <motion.div
                   key={a.id}
-                  initial={{ opacity: 0, y: 24 }}
+                  initial={false}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6, delay: 0.2 }}
                   className="absolute inset-x-0 bottom-0 p-5 sm:p-8"

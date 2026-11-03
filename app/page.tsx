@@ -15,7 +15,7 @@ export const metadata: Metadata = {
     "বাংলাদেশ ও বিশ্বের সর্বশেষ খবর, রাজনীতি, অর্থনীতি, খেলাধুলা, প্রযুক্তি, বিনোদন। সত্যের সাথে সবসময় — BD24News.",
 };
 
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   const {

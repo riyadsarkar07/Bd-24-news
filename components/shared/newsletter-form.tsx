@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import toast from "react-hot-toast";
-import { Send, Loader2 } from "lucide-react";
+import { Send, Loader2, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useLanguage } from "@/providers/language-provider";
@@ -30,7 +30,9 @@ export function NewsletterForm({ variant = "default" }: { variant?: "default" | 
   const onSubmit = async ({ email }: Schema) => {
     try {
       await addSubscriber(email);
-      toast.success(lang === "bn" ? "সাবস্ক্রিপশন সফল হয়েছে!" : "Subscription successful!");
+      toast.success(lang === "bn" ? "সাবস্ক্রিপশন সফল হয়েছে!" : "Subscription successful!", {
+        icon: <CheckCircle2 className="h-5 w-5 text-success" />,
+      });
       reset();
     } catch {
       toast.error(lang === "bn" ? "সাবস্ক্রিপশন ব্যর্থ হয়েছে, আবার চেষ্টা করুন" : "Subscription failed, please try again");
@@ -44,8 +46,11 @@ export function NewsletterForm({ variant = "default" }: { variant?: "default" | 
           type="email"
           placeholder={lang === "bn" ? "আপনার ইমেইল" : "Your email"}
           aria-label={lang === "bn" ? "ইমেইল" : "Email"}
+          aria-invalid={Boolean(errors.email)}
           className={cn(
-            variant === "footer" && "border-white/15 bg-white/5 text-white placeholder:text-white/40 focus-visible:border-brand",
+            variant === "footer" &&
+              "border-white/15 bg-white/5 text-white placeholder:text-white/40 focus-visible:border-brand",
+            errors.email && "border-danger/60 focus-visible:border-danger focus-visible:ring-danger/20",
           )}
           {...register("email")}
         />

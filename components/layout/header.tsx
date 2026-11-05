@@ -28,7 +28,7 @@ export function Header({ onOpenMobile }: { onOpenMobile: () => void }) {
         scrolled ? "shadow-soft-lg" : "shadow-none",
       )}
     >
-      <div className="container-page flex h-[76px] items-center justify-between gap-4">
+      <div className="container-page flex h-[76px] items-center justify-between gap-3 sm:gap-4">
         <Button
           variant="ghost"
           size="icon"
@@ -44,7 +44,7 @@ export function Header({ onOpenMobile }: { onOpenMobile: () => void }) {
         <div className="hidden flex-1 items-center justify-center px-4 lg:flex">
           <button
             onClick={() => setOpen(true)}
-            className="group flex w-full max-w-xl items-center gap-3 rounded-full border border-border bg-muted/40 px-4 py-2.5 text-sm text-muted-foreground transition-all hover:border-brand/40 hover:bg-muted/70"
+            className="group flex w-full max-w-xl items-center gap-3 rounded-full border border-border bg-muted/40 px-4 py-2.5 text-sm text-muted-foreground shadow-sm transition-all hover:border-brand/40 hover:bg-muted/70 hover:shadow-soft"
           >
             <Search className="h-4 w-4 transition-colors group-hover:text-brand" />
             <span>{t("search")}…</span>
@@ -54,7 +54,7 @@ export function Header({ onOpenMobile }: { onOpenMobile: () => void }) {
           </button>
         </div>
 
-        <div className="flex items-center gap-1.5 sm:gap-2">
+        <div className="flex items-center gap-1 sm:gap-1.5">
           <Button
             variant="ghost"
             size="icon"
@@ -64,24 +64,20 @@ export function Header({ onOpenMobile }: { onOpenMobile: () => void }) {
           >
             <Search className="h-5 w-5" />
           </Button>
-          <Link href="/live-tv">
-            <Button
-              variant="gradient"
-              size="sm"
-              className="hidden sm:inline-flex"
-            >
+          <Link href="/live-tv" className="hidden sm:block">
+            <Button variant="gradient" size="sm" className="rounded-full pr-3.5">
               <span className="relative flex h-2 w-2">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-white" />
               </span>
               <Radio className="h-4 w-4" />
-              {t("watchLive")}
+              <span className="hidden md:inline">{t("watchLive")}</span>
             </Button>
           </Link>
           <Button
             variant="outline"
             size="sm"
-            className="hidden md:inline-flex"
+            className="hidden rounded-full md:inline-flex"
           >
             <Newspaper className="h-4 w-4" />
             {t("subscribe")}

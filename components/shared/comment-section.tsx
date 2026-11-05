@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { motion } from "framer-motion";
-import { ThumbsUp, MessageSquare, UserRound } from "lucide-react";
+import { ThumbsUp, MessageSquare, UserRound, Send } from "lucide-react";
 import { useComments, useAddComment } from "@/hooks/useNews";
 import { useLanguage } from "@/providers/language-provider";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -29,13 +29,17 @@ export function CommentSection({ articleId }: { articleId: string }) {
     });
   };
 
+  const count = toBanglaNumerals(comments?.length ?? 0);
+
   return (
-    <section className="mt-10">
+    <section className="mt-10" aria-label={lang === "bn" ? "মন্তব্য" : "Comments"}>
       <h3 className="flex items-center gap-2 font-bengali text-xl font-bold">
-        <MessageSquare className="h-5 w-5 text-brand" />
+        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand/10">
+          <MessageSquare className="h-4 w-4 text-brand" />
+        </span>
         {lang === "bn" ? "মন্তব্য" : "Comments"}
         <span className="rounded-full bg-brand/10 px-2.5 py-0.5 text-xs font-bold text-brand">
-          {toBanglaNumerals(comments?.length ?? 0)}
+          {count}
         </span>
       </h3>
 
@@ -53,7 +57,8 @@ export function CommentSection({ articleId }: { articleId: string }) {
           required
         />
         <div className="flex justify-end">
-          <Button type="submit" disabled={addComment.isPending}>
+          <Button type="submit" disabled={addComment.isPending || !content.trim()}>
+            <Send className="h-4 w-4" />
             {lang === "bn" ? "মন্তব্য করুন" : "Post comment"}
           </Button>
         </div>
@@ -71,6 +76,12 @@ export function CommentSection({ articleId }: { articleId: string }) {
             </div>
           ))}
 
+        {!isLoading && comments && comments.length === 0 && (
+          <p className="rounded-2xl border border-dashed border-border bg-muted/20 p-6 text-center text-sm text-muted-foreground">
+            {lang === "bn" ? "এখনো কোনো মন্তব্য নেই। প্রথম মন্তব্যটি আপনার হোক!" : "No comments yet. Be the first to share your thoughts!"}
+          </p>
+        )}
+
         {comments?.map((c) => (
           <motion.div
             key={c.id}
@@ -83,10 +94,10 @@ export function CommentSection({ articleId }: { articleId: string }) {
                 {c.author.slice(0, 2)}
               </AvatarFallback>
             </Avatar>
-            <div className="flex-1 rounded-2xl border border-border/50 bg-card p-4 shadow-card">
-              <div className="flex items-center justify-between">
+            <div className="min-w-0 flex-1 rounded-2xl border border-border/50 bg-card p-4 shadow-card">
+              <div className="flex items-center justify-between gap-2">
                 <p className="text-sm font-bold">{c.author}</p>
-                <span className="text-[11px] text-muted-foreground">{timeAgo(c.createdAt, lang)}</span>
+                <span className="shrink-0 text-[11px] text-muted-foreground">{timeAgo(c.createdAt, lang)}</span>
               </div>
               <p className="mt-2 text-sm leading-relaxed text-foreground/85">{c.content}</p>
               <div className="mt-3 flex items-center gap-3 text-xs text-muted-foreground">
@@ -104,9 +115,12 @@ export function CommentSection({ articleId }: { articleId: string }) {
                   <Avatar className="h-8 w-8 border">
                     <AvatarFallback className="bg-navy-900 text-[10px] font-bold text-white">{r.author.slice(0, 2)}</AvatarFallback>
                   </Avatar>
-                  <div>
-                    <p className="text-xs font-bold">{r.author}</p>
-                    <p className="mt-1 text-sm text-foreground/85">{r.content}</p>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-xs font-bold">{r.author}</p>
+                      <span className="shrink-0 text-[10px] text-muted-foreground">{timeAgo(r.createdAt, lang)}</span>
+                    </div>
+                    <p className="mt-1 text-sm leading-relaxed text-foreground/85">{r.content}</p>
                   </div>
                 </div>
               ))}

@@ -41,7 +41,7 @@ export function LiveTvPage() {
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <div className="relative aspect-video overflow-hidden rounded-3xl bg-black shadow-soft-lg">
+          <div className="relative aspect-video overflow-hidden rounded-3xl bg-black shadow-soft-lg ring-1 ring-white/5">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={channels.find((c) => c.id === 1)?.id ? "https://images.unsplash.com/photo-1495020689067-958852a7765e?w=1280&q=80" : ""}
@@ -116,7 +116,7 @@ export function LiveTvPage() {
                     "flex w-full items-center gap-3 rounded-xl border p-3 text-left transition-all",
                     activeChannel.id === c.id
                       ? "border-brand bg-brand/5 shadow-glow"
-                      : "border-border/60 hover:border-brand/40 hover:bg-muted/50",
+                      : "border-border/60 hover:-translate-y-0.5 hover:border-brand/40 hover:bg-muted/50",
                   )}
                 >
                   <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-white" style={{ background: c.color }}>

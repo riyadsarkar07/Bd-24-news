@@ -21,11 +21,11 @@ export function NewsTicker() {
 
   return (
     <div
-      className="relative flex h-10 items-center overflow-hidden border-y border-border/60 bg-navy-950 text-white"
+      className="relative flex h-10 items-center overflow-hidden border-y border-black/10 bg-navy-950 text-white dark:border-white/10"
       role="region"
       aria-label={t("breaking")}
     >
-      <div className="relative z-10 flex h-full shrink-0 items-center gap-1.5 bg-brand px-4 shadow-glow">
+      <div className="relative z-10 flex h-full shrink-0 items-center gap-1.5 bg-brand px-4 shadow-[8px_0_16px_-8px_rgba(229,9,20,0.6)]">
         <span className="relative flex h-2 w-2">
           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75" />
           <span className="relative inline-flex h-2 w-2 rounded-full bg-white" />
@@ -41,12 +41,16 @@ export function NewsTicker() {
           {doubled.map((item, i) => {
             const target = breaking && breaking.length > 0 ? breaking[i % breaking.length] : undefined;
             const wrap = target ? (
-              <Link key={`${item}-${i}`} href={`/article/${target.slug}`} className="flex items-center gap-3 text-xs font-medium text-white/90 transition-colors hover:text-brand-300">
-                <span className="h-1.5 w-1.5 rounded-full bg-brand-400" />
+              <Link
+                key={`${item}-${i}`}
+                href={`/article/${target.slug}`}
+                className="group flex items-center gap-3 text-xs font-medium text-white/85 transition-colors hover:text-brand-300"
+              >
+                <span className="h-1.5 w-1.5 rounded-full bg-brand-400 transition-transform group-hover:scale-150" />
                 {item}
               </Link>
             ) : (
-              <span key={`${item}-${i}`} className="flex items-center gap-3 text-xs font-medium text-white/90">
+              <span key={`${item}-${i}`} className="flex items-center gap-3 text-xs font-medium text-white/85">
                 <span className="h-1.5 w-1.5 rounded-full bg-brand-400" />
                 {item}
               </span>

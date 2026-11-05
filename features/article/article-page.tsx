@@ -119,11 +119,16 @@ export function ArticlePage({ article: initialArticle }: { article: Article }) {
         itemType="https://schema.org/NewsArticle"
       >
         <header>
-          <span className="badge-cat" style={{ background: article.categoryColor }} itemProp="articleSection">
-            {article.category}
-          </span>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="badge-cat" style={{ background: article.categoryColor }} itemProp="articleSection">
+              {article.category}
+            </span>
+            <span className="rounded-md bg-muted px-2 py-1 text-[11px] font-semibold text-muted-foreground">
+              {article.readingMinutes} {lang === "bn" ? "মিনিট পড়া" : "min read"}
+            </span>
+          </div>
           <h1
-            className="mt-4 font-bengali text-3xl font-black leading-tight sm:text-4xl"
+            className="mt-4 font-bengali text-3xl font-black leading-[1.15] sm:text-4xl lg:text-[2.6rem]"
             itemProp="headline"
           >
             {lang === "bn" ? article.titleBn : article.title}
@@ -133,19 +138,20 @@ export function ArticlePage({ article: initialArticle }: { article: Article }) {
           </p>
 
           <div className="mt-5 flex flex-wrap items-center justify-between gap-4 border-y border-border/60 py-4">
-            <div className="flex flex-wrap items-center gap-3">
-              <Link href={`/authors/${article.authorSlug}`} className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+              <Link href={`/authors/${article.authorSlug}`} className="group flex items-center gap-2">
                 <Avatar className="h-10 w-10 border-2 border-brand/30">
                   <AvatarImage src={article.authorAvatar} alt={article.author} />
                   <AvatarFallback>{article.author.slice(0, 2)}</AvatarFallback>
                 </Avatar>
                 <span>
-                  <span className="block text-sm font-bold transition-colors hover:text-brand" itemProp="author">
+                  <span className="block text-sm font-bold transition-colors group-hover:text-brand" itemProp="author">
                     {article.author}
                   </span>
                   <span className="block text-[11px] text-muted-foreground">{article.authorRole}</span>
                 </span>
               </Link>
+              <span className="hidden h-6 w-px bg-border sm:block" />
               <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 <CalendarDays className="h-3.5 w-3.5" />
                 <time dateTime={article.publishedAt} itemProp="datePublished">
@@ -190,7 +196,7 @@ export function ArticlePage({ article: initialArticle }: { article: Article }) {
                 }}
               >
                 {isBookmarked(article.slug) ? <BookmarkCheck className="h-4 w-4" /> : <Bookmark className="h-4 w-4" />}
-                {lang === "bn" ? "বুকমার্ক" : "Bookmark"}
+                <span className="hidden sm:inline">{lang === "bn" ? "বুকমার্ক" : "Bookmark"}</span>
               </Button>
               <Button variant="outline" size="sm" onClick={() => window.print()} aria-label="Print">
                 <Printer className="h-4 w-4" />
@@ -226,7 +232,7 @@ export function ArticlePage({ article: initialArticle }: { article: Article }) {
           </div>
         </header>
 
-        <div className="relative mt-6 overflow-hidden rounded-3xl">
+        <div className="relative mt-6 overflow-hidden rounded-3xl shadow-card ring-1 ring-black/5">
           <ImageWithFallback
             src={article.coverImage}
             alt={article.titleBn}

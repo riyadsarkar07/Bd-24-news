@@ -56,6 +56,9 @@ const config: Config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        surface: {
+          DEFAULT: "hsl(var(--surface))",
+        },
         brand: {
           50: "#FEF2F2",
           100: "#FEE2E2",
@@ -88,9 +91,19 @@ const config: Config = {
         },
         success: {
           DEFAULT: "#22C55E",
+          foreground: "#052E16",
         },
         warning: {
           DEFAULT: "#F59E0B",
+          foreground: "#451A03",
+        },
+        danger: {
+          DEFAULT: "#EF4444",
+          foreground: "#FFFFFF",
+        },
+        info: {
+          DEFAULT: "#3B82F6",
+          foreground: "#FFFFFF",
         },
       },
       fontFamily: {

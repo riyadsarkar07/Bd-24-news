@@ -12,6 +12,7 @@ import { MegaNav } from "@/components/layout/mega-nav";
 import { MobileNav } from "@/components/layout/mobile-nav";
 import { Footer } from "@/components/layout/footer";
 import { NewsTicker } from "@/components/shared/news-ticker";
+import { PageTransition } from "@/components/shared/page-transition";
 
 export function SiteShell({ children }: { children: React.ReactNode }) {
   const [mobileOpen, setMobileOpen] = React.useState(false);
@@ -33,7 +34,7 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
               <MegaNav />
               <NewsTicker />
               <div id="main-content" className="flex-1">
-                {children}
+                <PageTransition>{children}</PageTransition>
               </div>
               <Footer />
               <MobileNav open={mobileOpen} onClose={() => setMobileOpen(false)} />

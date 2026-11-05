@@ -25,9 +25,10 @@ export function BreakingSpotlight({ initialData }: { initialData?: Article[] }) 
 
   return (
     <section className="container-page py-8" aria-label="Breaking news spotlight">
-      <div className="relative overflow-hidden rounded-3xl bg-navy-950 p-6 text-white sm:p-8">
+      <div className="relative overflow-hidden rounded-3xl bg-navy-950 p-6 text-white shadow-soft-lg ring-1 ring-white/5 sm:p-8">
         <div className="bg-grid pointer-events-none absolute inset-0 opacity-30" />
         <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-brand/30 blur-[90px]" />
+        <div className="pointer-events-none absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-accentblue/20 blur-[90px]" />
         <div className="relative grid gap-6 lg:grid-cols-5">
           <div className="lg:col-span-3">
             <div className="flex items-center gap-2">
@@ -45,18 +46,19 @@ export function BreakingSpotlight({ initialData }: { initialData?: Article[] }) 
                 {lang === "bn" ? lead.titleBn : lead.title}
               </h2>
               <p className="mt-3 line-clamp-2 text-sm text-white/60">{lead.excerpt}</p>
-              <p className="mt-4 text-xs text-white/40">
+              <p className="mt-4 flex items-center gap-2 text-xs text-white/40">
+                <span className="h-1 w-1 rounded-full bg-brand/70" />
                 {lead.author} · {timeAgo(lead.publishedAt, lang)}
               </p>
             </Link>
           </div>
           <div className="grid grid-cols-2 gap-3 lg:col-span-2 lg:grid-cols-1">
             {rest.map((a) => (
-              <Link key={a.id} href={`/article/${a.slug}`} className="group flex items-center gap-3 rounded-xl bg-white/5 p-2.5 transition-all hover:bg-white/10">
+              <Link key={a.id} href={`/article/${a.slug}`} className="group flex items-center gap-3 rounded-xl border border-white/5 bg-white/5 p-2.5 transition-all hover:border-white/10 hover:bg-white/10">
                 <div className="relative h-14 w-16 shrink-0 overflow-hidden rounded-lg">
-                  <ImageWithFallback src={a.coverImage} alt="" fill sizes="64px" className="object-cover" />
+                  <ImageWithFallback src={a.coverImage} alt="" fill sizes="64px" className="object-cover transition-transform duration-500 group-hover:scale-110" />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <p className="line-clamp-2 text-xs font-semibold leading-snug transition-colors group-hover:text-brand-300">
                     {lang === "bn" ? a.titleBn : a.title}
                   </p>

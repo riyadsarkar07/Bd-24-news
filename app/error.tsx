@@ -11,15 +11,16 @@ export default function GlobalError({ error, reset }: { error: Error & { digest?
   }, [error]);
 
   return (
-    <div className="container-page flex min-h-[70vh] flex-col items-center justify-center py-16 text-center">
-      <span className="flex h-20 w-20 items-center justify-center rounded-3xl bg-danger/10 text-danger">
+    <div className="relative container-page flex min-h-[70vh] flex-col items-center justify-center py-16 text-center">
+      <div className="bg-grid pointer-events-none absolute inset-0 opacity-30" />
+      <span className="relative flex h-20 w-20 items-center justify-center rounded-3xl bg-danger/10 text-danger shadow-sm">
         <AlertTriangle className="h-10 w-10" />
       </span>
-      <h1 className="mt-6 font-bengali text-3xl font-black">সার্ভার ত্রুটি</h1>
-      <p className="mt-2 max-w-md text-muted-foreground">
+      <h1 className="relative mt-6 font-bengali text-3xl font-black">সার্ভার ত্রুটি</h1>
+      <p className="relative mt-2 max-w-md text-pretty text-muted-foreground">
         কিছু একটা ভুল হয়েছে। আমরা সমস্যাটি সমাধানে কাজ করছি। কিছুক্ষণ পরে আবার চেষ্টা করুন।
       </p>
-      <div className="mt-6 flex items-center gap-3">
+      <div className="relative mt-6 flex items-center gap-3">
         <Button onClick={reset}>
           <RefreshCw className="h-4 w-4" /> আবার চেষ্টা করুন
         </Button>
@@ -29,7 +30,7 @@ export default function GlobalError({ error, reset }: { error: Error & { digest?
           </Button>
         </Link>
       </div>
-      <p className="mt-6 text-xs text-muted-foreground">Error: {error.message}</p>
+      <p className="relative mt-6 max-w-md break-words text-xs text-muted-foreground">Error: {error.message}</p>
     </div>
   );
 }

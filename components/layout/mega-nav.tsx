@@ -95,7 +95,7 @@ export function MegaNav() {
       onMouseLeave={() => setOpen(null)}
     >
       <div className="container-page flex h-12 items-center">
-        <div className="no-scrollbar flex flex-1 items-center gap-1 overflow-x-auto">
+        <div className="no-scrollbar flex flex-1 items-center gap-0.5 overflow-x-auto py-1">
           <Link
             href="/"
             onMouseEnter={() => setOpen(null)}
@@ -128,10 +128,10 @@ export function MegaNav() {
               <AnimatePresence>
                 {open === cat.slug && (
                   <motion.div
-                    initial={{ opacity: 0, y: reduce ? 0 : 12 }}
+                    initial={{ opacity: 0, y: reduce ? 0 : 8 }}
                     animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: reduce ? 0 : 8 }}
-                    transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+                    exit={{ opacity: 0, y: reduce ? 0 : 6 }}
+                    transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
                     className="fixed inset-x-0 top-full z-50 border-t border-border/50 bg-background/95 shadow-soft-lg backdrop-blur-2xl"
                   >
                     <CategoryDropdown category={cat} onClose={() => setOpen(null)} />
@@ -148,7 +148,7 @@ export function MegaNav() {
               onMouseEnter={() => setOpen(null)}
               className={cn(
                 "flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-bold transition-all",
-                item.href === "/live-tv" && "text-brand",
+                item.href === "/live-tv" && !isActive(item.href) && "text-brand",
                 isActive(item.href)
                   ? "bg-brand text-white shadow-glow"
                   : "text-foreground/80 hover:bg-muted hover:text-brand",

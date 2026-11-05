@@ -50,7 +50,7 @@ export function SearchPage() {
             e.preventDefault();
             setDebounced(query);
           }}
-          className="flex items-center gap-2 rounded-2xl border border-border bg-card p-2 shadow-card focus-within:border-brand"
+          className="flex items-center gap-2 rounded-2xl border border-border bg-card p-2 shadow-card transition-colors focus-within:border-brand focus-within:shadow-soft-lg"
         >
           <SearchIcon className="ml-3 h-5 w-5 shrink-0 text-brand" />
           <Input
@@ -112,12 +112,14 @@ export function SearchPage() {
           ))}
         </div>
       ) : (
-        <div className="mt-16 flex flex-col items-center gap-3 text-muted-foreground">
-          <SearchIcon className="h-12 w-12" />
-          <p className="font-bengali text-lg font-bold">
+        <div className="mt-16 flex flex-col items-center gap-3 rounded-3xl border border-dashed border-border bg-muted/20 py-16 text-center text-muted-foreground">
+          <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-muted">
+            <SearchIcon className="h-8 w-8 text-muted-foreground/70" />
+          </span>
+          <p className="font-bengali text-lg font-bold text-foreground">
             {lang === "bn" ? "কোনো ফলাফল পাওয়া যায়নি" : "No results found"}
           </p>
-          <p className="text-sm">{lang === "bn" ? "অন্য কিছু খুঁজে দেখুন" : "Try a different search term"}</p>
+          <p className="max-w-sm text-sm">{lang === "bn" ? "অন্য কিছু খুঁজে দেখুন অথবা বানান ঠিক আছে কিনা যাচাই করুন" : "Try a different search term or check your spelling"}</p>
         </div>
       )}
 

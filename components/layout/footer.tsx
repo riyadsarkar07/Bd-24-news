@@ -27,15 +27,12 @@ export function Footer() {
   const showTop = y > 500;
 
   const scrollTop = () => {
-    if (reduce) {
-      window.scrollTo({ top: 0, behavior: "auto" });
-    } else {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
+    window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" });
   };
 
   return (
-    <footer className="relative overflow-hidden bg-navy-950 text-white">
+    <footer className="relative mt-4 overflow-hidden bg-navy-950 text-white">
+      <div className="h-1 w-full bg-gradient-to-r from-brand via-accentblue to-brand" />
       <div className="bg-grid pointer-events-none absolute inset-0 opacity-40" />
       <div className="pointer-events-none absolute -left-32 top-0 h-64 w-64 rounded-full bg-brand/20 blur-[100px]" />
       <div className="pointer-events-none absolute -right-32 bottom-0 h-64 w-64 rounded-full bg-accentblue/20 blur-[100px]" />
@@ -113,14 +110,14 @@ export function Footer() {
               <NewsletterForm variant="footer" />
             </div>
             <div className="mt-6 space-y-3 text-sm text-white/60">
-              <p className="flex items-center gap-3"><MapPin className="h-4 w-4 shrink-0 text-brand-400" />{siteConfig.address}</p>
+              <p className="flex items-start gap-3"><MapPin className="mt-0.5 h-4 w-4 shrink-0 text-brand-400" />{siteConfig.address}</p>
               <p className="flex items-center gap-3"><Mail className="h-4 w-4 shrink-0 text-brand-400" />{siteConfig.email}</p>
               <p className="flex items-center gap-3"><Phone className="h-4 w-4 shrink-0 text-brand-400" />{siteConfig.phone}</p>
             </div>
           </div>
         </div>
 
-        <div className="mt-12 grid gap-4 border-t border-white/10 pt-6 text-sm sm:grid-cols-3">
+        <div className="mt-12 grid gap-3 border-t border-white/10 pt-6 text-sm sm:grid-cols-2 lg:grid-cols-4">
           {links.map((l) => (
             <Link key={l.href} href={l.href} className="flex items-center gap-2 text-white/60 transition-colors hover:text-white">
               <ShieldCheck className="h-4 w-4 text-brand-400" />
@@ -136,15 +133,16 @@ export function Footer() {
         </div>
 
         <div className="mt-8 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-6 text-xs text-white/50 sm:flex-row">
-          <p>
-            © {new Date().getFullYear()} {siteConfig.name} {t("allRightsReserved")}. {lang === "bn" ? `প্রতিষ্ঠিত ${toBn(siteConfig.establishedYear)}` : `Est. ${siteConfig.establishedYear}`}
-            <span className="mx-2 text-white/25">|</span>
-            {lang === "bn" ? `ডেভেলপার: ${siteConfig.developer}` : `Developed by ${siteConfig.developer}`}
+          <p className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center sm:text-left">
+            <span>© {new Date().getFullYear()} {siteConfig.name} {t("allRightsReserved")}.</span>
+            <span>{lang === "bn" ? `প্রতিষ্ঠিত ${toBanglaNumerals(siteConfig.establishedYear)}` : `Est. ${siteConfig.establishedYear}`}</span>
+            <span className="text-white/25">|</span>
+            <span>{lang === "bn" ? `ডেভেলপার: ${siteConfig.developer}` : `Developed by ${siteConfig.developer}`}</span>
           </p>
           <div className="flex items-center gap-4">
-            <Link href="/terms" className="hover:text-white">{lang === "bn" ? "শর্তাবলী" : "Terms"}</Link>
-            <Link href="/about" className="hover:text-white">{lang === "bn" ? "সম্পাদকীয় নীতি" : "Editorial Policy"}</Link>
-            <Link href="/sitemap.xml" className="hover:text-white">Sitemap</Link>
+            <Link href="/terms" className="transition-colors hover:text-white">{lang === "bn" ? "শর্তাবলী" : "Terms"}</Link>
+            <Link href="/about" className="transition-colors hover:text-white">{lang === "bn" ? "সম্পাদকীয় নীতি" : "Editorial Policy"}</Link>
+            <Link href="/sitemap.xml" className="transition-colors hover:text-white">Sitemap</Link>
           </div>
         </div>
       </div>
@@ -152,18 +150,14 @@ export function Footer() {
       <motion.button
         initial={false}
         animate={{ opacity: showTop ? 1 : 0, y: showTop ? 0 : 20, pointerEvents: showTop ? "auto" : "none" }}
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
+        whileHover={{ scale: 1.08 }}
+        whileTap={{ scale: 0.92 }}
         onClick={scrollTop}
-        className="fixed bottom-6 right-6 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-brand to-brand-700 text-white shadow-glow"
+        className="fixed bottom-6 right-5 z-40 flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-brand to-brand-700 text-white shadow-glow ring-1 ring-white/20 sm:bottom-8 sm:right-8"
         aria-label={t("backToTop")}
       >
         <ArrowUp className="h-5 w-5" />
       </motion.button>
     </footer>
   );
-}
-
-function toBn(n: number): string {
-  return toBanglaNumerals(n);
 }

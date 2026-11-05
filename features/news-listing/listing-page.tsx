@@ -126,10 +126,13 @@ export function NewsListing({
               ))}
             </div>
           </section>
-          <section className="glass-card rounded-2xl p-5">
-            <p className="font-bengali text-sm font-bold">{lang === "bn" ? "নিউজলেটার" : "Newsletter"}</p>
-            <p className="mb-3 text-xs text-muted-foreground">{lang === "bn" ? "প্রতিদিনের খবর পান" : "Get the daily digest"}</p>
-            <NewsletterForm />
+          <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-brand via-brand-600 to-accentblue p-5 text-white shadow-glow">
+            <div className="bg-grid pointer-events-none absolute inset-0 opacity-20" />
+            <div className="relative">
+              <p className="font-bengali text-sm font-bold">{lang === "bn" ? "নিউজলেটার" : "Newsletter"}</p>
+              <p className="mb-3 text-xs text-white/70">{lang === "bn" ? "প্রতিদিনের খবর পান" : "Get the daily digest"}</p>
+              <NewsletterForm variant="footer" />
+            </div>
           </section>
         </aside>
       </div>

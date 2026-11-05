@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
 import { Flame, Eye, Users, Mail } from "lucide-react";
 import { useMostRead, useTrending } from "@/hooks/useNews";
 import type { Article } from "@/types";
@@ -65,7 +64,7 @@ export function Sidebar({ initialData }: { initialData?: { trending?: Article[];
         </div>
       </section>
 
-      <section className="glass-card overflow-hidden rounded-2xl bg-gradient-to-br from-brand via-brand-600 to-accentblue p-6 text-white">
+      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-brand via-brand-600 to-accentblue p-6 text-white shadow-glow">
         <div className="flex items-center gap-3">
           <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/15 backdrop-blur">
             <Mail className="h-5 w-5" />
@@ -89,8 +88,8 @@ export function Sidebar({ initialData }: { initialData?: { trending?: Article[];
             { label: lang === "bn" ? "ইনস্টাগ্রাম" : "Instagram", count: "890K", color: "#E4405F" },
             { label: lang === "bn" ? "টিকটক" : "TikTok", count: "3.1M", color: "#000000" },
           ].map((s) => (
-            <div key={s.label} className="rounded-xl border border-border/60 bg-card p-3 text-center shadow-card">
-              <span className="font-bengali text-xl font-black" style={{ color: s.color }}>{s.count}</span>
+            <div key={s.label} className="group rounded-xl border border-border/60 bg-card p-3 text-center shadow-card transition-all hover:-translate-y-0.5 hover:shadow-soft">
+              <span className="font-bengali text-xl font-black transition-transform group-hover:scale-105" style={{ color: s.color }}>{s.count}</span>
               <p className="text-[11px] font-semibold text-muted-foreground">{s.label}</p>
             </div>
           ))}
@@ -100,8 +99,4 @@ export function Sidebar({ initialData }: { initialData?: { trending?: Article[];
       <AdSlot size="sidebar" />
     </aside>
   );
-}
-
-function toBn(n: number): string {
-  return toBanglaNumerals(n);
 }

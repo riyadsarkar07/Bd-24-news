@@ -46,7 +46,7 @@ export function WidgetBar() {
   const ss = now ? 60 - now.getSeconds() : 0;
 
   const widgetClass =
-    "group relative flex h-full flex-col justify-between overflow-hidden rounded-2xl border border-border/60 bg-card p-4 shadow-card transition-all duration-300 hover:-translate-y-1 hover:shadow-soft-lg";
+    "group relative flex h-full flex-col justify-between overflow-hidden rounded-2xl border border-border/60 bg-card p-4 shadow-card transition-all duration-300 hover:-translate-y-1 hover:border-brand/20 hover:shadow-soft-lg";
 
   const TrendIcon = ({ up }: { up: boolean }) => (up ? <TrendingUp className="h-3.5 w-3.5 text-success" /> : <TrendingDown className="h-3.5 w-3.5 text-danger" />);
 

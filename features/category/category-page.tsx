@@ -4,13 +4,14 @@ import * as React from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { LayoutGrid, List, Loader2 } from "lucide-react";
+import { LayoutGrid, List, Loader2, Eye } from "lucide-react";
 import { useArticles, useMostRead, useTrending } from "@/hooks/useNews";
 import type { Article } from "@/types";
 import { getCategory } from "@/constants/categories";
 import { Breadcrumb } from "@/components/shared/breadcrumb";
 import { SectionHeading } from "@/components/shared/section-heading";
 import { ArticleCard } from "@/components/shared/article-card";
+import { ImageWithFallback } from "@/components/shared/image-with-fallback";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -89,26 +90,71 @@ export function CategoryPage({ slug, initialData }: { slug: string; initialData?
                 <Skeleton key={i} className={cn(view === "grid" ? "h-72 w-full" : "h-28 w-full")} />
               ))}
             </div>
+          ) : pageArticles.length === 0 ? (
+            <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-border bg-muted/20 py-16 text-center">
+              <Icon className="h-8 w-8 text-muted-foreground/60" />
+              <p className="font-bengali text-sm font-semibold text-muted-foreground">
+                {lang === "bn" ? "এই বিভাগে এখনো কোনো খবর নেই" : "No stories in this category yet"}
+              </p>
+            </div>
           ) : (
             <div className={view === "grid" ? "grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3" : "space-y-4"}>
               <AnimatePresence mode="popLayout">
-                {pageArticles.map((a, i) => (
-                  <motion.div
-                    key={a.id}
-                    layout
-                    initial={{ opacity: 0, y: 18 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.96 }}
-                    transition={{ delay: i * 0.04, duration: 0.4 }}
-                  >
-                    <ArticleCard
-                      article={a}
-                      variant={view === "list" ? "horizontal" : "default"}
-                      priority={i < 3}
-                      className={view === "list" ? "!h-full !flex-col sm:!flex-row sm:!items-center" : ""}
-                    />
-                  </motion.div>
-                ))}
+                {pageArticles.map((a, i) =>
+                  view === "list" ? (
+                    <motion.div
+                      key={a.id}
+                      layout
+                      initial={{ opacity: 0, y: 18 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.96 }}
+                      transition={{ delay: i * 0.04, duration: 0.4 }}
+                    >
+                      <Link
+                        href={`/article/${a.slug}`}
+                        className="group flex flex-col gap-4 overflow-hidden rounded-2xl border border-border/60 bg-card p-3 shadow-card transition-all hover:-translate-y-0.5 hover:border-brand/30 hover:shadow-soft-lg sm:flex-row sm:items-center"
+                      >
+                        <div className="relative aspect-[16/10] w-full shrink-0 overflow-hidden rounded-xl sm:aspect-[4/3] sm:w-56">
+                          <ImageWithFallback
+                            src={a.coverImage}
+                            alt={a.titleBn}
+                            fill
+                            sizes="(max-width: 640px) 100vw, 224px"
+                            className="transition-transform duration-500 group-hover:scale-105"
+                          />
+                          <span className="absolute left-2 top-2 badge-cat !text-[10px]" style={{ background: a.categoryColor }}>
+                            {a.category}
+                          </span>
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <h3 className="line-clamp-2 font-bengali text-lg font-bold leading-snug transition-colors group-hover:text-brand">
+                            {lang === "bn" ? a.titleBn : a.title}
+                          </h3>
+                          <p className="mt-1.5 line-clamp-2 text-sm text-muted-foreground">{a.excerpt}</p>
+                          <div className="mt-3 flex flex-wrap items-center gap-3 text-[11px] text-muted-foreground">
+                            <span className="font-semibold text-foreground/70">{a.author}</span>
+                            <span>{timeAgo(a.publishedAt, lang)}</span>
+                            <span className="flex items-center gap-1">
+                              <Eye className="h-3 w-3" />
+                              {toBanglaNumerals(a.views)}
+                            </span>
+                          </div>
+                        </div>
+                      </Link>
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key={a.id}
+                      layout
+                      initial={{ opacity: 0, y: 18 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.96 }}
+                      transition={{ delay: i * 0.04, duration: 0.4 }}
+                    >
+                      <ArticleCard article={a} priority={i < 3} />
+                    </motion.div>
+                  ),
+                )}
               </AnimatePresence>
             </div>
           )}
@@ -153,12 +199,15 @@ export function CategoryPage({ slug, initialData }: { slug: string; initialData?
               ))}
             </div>
           </section>
-          <section className="glass-card rounded-2xl p-5">
-            <p className="font-bengali text-sm font-bold">{lang === "bn" ? "নিউজলেটার" : "Newsletter"}</p>
-            <p className="mb-3 text-xs text-muted-foreground">
-              {lang === "bn" ? "প্রতিদিনের খবর পান" : "Get the daily digest"}
-            </p>
-            <NewsletterForm />
+          <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-brand via-brand-600 to-accentblue p-5 text-white shadow-glow">
+            <div className="bg-grid pointer-events-none absolute inset-0 opacity-20" />
+            <div className="relative">
+              <p className="font-bengali text-sm font-bold">{lang === "bn" ? "নিউজলেটার" : "Newsletter"}</p>
+              <p className="mb-3 text-xs text-white/70">
+                {lang === "bn" ? "প্রতিদিনের খবর পান" : "Get the daily digest"}
+              </p>
+              <NewsletterForm variant="footer" />
+            </div>
           </section>
         </aside>
       </div>

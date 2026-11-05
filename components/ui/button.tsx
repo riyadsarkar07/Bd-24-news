@@ -4,19 +4,20 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-semibold ring-offset-background transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-semibold ring-offset-background transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 active:scale-[0.98] [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
-        default: "bg-brand text-white shadow-glow hover:bg-brand-600 hover:-translate-y-0.5 active:translate-y-0",
+        default: "bg-brand text-white shadow-glow hover:bg-brand-600 hover:-translate-y-0.5 hover:shadow-[0_8px_28px_-6px_rgba(229,9,20,0.55)] active:translate-y-0",
         secondary: "bg-secondary text-secondary-foreground hover:opacity-90 hover:-translate-y-0.5",
-        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-        outline: "border border-border bg-background hover:border-brand hover:text-brand",
+        destructive: "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90 hover:-translate-y-0.5",
+        outline: "border border-border bg-background hover:border-brand hover:bg-brand/5 hover:text-brand",
         ghost: "hover:bg-muted hover:text-foreground",
         link: "text-brand underline-offset-4 hover:underline",
         gradient:
-          "bg-gradient-to-r from-brand via-brand-600 to-accentblue text-white bg-[length:200%_auto] hover:bg-[position:right_center] shadow-glow",
+          "bg-gradient-to-r from-brand via-brand-600 to-accentblue text-white bg-[length:200%_auto] shadow-glow hover:bg-[position:right_center] hover:-translate-y-0.5 hover:shadow-[0_8px_28px_-6px_rgba(37,99,235,0.5)]",
         glass: "glass-card text-foreground hover:bg-white/80 dark:hover:bg-white/10",
+        subtle: "bg-muted text-foreground hover:bg-muted/80",
       },
       size: {
         default: "h-10 px-4 py-2",

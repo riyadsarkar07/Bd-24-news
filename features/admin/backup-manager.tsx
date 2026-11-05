@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import toast from "react-hot-toast";
 import { useLanguage } from "@/providers/language-provider";
-import { createBackup, listBackups, deleteBackup, restoreBackup, type BackupRow } from "@/services/backupService";
+import { createBackup, listBackups, deleteBackup, restoreBackup, getBackupData, type BackupRow } from "@/services/backupService";
 
 export function BackupManager() {
   const { lang } = useLanguage();
@@ -44,17 +44,21 @@ export function BackupManager() {
     }
   };
 
-  const download = (b: BackupRow) => {
-    const rows = backups.filter((x) => x.id === b.id);
-    const data = JSON.stringify(rows, null, 2);
-    const blob = new Blob([data], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${b.id}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast.success("Download started");
+  const download = async (b: BackupRow) => {
+    try {
+      const snapshot = await getBackupData(b.id);
+      const data = JSON.stringify(snapshot, null, 2);
+      const blob = new Blob([data], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${b.id}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success(lang === "bn" ? "ডাউনলোড শুরু হয়েছে" : "Download started");
+    } catch {
+      toast.error(lang === "bn" ? "ডাউনলোড ব্যর্থ হয়েছে" : "Download failed");
+    }
   };
 
   return (
@@ -64,7 +68,7 @@ export function BackupManager() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2"><DatabaseBackup className="h-5 w-5 text-brand" /> {lang === "bn" ? "নতুন ব্যাকআপ" : "New Backup"}</CardTitle>
-          <CardDescription>Create a full snapshot of your Firestore collections</CardDescription>
+          <CardDescription>Create a full snapshot of your database tables</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex items-center gap-4">
@@ -94,7 +98,7 @@ export function BackupManager() {
                   <p className="font-bold">{b.label}</p>
                   <p className="flex items-center gap-1.5 text-xs text-muted-foreground"><Clock className="h-3.5 w-3.5" /> {b.createdAt ? new Date(b.createdAt).toLocaleString() : "—"}</p>
                 </div>
-                <Badge variant="outline" className="text-muted-foreground">{b.collections.length} collections</Badge>
+                <Badge variant="outline" className="text-muted-foreground">{b.collections.length} tables</Badge>
                 <span className="text-sm tabular-nums text-muted-foreground">{b.size}</span>
                 <div className="flex gap-2">
                   <Button variant="outline" size="sm" onClick={() => download(b)}><Download className="h-3.5 w-3.5" /> {lang === "bn" ? "ডাউনলোড" : "Download"}</Button>
@@ -144,7 +148,7 @@ export function BackupManager() {
           if (restoring) {
             try {
               const written = await restoreBackup(restoring.id);
-              toast.success(`${written} documents restored`);
+              toast.success(`${written} rows restored`);
             } catch {
               toast.error("Restore failed");
             }

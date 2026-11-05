@@ -2,20 +2,67 @@
 
 import * as React from "react";
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, PieChart, Pie, Cell, BarChart, Bar, Legend } from "recharts";
+import { AlertCircle, TrendingDown, TrendingUp } from "lucide-react";
 import { PageHeader } from "@/features/admin/admin-table";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/providers/language-provider";
-import { getAnalytics, type AnalyticsData } from "@/services/analyticsService";
+import { getAnalytics, type AnalyticsData, type AnalyticsRange } from "@/services/analyticsService";
+import { cn } from "@/lib/utils";
+
+const RANGE_LABEL: Record<AnalyticsRange, string> = {
+  "7d": "Last 7 days",
+  "30d": "Last 30 days",
+  "90d": "Last 90 days",
+};
+
+function Delta({ value }: { value: number }) {
+  const flat = value === 0;
+  const up = value > 0;
+  return (
+    <p
+      className={cn(
+        "mt-1 flex items-center gap-1 text-xs font-semibold",
+        flat ? "text-muted-foreground" : up ? "text-success" : "text-danger",
+      )}
+    >
+      {!flat && (up ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />)}
+      {value > 0 ? "+" : ""}
+      {value}% vs last period
+    </p>
+  );
+}
 
 export function AnalyticsManager() {
   const { lang } = useLanguage();
-  const [range, setRange] = React.useState("30d");
+  const [range, setRange] = React.useState<AnalyticsRange>("30d");
   const [data, setData] = React.useState<AnalyticsData | null>(null);
+  const [loading, setLoading] = React.useState(true);
+  const [failed, setFailed] = React.useState(false);
+  const [reloadKey, setReloadKey] = React.useState(0);
 
   React.useEffect(() => {
-    getAnalytics().then(setData).catch(() => setData(null));
-  }, []);
+    let cancelled = false;
+    setLoading(true);
+    setFailed(false);
+    getAnalytics(range)
+      .then((result) => {
+        if (cancelled) return;
+        setData(result);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setFailed(true);
+        setData(null);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [range, reloadKey]);
 
   const trend = data?.monthlyTrend ?? [];
   const categories = data?.categoryDistribution ?? [];
@@ -23,17 +70,17 @@ export function AnalyticsManager() {
   const status = data?.contentStatus ?? [];
 
   const statCards = [
-    { label: lang === "bn" ? "মোট দর্শন" : "Page views", value: data ? data.totalViews.toLocaleString() : "—", delta: "+0.0%" },
-    { label: lang === "bn" ? "মোট সংবাদ" : "Articles", value: data ? data.totalArticles.toLocaleString() : "—", delta: "+0.0%" },
-    { label: lang === "bn" ? "সাবস্ক্রাইবার" : "Subscribers", value: data ? data.totalSubscribers.toLocaleString() : "—", delta: "+0.0%" },
-    { label: lang === "bn" ? "মন্তব্য" : "Comments", value: data ? data.totalComments.toLocaleString() : "—", delta: "+0.0%" },
+    { label: lang === "bn" ? "মোট দর্শন" : "Page views", value: data ? data.totalViews.toLocaleString() : "—", delta: data?.deltas.views ?? 0 },
+    { label: lang === "bn" ? "মোট সংবাদ" : "Articles", value: data ? data.totalArticles.toLocaleString() : "—", delta: data?.deltas.articles ?? 0 },
+    { label: lang === "bn" ? "সাবস্ক্রাইবার" : "Subscribers", value: data ? data.totalSubscribers.toLocaleString() : "—", delta: data?.deltas.subscribers ?? 0 },
+    { label: lang === "bn" ? "মন্তব্য" : "Comments", value: data ? data.totalComments.toLocaleString() : "—", delta: data?.deltas.comments ?? 0 },
   ];
 
   return (
     <div className="space-y-6">
       <PageHeader
         title={lang === "bn" ? "অ্যানালিটিক্স" : "Analytics"}
-        description="Site traffic and engagement insights"
+        description={lang === "bn" ? "সাইট ট্রাফিক ও এনগেজমেন্ট" : "Site traffic and engagement insights"}
         action={
           <div className="flex gap-1 rounded-xl border bg-muted/30 p-1">
             {(["7d", "30d", "90d"] as const).map((r) => (
@@ -49,27 +96,43 @@ export function AnalyticsManager() {
         }
       />
 
+      {failed && (
+        <div className="flex items-center gap-3 rounded-xl border border-danger/30 bg-danger/10 p-4 text-sm">
+          <AlertCircle className="h-4 w-4 shrink-0 text-danger" />
+          <span className="flex-1">
+            {lang === "bn" ? "অ্যানালিটিক্স লোড করা যায়নি।" : "Could not load analytics."}
+          </span>
+          <Button size="sm" variant="outline" onClick={() => setReloadKey((k) => k + 1)}>
+            {lang === "bn" ? "আবার চেষ্টা" : "Retry"}
+          </Button>
+        </div>
+      )}
+
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        {statCards.map((s) => (
-          <Card key={s.label}>
-            <CardContent className="p-5">
-              <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{s.label}</p>
-              <p className="mt-1 text-2xl font-black tabular-nums">{s.value}</p>
-              <p className="text-xs font-semibold text-success">{s.delta} vs last period</p>
-            </CardContent>
-          </Card>
-        ))}
+        {loading
+          ? Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-28 rounded-2xl" />)
+          : statCards.map((s) => (
+              <Card key={s.label}>
+                <CardContent className="p-5">
+                  <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{s.label}</p>
+                  <p className="mt-1 text-2xl font-black tabular-nums">{s.value}</p>
+                  <Delta value={s.delta} />
+                </CardContent>
+              </Card>
+            ))}
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle>{lang === "bn" ? "ট্রাফিক ট্রেন্ড" : "Traffic Trend"}</CardTitle>
-            <CardDescription>Views and articles over the last 6 months</CardDescription>
+            <CardDescription>{RANGE_LABEL[range]} — views and published articles</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="h-72">
-              {data ? (
+              {loading ? (
+                <Skeleton className="h-full w-full rounded-xl" />
+              ) : trend.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={trend} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                     <defs>
@@ -92,7 +155,9 @@ export function AnalyticsManager() {
                   </AreaChart>
                 </ResponsiveContainer>
               ) : (
-                <Skeleton className="h-full w-full rounded-xl" />
+                <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+                  {lang === "bn" ? "কোনো তথ্য নেই" : "No data in this range"}
+                </div>
               )}
             </div>
           </CardContent>
@@ -104,7 +169,7 @@ export function AnalyticsManager() {
           </CardHeader>
           <CardContent>
             <div className="h-52">
-              {data && categories.length > 0 ? (
+              {categories.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie data={categories} dataKey="value" nameKey="name" innerRadius={55} outerRadius={80} paddingAngle={3} stroke="hsl(var(--card))">
@@ -162,7 +227,7 @@ export function AnalyticsManager() {
           </CardHeader>
           <CardContent>
             <div className="h-56">
-              {data && status.length > 0 ? (
+              {status.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={status} layout="vertical" margin={{ left: 20, right: 20 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />

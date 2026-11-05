@@ -13,6 +13,8 @@ import {
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import toast from "react-hot-toast";
+import { useAdminCollection } from "@/features/admin/use-admin-collection";
+import { CollectionError, TableSkeleton } from "@/features/admin/collection-state";
 import {
   subscribeRoles,
   saveRole,
@@ -27,22 +29,13 @@ const permissionPool = [
 ];
 
 export function RolesManager() {
-  const [data, setData] = React.useState<AdminRoleRow[]>([]);
+  const { data, setData, loading, error } = useAdminCollection<AdminRoleRow>(subscribeRoles);
   const [deleting, setDeleting] = React.useState<AdminRoleRow | null>(null);
   const [creating, setCreating] = React.useState(false);
   const [name, setName] = React.useState("");
   const [description, setDescription] = React.useState("");
   const [perms, setPerms] = React.useState<string[]>([]);
   const [saving, setSaving] = React.useState(false);
-
-  React.useEffect(() => {
-    let mounted = true;
-    const unsub = subscribeRoles((rows) => mounted && setData(rows));
-    return () => {
-      mounted = false;
-      unsub();
-    };
-  }, []);
 
   const togglePerm = (p: string) => setPerms((prev) => (prev.includes(p) ? prev.filter((x) => x !== p) : [...prev, p]));
 
@@ -106,7 +99,12 @@ export function RolesManager() {
         description={`${data.length} roles configured`}
         action={<Button onClick={() => setCreating(true)}><Plus className="h-4 w-4" /> New Role</Button>}
       />
-      <AdminTable columns={columns} data={data} onDelete={(r) => !r.system && setDeleting(r)} />
+      {error && <CollectionError />}
+      {loading ? (
+        <TableSkeleton />
+      ) : (
+        <AdminTable columns={columns} data={data} onDelete={(r) => !r.system && setDeleting(r)} emptyTitle="No roles yet" emptyDescription="Create a role to group permissions." />
+      )}
 
       <Dialog open={creating} onOpenChange={setCreating}>
         <DialogContent className="max-w-lg">

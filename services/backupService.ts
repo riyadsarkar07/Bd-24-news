@@ -91,12 +91,18 @@ export async function deleteBackup(id: string): Promise<void> {
   await supabase.from("backups").delete().eq("id", id);
 }
 
-export async function restoreBackup(id: string): Promise<number> {
+export async function getBackupData(id: string): Promise<Record<string, unknown[]>> {
   const supabase = getSupabase();
   if (!supabase) throw new Error("Supabase is not configured.");
-  const { data } = await supabase.from("backups").select("data").eq("id", id).limit(1).maybeSingle();
+  const { data, error } = await supabase.from("backups").select("data").eq("id", id).limit(1).maybeSingle();
+  if (error) throw error;
   if (!data?.data) throw new Error("Backup not found");
-  return restoreSnapshot(data.data as Record<string, unknown[]>);
+  return data.data as Record<string, unknown[]>;
+}
+
+export async function restoreBackup(id: string): Promise<number> {
+  const snapshot = await getBackupData(id);
+  return restoreSnapshot(snapshot);
 }
 
 export async function restoreSnapshot(snapshot: Record<string, unknown[]>): Promise<number> {

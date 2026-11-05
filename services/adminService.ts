@@ -154,6 +154,38 @@ export async function deleteArticle(id: string): Promise<void> {
   await supabase.from("articles").delete().or(`slug.eq.${id},id.eq.${id}`);
 }
 
+export async function deleteArticles(ids: string[]): Promise<void> {
+  const supabase = getSupabase();
+  if (!supabase || ids.length === 0) return;
+  const uuids = ids.filter((id) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id));
+  const slugs = ids.filter((id) => !uuids.includes(id));
+  if (uuids.length > 0) {
+    const { error } = await supabase.from("articles").delete().in("id", uuids);
+    if (error) throw error;
+  }
+  if (slugs.length > 0) {
+    const { error } = await supabase.from("articles").delete().in("slug", slugs);
+    if (error) throw error;
+  }
+}
+
+export async function setArticlesStatus(ids: string[], status: ArticleStatus): Promise<void> {
+  const supabase = getSupabase();
+  if (!supabase || ids.length === 0) return;
+  const uuids = ids.filter((id) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id));
+  const slugs = ids.filter((id) => !uuids.includes(id));
+  const payload: Record<string, unknown> = { status, updated_at: new Date().toISOString() };
+  if (status === "published") payload.published_at = new Date().toISOString();
+  if (uuids.length > 0) {
+    const { error } = await supabase.from("articles").update(payload).in("id", uuids);
+    if (error) throw error;
+  }
+  if (slugs.length > 0) {
+    const { error } = await supabase.from("articles").update(payload).in("slug", slugs);
+    if (error) throw error;
+  }
+}
+
 export async function duplicateArticle(id: string): Promise<{ id: string; slug: string }> {
   const existing = await getArticleById(id);
   if (!existing) throw new Error("Article not found");

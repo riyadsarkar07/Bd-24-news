@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import toast from "react-hot-toast";
+import { useAdminCollection } from "@/features/admin/use-admin-collection";
+import { CollectionError, TableSkeleton } from "@/features/admin/collection-state";
 import {
   subscribeTags,
   saveTag,
@@ -17,22 +19,13 @@ import {
 } from "@/services/cmsService";
 
 export function TagsManager() {
-  const [data, setData] = React.useState<AdminTagRow[]>([]);
+  const { data, setData, loading, error } = useAdminCollection<AdminTagRow>(subscribeTags);
   const [search, setSearch] = React.useState("");
   const [open, setOpen] = React.useState(false);
   const [deleting, setDeleting] = React.useState<AdminTagRow | null>(null);
   const [name, setName] = React.useState("");
   const [trending, setTrending] = React.useState(false);
   const [saving, setSaving] = React.useState(false);
-
-  React.useEffect(() => {
-    let mounted = true;
-    const unsub = subscribeTags((rows) => mounted && setData(rows));
-    return () => {
-      mounted = false;
-      unsub();
-    };
-  }, []);
 
   const filtered = data.filter((r) => r.name.toLowerCase().includes(search.toLowerCase()));
 
@@ -81,7 +74,12 @@ export function TagsManager() {
         action={<Button onClick={() => setOpen(true)}><Plus className="h-4 w-4" /> New Tag</Button>}
       />
       <Toolbar search={search} onSearch={setSearch} placeholder="Search tags…" />
-      <AdminTable columns={columns} data={filtered} onDelete={(r) => setDeleting(r)} />
+      {error && <CollectionError />}
+      {loading ? (
+        <TableSkeleton />
+      ) : (
+        <AdminTable columns={columns} data={filtered} onDelete={(r) => setDeleting(r)} emptyTitle="No tags yet" emptyDescription="Create tags to group related coverage." />
+      )}
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>

@@ -15,6 +15,8 @@ import {
 } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import toast from "react-hot-toast";
+import { useAdminCollection } from "@/features/admin/use-admin-collection";
+import { CollectionError, TableSkeleton } from "@/features/admin/collection-state";
 import {
   subscribeAds,
   saveAd,
@@ -31,20 +33,11 @@ const typeColor: Record<AdminAdRow["type"], string> = {
 };
 
 export function AdsManager() {
-  const [data, setData] = React.useState<AdminAdRow[]>([]);
+  const { data, setData, loading, error } = useAdminCollection<AdminAdRow>(subscribeAds);
   const [search, setSearch] = React.useState("");
   const [deleting, setDeleting] = React.useState<AdminAdRow | null>(null);
   const [editing, setEditing] = React.useState<AdminAdRow | null>(null);
   const [saving, setSaving] = React.useState(false);
-
-  React.useEffect(() => {
-    let mounted = true;
-    const unsub = subscribeAds((rows) => mounted && setData(rows));
-    return () => {
-      mounted = false;
-      unsub();
-    };
-  }, []);
 
   const filtered = data.filter((r) => r.name.toLowerCase().includes(search.toLowerCase()) || r.position.toLowerCase().includes(search.toLowerCase()));
 
@@ -111,21 +104,28 @@ export function AdsManager() {
         action={<Button onClick={() => setEditing({ id: uniqueId(), name: "", position: "Sidebar", size: "300×250", type: "banner", impressions: 0, clicks: 0, ctr: 0, status: "inactive" })}><Plus className="h-4 w-4" /> New Ad Unit</Button>}
       />
       <Toolbar search={search} onSearch={setSearch} placeholder="Search ad units…" />
-      <AdminTable
-        columns={columns}
-        data={filtered}
-        onDelete={(r) => setDeleting(r)}
-        actions={(r) => (
-          <>
-            <Button variant="ghost" size="icon-sm" onClick={() => toggle(r)} aria-label="Toggle status">
-              {r.status === "active" ? <StatusBadge status="inactive" /> : <StatusBadge status="active" />}
-            </Button>
-            <Button variant="ghost" size="icon-sm" onClick={() => setEditing(r)} aria-label="Edit">
-              <Pencil className="h-4 w-4" />
-            </Button>
-          </>
-        )}
-      />
+      {error && <CollectionError />}
+      {loading ? (
+        <TableSkeleton />
+      ) : (
+        <AdminTable
+          columns={columns}
+          data={filtered}
+          onDelete={(r) => setDeleting(r)}
+          actions={(r) => (
+            <>
+              <Button variant="ghost" size="icon-sm" onClick={() => toggle(r)} aria-label="Toggle status">
+                {r.status === "active" ? <StatusBadge status="inactive" /> : <StatusBadge status="active" />}
+              </Button>
+              <Button variant="ghost" size="icon-sm" onClick={() => setEditing(r)} aria-label="Edit">
+                <Pencil className="h-4 w-4" />
+              </Button>
+            </>
+          )}
+          emptyTitle="No ad units yet"
+          emptyDescription="Create an ad unit to fill your ad slots."
+        />
+      )}
 
       <Dialog open={!!editing} onOpenChange={(v) => !v && setEditing(null)}>
         <DialogContent>

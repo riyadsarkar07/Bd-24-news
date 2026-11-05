@@ -74,7 +74,7 @@ export function RestoreManager() {
                 <span className="rounded-xl bg-accentblue/10 p-3 text-accentblue"><Database className="h-5 w-5" /></span>
                 <div className="min-w-0 flex-1">
                   <p className="font-bold">{r.label}</p>
-                  <p className="text-xs text-muted-foreground">{r.createdAt ? new Date(r.createdAt).toLocaleString() : "—"} • {r.collections.length} collections • {r.size}</p>
+                  <p className="text-xs text-muted-foreground">{r.createdAt ? new Date(r.createdAt).toLocaleString() : "—"} • {r.collections.length} tables • {r.size}</p>
                 </div>
                 <Badge variant="outline" className="bg-success/10 text-success">Ready</Badge>
                 <Button variant="outline" disabled={running} onClick={() => setPending(r)}>

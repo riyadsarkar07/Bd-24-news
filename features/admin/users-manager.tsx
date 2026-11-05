@@ -14,6 +14,8 @@ import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import toast from "react-hot-toast";
+import { useAdminCollection } from "@/features/admin/use-admin-collection";
+import { CollectionError, TableSkeleton } from "@/features/admin/collection-state";
 import {
   subscribeUsers,
   updateUser,
@@ -27,7 +29,7 @@ import {
 const ROLES: UserRole[] = ["Admin", "Editor", "Journalist", "Subscriber"];
 
 export function UsersManager() {
-  const [data, setData] = React.useState<AdminUserRow[]>([]);
+  const { data, setData, loading, error } = useAdminCollection<AdminUserRow>(subscribeUsers);
   const [search, setSearch] = React.useState("");
   const [addOpen, setAddOpen] = React.useState(false);
   const [deleting, setDeleting] = React.useState<AdminUserRow | null>(null);
@@ -35,15 +37,6 @@ export function UsersManager() {
   const [newName, setNewName] = React.useState("");
   const [newRole, setNewRole] = React.useState<UserRole>("Subscriber");
   const [saving, setSaving] = React.useState(false);
-
-  React.useEffect(() => {
-    let mounted = true;
-    const unsub = subscribeUsers((rows) => mounted && setData(rows));
-    return () => {
-      mounted = false;
-      unsub();
-    };
-  }, []);
 
   const filtered = data.filter(
     (r) => r.name.toLowerCase().includes(search.toLowerCase()) || r.email.toLowerCase().includes(search.toLowerCase()),
@@ -155,13 +148,18 @@ export function UsersManager() {
         action={<Button onClick={() => setAddOpen(true)}><Plus className="h-4 w-4" /> Add user</Button>}
       />
       <Toolbar search={search} onSearch={setSearch} placeholder="Search users…" />
-      <AdminTable columns={columns} data={filtered} onDelete={(r) => setDeleting(r)} />
+      {error && <CollectionError />}
+      {loading ? (
+        <TableSkeleton />
+      ) : (
+        <AdminTable columns={columns} data={filtered} onDelete={(r) => setDeleting(r)} emptyTitle="No users found" emptyDescription="Try a different search, or add a user." />
+      )}
 
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Add user</DialogTitle>
-            <DialogDescription>Register an existing account for admin panel access. The email must already exist in Firebase Authentication.</DialogDescription>
+            <DialogDescription>Register an existing account for admin panel access. The email must already belong to a registered user.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
@@ -195,7 +193,7 @@ export function UsersManager() {
         open={!!deleting}
         onOpenChange={(v) => !v && setDeleting(null)}
         title="Remove user?"
-        description={`This will remove "${deleting?.email}" from the admin panel. It does not delete the Firebase Authentication account.`}
+        description={`This will remove "${deleting?.email}" from the admin panel. It does not delete the user's login account.`}
         onConfirm={async () => {
           if (deleting) {
             try {

@@ -15,9 +15,9 @@ import {
   Bar,
 } from "recharts";
 import { motion } from "framer-motion";
-import { ArrowUpRight, Eye, PenSquare, UserPlus, MessageSquare, DollarSign, TrendingUp } from "lucide-react";
-import { adminService } from "@/services/adminService";
-import { getAnalytics } from "@/services/analyticsService";
+import { ArrowUpRight, Eye, PenSquare, UserPlus, MessageSquare, FileText, TrendingUp, AlertCircle } from "lucide-react";
+import { getAnalytics, type AnalyticsData } from "@/services/analyticsService";
+import type { AdminStat } from "@/services/adminService";
 import { StatCard } from "@/features/admin/stat-card";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -26,22 +26,30 @@ import { useLanguage } from "@/providers/language-provider";
 
 export function AdminDashboard() {
   const { lang } = useLanguage();
-  const [stats, setStats] = React.useState<Awaited<ReturnType<typeof adminService.getStats>> | null>(null);
-  const [chart, setChart] = React.useState<Awaited<ReturnType<typeof adminService.getChart>> | null>(null);
-  const [engagement, setEngagement] = React.useState<{ comments: number; subscribers: number; drafts: number } | null>(null);
+  const [analytics, setAnalytics] = React.useState<AnalyticsData | null>(null);
+  const [failed, setFailed] = React.useState(false);
+
+  const load = React.useCallback(() => {
+    setFailed(false);
+    getAnalytics("90d")
+      .then((data) => setAnalytics(data))
+      .catch(() => setFailed(true));
+  }, []);
 
   React.useEffect(() => {
-    Promise.all([adminService.getChart(), getAnalytics()]).then(([c, a]) => {
-      setChart(c);
-      setStats([
-        { key: "views", value: a.totalViews, delta: 0 },
-        { key: "articles", value: a.totalArticles, delta: 0 },
-        { key: "users", value: a.totalUsers, delta: 0 },
-        { key: "subscribers", value: a.totalSubscribers, delta: 0 },
-      ]);
-      setEngagement({ comments: a.totalComments, subscribers: a.totalSubscribers, drafts: a.draftArticles });
-    });
-  }, []);
+    load();
+  }, [load]);
+
+  const stats: AdminStat[] | null = analytics
+    ? [
+        { key: "views", value: analytics.totalViews, delta: analytics.deltas.views },
+        { key: "articles", value: analytics.totalArticles, delta: analytics.deltas.articles },
+        { key: "users", value: analytics.totalUsers, delta: analytics.deltas.users },
+        { key: "subscribers", value: analytics.totalSubscribers, delta: analytics.deltas.subscribers },
+      ]
+    : null;
+
+  const chart = analytics?.monthlyTrend ?? null;
 
   const quickActions = [
     { href: "/admin/news/new", icon: PenSquare, label: lang === "bn" ? "নতুন সংবাদ" : "Write News" },
@@ -69,6 +77,23 @@ export function AdminDashboard() {
         </Link>
       </div>
 
+      {failed && (
+        <div className="flex items-start gap-3 rounded-xl border border-danger/30 bg-danger/10 p-4 text-sm">
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-danger" />
+          <div className="flex-1">
+            <p className="font-semibold">
+              {lang === "bn" ? "ড্যাশবোর্ড ডেটা লোড করা যায়নি।" : "Could not load dashboard data."}
+            </p>
+            <p className="text-muted-foreground">
+              {lang === "bn" ? "সংযোগ পরীক্ষা করে আবার চেষ্টা করুন।" : "Check your connection and try again."}
+            </p>
+          </div>
+          <Button size="sm" variant="outline" onClick={load}>
+            {lang === "bn" ? "আবার চেষ্টা" : "Retry"}
+          </Button>
+        </div>
+      )}
+
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {stats ? stats.map((s, i) => <StatCard key={s.key} stat={s} index={i} />) : Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-28 rounded-2xl" />)}
       </div>
@@ -77,7 +102,7 @@ export function AdminDashboard() {
         <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle>{lang === "bn" ? "ট্রাফিক ওভারভিউ" : "Traffic Overview"}</CardTitle>
-            <CardDescription>{lang === "bn" ? "গত ৭ দিনের দর্শন" : "Last 7 days performance"}</CardDescription>
+            <CardDescription>{lang === "bn" ? "গত ৯০ দিনের দর্শন ও প্রকাশনা" : "Views and publishing over the last 90 days"}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="h-72">
@@ -152,13 +177,13 @@ export function AdminDashboard() {
       </Card>
 
       <div className="grid gap-6 md:grid-cols-3">
-        {engagement
+        {analytics
           ? [
-              { icon: MessageSquare, label: lang === "bn" ? "মন্তব্য" : "Comments", value: engagement.comments.toLocaleString() },
-              { icon: DollarSign, label: lang === "bn" ? "ড্রাফট" : "Drafts", value: engagement.drafts.toLocaleString() },
-              { icon: UserPlus, label: lang === "bn" ? "সাবস্ক্রাইবার" : "Subscribers", value: engagement.subscribers.toLocaleString() },
+              { icon: MessageSquare, label: lang === "bn" ? "মন্তব্য" : "Comments", value: analytics.totalComments.toLocaleString(), delta: analytics.deltas.comments },
+              { icon: FileText, label: lang === "bn" ? "ড্রাফট" : "Drafts", value: analytics.draftArticles.toLocaleString(), delta: 0 },
+              { icon: UserPlus, label: lang === "bn" ? "সাবস্ক্রাইবার" : "Subscribers", value: analytics.totalSubscribers.toLocaleString(), delta: analytics.deltas.subscribers },
             ].map((item, i) => (
-              <motion.div key={item.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 * i }}>
+              <motion.div key={item.label} initial={false} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 * i }}>
                 <Card>
                   <CardContent className="flex items-center gap-4 p-5">
                     <span className="rounded-xl bg-accentblue/10 p-3 text-accentblue">

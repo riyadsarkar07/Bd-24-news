@@ -14,6 +14,8 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import toast from "react-hot-toast";
+import { useAdminCollection } from "@/features/admin/use-admin-collection";
+import { CollectionError, TableSkeleton } from "@/features/admin/collection-state";
 import {
   subscribeCategories,
   saveCategory,
@@ -24,21 +26,12 @@ import {
 type Draft = Omit<AdminCategoryRow, "id" | "articles"> & { id?: string };
 
 export function CategoriesManager() {
-  const [data, setData] = React.useState<AdminCategoryRow[]>([]);
+  const { data, setData, loading, error } = useAdminCollection<AdminCategoryRow>(subscribeCategories);
   const [search, setSearch] = React.useState("");
   const [open, setOpen] = React.useState(false);
   const [deleting, setDeleting] = React.useState<AdminCategoryRow | null>(null);
   const [saving, setSaving] = React.useState(false);
   const [draft, setDraft] = React.useState<Draft>({ slug: "", nameBn: "", name: "", color: "#E50914", status: "active", menu: true, featured: false });
-
-  React.useEffect(() => {
-    let mounted = true;
-    const unsub = subscribeCategories((rows) => mounted && setData(rows));
-    return () => {
-      mounted = false;
-      unsub();
-    };
-  }, []);
 
   const filtered = data.filter((r) => r.nameBn.toLowerCase().includes(search.toLowerCase()) || r.name.toLowerCase().includes(search.toLowerCase()));
 
@@ -101,11 +94,24 @@ export function CategoriesManager() {
         action={<Button onClick={() => openEdit()}><Plus className="h-4 w-4" /> New Category</Button>}
       />
       <Toolbar search={search} onSearch={setSearch} placeholder="Search categories…" />
-      <AdminTable columns={columns} data={filtered} onDelete={(r) => setDeleting(r)} actions={(r) => (
-        <Button variant="ghost" size="icon-sm" onClick={() => openEdit(r)} aria-label="Edit">
-          <Pencil className="h-4 w-4" />
-        </Button>
-      )} />
+      {error && <CollectionError />}
+      {loading ? (
+        <TableSkeleton />
+      ) : (
+        <AdminTable
+          columns={columns}
+          data={filtered}
+          onDelete={(r) => setDeleting(r)}
+          emptyTitle="No categories yet"
+          emptyDescription="Add your first category to organise articles."
+          actions={(r) => (
+            <Button variant="ghost" size="icon-sm" onClick={() => openEdit(r)} aria-label="Edit">
+              <Pencil className="h-4 w-4" />
+            </Button>
+          )}
+        />
+      )}
+
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-lg">

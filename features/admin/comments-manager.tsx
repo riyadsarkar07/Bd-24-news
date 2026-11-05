@@ -6,6 +6,8 @@ import { PageHeader, Toolbar, AdminTable, StatusBadge, ConfirmDialog, type Admin
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import toast from "react-hot-toast";
+import { useAdminCollection } from "@/features/admin/use-admin-collection";
+import { CollectionError, TableSkeleton } from "@/features/admin/collection-state";
 import {
   subscribeCommentsAdmin,
   updateComment,
@@ -14,19 +16,10 @@ import {
 } from "@/services/cmsService";
 
 export function CommentsManager() {
-  const [data, setData] = React.useState<AdminCommentRow[]>([]);
+  const { data, setData, loading, error } = useAdminCollection<AdminCommentRow>(subscribeCommentsAdmin);
   const [search, setSearch] = React.useState("");
   const [filter, setFilter] = React.useState<"all" | "published" | "pending" | "spam">("all");
   const [deleting, setDeleting] = React.useState<AdminCommentRow | null>(null);
-
-  React.useEffect(() => {
-    let mounted = true;
-    const unsub = subscribeCommentsAdmin((rows) => mounted && setData(rows));
-    return () => {
-      mounted = false;
-      unsub();
-    };
-  }, []);
 
   const filtered = data.filter(
     (r) => (filter === "all" || r.status === filter) && (r.content.toLowerCase().includes(search.toLowerCase()) || r.author.toLowerCase().includes(search.toLowerCase())),
@@ -95,25 +88,33 @@ export function CommentsManager() {
           </div>
         }
       />
-      <AdminTable
-        columns={columns}
-        data={filtered}
-        onDelete={(r) => setDeleting(r)}
-        actions={(r) => (
-          <>
-            {r.status !== "published" && (
-              <Button variant="ghost" size="icon-sm" onClick={() => setStatus(r, "published")} aria-label="Approve">
-                <Check className="h-4 w-4 text-success" />
-              </Button>
-            )}
-            {r.status !== "spam" && (
-              <Button variant="ghost" size="icon-sm" onClick={() => setStatus(r, "spam")} aria-label="Mark spam">
-                <X className="h-4 w-4 text-warning" />
-              </Button>
-            )}
-          </>
-        )}
-      />
+      {error && <CollectionError />}
+      {loading ? (
+        <TableSkeleton />
+      ) : (
+        <AdminTable
+          columns={columns}
+          data={filtered}
+          onDelete={(r) => setDeleting(r)}
+          actions={(r) => (
+            <>
+              {r.status !== "published" && (
+                <Button variant="ghost" size="icon-sm" onClick={() => setStatus(r, "published")} aria-label="Approve">
+                  <Check className="h-4 w-4 text-success" />
+                </Button>
+              )}
+              {r.status !== "spam" && (
+                <Button variant="ghost" size="icon-sm" onClick={() => setStatus(r, "spam")} aria-label="Mark spam">
+                  <X className="h-4 w-4 text-warning" />
+                </Button>
+              )}
+            </>
+          )}
+          emptyTitle="No comments found"
+          emptyDescription="Comments will appear here for moderation."
+        />
+      )}
+
 
       <ConfirmDialog
         open={!!deleting}

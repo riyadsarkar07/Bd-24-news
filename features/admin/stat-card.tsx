@@ -14,7 +14,8 @@ const labels: Record<string, string> = {
 };
 
 export function StatCard({ stat, index }: { stat: AdminStat; index: number }) {
-  const up = stat.delta >= 0;
+  const flat = stat.delta === 0;
+  const up = stat.delta > 0;
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
@@ -33,11 +34,17 @@ export function StatCard({ stat, index }: { stat: AdminStat; index: number }) {
             <span
               className={cn(
                 "flex items-center gap-0.5 rounded-full px-2 py-0.5 text-xs font-bold",
-                up ? "bg-success/15 text-success" : "bg-danger/15 text-danger",
+                flat
+                  ? "bg-muted text-muted-foreground"
+                  : up
+                    ? "bg-success/15 text-success"
+                    : "bg-danger/15 text-danger",
               )}
+              title="Change vs previous period"
             >
-              {up ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-              {Math.abs(stat.delta)}%
+              {!flat && (up ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />)}
+              {stat.delta > 0 ? "+" : ""}
+              {stat.delta}%
             </span>
           </div>
         </CardContent>
@@ -45,3 +52,4 @@ export function StatCard({ stat, index }: { stat: AdminStat; index: number }) {
     </motion.div>
   );
 }
+

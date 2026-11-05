@@ -89,3 +89,46 @@ export async function resetAdminPassword(email: string): Promise<void> {
   const { error } = await supabase.auth.resetPasswordForEmail(normalized);
   if (error) throw new Error(error.message);
 }
+
+export async function updateAdminProfile(patch: {
+  name?: string;
+  phone?: string;
+  bio?: string;
+  avatar?: string;
+}): Promise<void> {
+  if (typeof window === "undefined") throw new Error("Authentication is only available in the browser.");
+  const supabase = getSupabase();
+  if (!supabase) throw new Error("Supabase is not configured.");
+  const { data: auth } = await supabase.auth.getUser();
+  const user = auth.user;
+  if (!user) throw new Error("You are not signed in.");
+
+  const { error: authError } = await supabase.auth.updateUser({
+    data: {
+      ...(user.user_metadata ?? {}),
+      ...(patch.name !== undefined ? { name: patch.name } : {}),
+      ...(patch.phone !== undefined ? { phone: patch.phone } : {}),
+      ...(patch.bio !== undefined ? { bio: patch.bio } : {}),
+      ...(patch.avatar !== undefined ? { avatar: patch.avatar } : {}),
+    },
+  });
+  if (authError) throw new Error(authError.message);
+
+  const profilePatch: Record<string, unknown> = { updated_at: new Date().toISOString() };
+  if (patch.name !== undefined) profilePatch.name = patch.name;
+  if (patch.avatar !== undefined) profilePatch.avatar = patch.avatar;
+  const { error: profileError } = await supabase
+    .from("profiles")
+    .update(profilePatch)
+    .eq("id", user.id);
+  if (profileError) throw new Error(profileError.message);
+}
+
+export async function updateAdminPassword(password: string): Promise<void> {
+  if (typeof window === "undefined") throw new Error("Authentication is only available in the browser.");
+  const supabase = getSupabase();
+  if (!supabase) throw new Error("Supabase is not configured.");
+  const { error } = await supabase.auth.updateUser({ password });
+  if (error) throw new Error(error.message);
+}
+

@@ -11,6 +11,8 @@ import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import toast from "react-hot-toast";
+import { useAdminCollection } from "@/features/admin/use-admin-collection";
+import { CollectionError, TableSkeleton } from "@/features/admin/collection-state";
 import {
   subscribeAuthors,
   saveAuthor,
@@ -21,21 +23,12 @@ import {
 type Draft = Omit<AdminAuthorRow, "id" | "articlesCount"> & { id?: string };
 
 export function AuthorsManager() {
-  const [data, setData] = React.useState<AdminAuthorRow[]>([]);
+  const { data, setData, loading, error } = useAdminCollection<AdminAuthorRow>(subscribeAuthors);
   const [search, setSearch] = React.useState("");
   const [deleting, setDeleting] = React.useState<AdminAuthorRow | null>(null);
   const [open, setOpen] = React.useState(false);
   const [saving, setSaving] = React.useState(false);
   const [draft, setDraft] = React.useState<Draft>({ slug: "", nameBn: "", name: "", role: "Journalist", avatar: "", followers: 0, verified: false, active: true });
-
-  React.useEffect(() => {
-    let mounted = true;
-    const unsub = subscribeAuthors((rows) => mounted && setData(rows));
-    return () => {
-      mounted = false;
-      unsub();
-    };
-  }, []);
 
   const filtered = data.filter((r) => r.nameBn.toLowerCase().includes(search.toLowerCase()) || r.name.toLowerCase().includes(search.toLowerCase()));
 
@@ -104,16 +97,23 @@ export function AuthorsManager() {
         action={<Button onClick={() => openEdit()}><Plus className="h-4 w-4" /> New Author</Button>}
       />
       <Toolbar search={search} onSearch={setSearch} placeholder="Search authors…" />
-      <AdminTable
-        columns={columns}
-        data={filtered}
-        onDelete={(r) => setDeleting(r)}
-        actions={(r) => (
-          <Button variant="ghost" size="icon-sm" onClick={() => openEdit(r)} aria-label="Edit">
-            <Pencil className="h-4 w-4" />
-          </Button>
-        )}
-      />
+      {error && <CollectionError />}
+      {loading ? (
+        <TableSkeleton />
+      ) : (
+        <AdminTable
+          columns={columns}
+          data={filtered}
+          onDelete={(r) => setDeleting(r)}
+          actions={(r) => (
+            <Button variant="ghost" size="icon-sm" onClick={() => openEdit(r)} aria-label="Edit">
+              <Pencil className="h-4 w-4" />
+            </Button>
+          )}
+          emptyTitle="No authors yet"
+          emptyDescription="Add author profiles to attribute articles."
+        />
+      )}
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>

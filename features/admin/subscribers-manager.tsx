@@ -5,6 +5,8 @@ import { Download, UserRound } from "lucide-react";
 import { PageHeader, Toolbar, AdminTable, StatusBadge, ConfirmDialog, type AdminColumn } from "@/features/admin/admin-table";
 import { Button } from "@/components/ui/button";
 import toast from "react-hot-toast";
+import { useAdminCollection } from "@/features/admin/use-admin-collection";
+import { CollectionError, TableSkeleton } from "@/features/admin/collection-state";
 import {
   subscribeSubscribers,
   deleteSubscriber,
@@ -12,18 +14,9 @@ import {
 } from "@/services/cmsService";
 
 export function SubscribersManager() {
-  const [data, setData] = React.useState<AdminSubscriberRow[]>([]);
+  const { data, setData, loading, error } = useAdminCollection<AdminSubscriberRow>(subscribeSubscribers);
   const [search, setSearch] = React.useState("");
   const [deleting, setDeleting] = React.useState<AdminSubscriberRow | null>(null);
-
-  React.useEffect(() => {
-    let mounted = true;
-    const unsub = subscribeSubscribers((rows) => mounted && setData(rows));
-    return () => {
-      mounted = false;
-      unsub();
-    };
-  }, []);
 
   const filtered = data.filter((r) => r.email.toLowerCase().includes(search.toLowerCase()) || r.name.toLowerCase().includes(search.toLowerCase()));
 
@@ -73,7 +66,12 @@ export function SubscribersManager() {
         action={<Button onClick={exportCsv}><Download className="h-4 w-4" /> Export CSV</Button>}
       />
       <Toolbar search={search} onSearch={setSearch} placeholder="Search subscribers…" />
-      <AdminTable columns={columns} data={filtered} onDelete={(r) => setDeleting(r)} />
+      {error && <CollectionError />}
+      {loading ? (
+        <TableSkeleton />
+      ) : (
+        <AdminTable columns={columns} data={filtered} onDelete={(r) => setDeleting(r)} emptyTitle="No subscribers yet" emptyDescription="Subscribers appear here once they sign up." />
+      )}
 
       <ConfirmDialog
         open={!!deleting}

@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Plus, Edit3, Trash2, Copy, Search, LayoutGrid, List, Database } from "lucide-react";
+import { Plus, Edit3, Trash2, Copy, LayoutGrid, List, Database, CheckCircle2, FileText } from "lucide-react";
 import { motion } from "framer-motion";
 import { PageHeader, Toolbar, AdminTable, StatusBadge, ConfirmDialog, type AdminColumn } from "@/features/admin/admin-table";
 import { Badge } from "@/components/ui/badge";
@@ -15,6 +15,8 @@ import type { Article } from "@/types";
 import {
   listAllArticles,
   deleteArticle,
+  deleteArticles,
+  setArticlesStatus,
   duplicateArticle,
   seedSampleArticles,
 } from "@/services/adminService";
@@ -29,6 +31,9 @@ export function NewsManager() {
   const [view, setView] = React.useState<"table" | "grid">("table");
   const [deleting, setDeleting] = React.useState<ArticleRow | null>(null);
   const [seeding, setSeeding] = React.useState(false);
+  const [selected, setSelected] = React.useState<string[]>([]);
+  const [bulkBusy, setBulkBusy] = React.useState(false);
+  const [bulkDeleteOpen, setBulkDeleteOpen] = React.useState(false);
 
   const load = React.useCallback(() => {
     listAllArticles()
@@ -46,6 +51,43 @@ export function NewsManager() {
       (filter === "all" || r.status === filter) &&
       (r.title.toLowerCase().includes(search.toLowerCase()) || r.titleBn.toLowerCase().includes(search.toLowerCase())),
   );
+
+  const selectedVisible = selected.filter((id) => filtered.some((r) => r.id === id));
+
+  async function bulkSetStatus(status: "published" | "draft") {
+    if (selectedVisible.length === 0) return;
+    try {
+      setBulkBusy(true);
+      await setArticlesStatus(selectedVisible, status);
+      setData((rows) => rows.map((r) => (selectedVisible.includes(r.id) ? { ...r, status } : r)));
+      toast.success(
+        status === "published"
+          ? `Published ${selectedVisible.length} article(s)`
+          : `Moved ${selectedVisible.length} article(s) to drafts`,
+      );
+      setSelected([]);
+    } catch {
+      toast.error("Bulk update failed");
+    } finally {
+      setBulkBusy(false);
+    }
+  }
+
+  async function bulkDelete() {
+    if (selectedVisible.length === 0) return;
+    try {
+      setBulkBusy(true);
+      await deleteArticles(selectedVisible);
+      setData((rows) => rows.filter((r) => !selectedVisible.includes(r.id)));
+      toast.success(`Deleted ${selectedVisible.length} article(s)`);
+      setSelected([]);
+      setBulkDeleteOpen(false);
+    } catch {
+      toast.error("Bulk delete failed");
+    } finally {
+      setBulkBusy(false);
+    }
+  }
 
   const columns: AdminColumn<ArticleRow>[] = [
     {
@@ -201,6 +243,26 @@ export function NewsManager() {
         }
       />
 
+      {selectedVisible.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2 rounded-xl border border-brand/30 bg-brand/5 px-4 py-2.5 text-sm">
+          <span className="font-semibold">{selectedVisible.length} selected</span>
+          <div className="ml-auto flex flex-wrap gap-2">
+            <Button size="sm" variant="outline" disabled={bulkBusy} onClick={() => bulkSetStatus("published")}>
+              <CheckCircle2 className="h-4 w-4" /> Publish
+            </Button>
+            <Button size="sm" variant="outline" disabled={bulkBusy} onClick={() => bulkSetStatus("draft")}>
+              <FileText className="h-4 w-4" /> Move to draft
+            </Button>
+            <Button size="sm" variant="destructive" disabled={bulkBusy} onClick={() => setBulkDeleteOpen(true)}>
+              <Trash2 className="h-4 w-4" /> Delete
+            </Button>
+            <Button size="sm" variant="ghost" disabled={bulkBusy} onClick={() => setSelected([])}>
+              Clear
+            </Button>
+          </div>
+        </div>
+      )}
+
       {loading ? (
         <div className="space-y-3">
           {[0, 1, 2, 3, 4].map((i) => (
@@ -230,6 +292,9 @@ export function NewsManager() {
           columns={columns}
           data={filtered}
           onDelete={(r) => setDeleting(r)}
+          selection={{ selected, onChange: setSelected }}
+          emptyTitle="No articles match"
+          emptyDescription="Adjust your search or filter to find articles."
           actions={(r) => (
             <>
               <Link href={`/admin/news/edit/${r.id}`}>
@@ -251,8 +316,17 @@ export function NewsManager() {
         open={!!deleting}
         onOpenChange={(v) => !v && setDeleting(null)}
         title="Delete article?"
-        description="This will permanently remove the article from Firestore. This action cannot be undone."
+        description="This will permanently remove the article from the database. This action cannot be undone."
         onConfirm={handleDelete}
+      />
+
+      <ConfirmDialog
+        open={bulkDeleteOpen}
+        onOpenChange={setBulkDeleteOpen}
+        title={`Delete ${selectedVisible.length} article(s)?`}
+        description="This permanently removes the selected articles from the database. This action cannot be undone."
+        confirmLabel="Delete all"
+        onConfirm={bulkDelete}
       />
     </div>
   );

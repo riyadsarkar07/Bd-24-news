@@ -109,7 +109,7 @@ export function MediaManager() {
       >
         <UploadCloud className="h-8 w-8" />
         <p className="text-sm font-semibold">Drag & drop files here, or click to browse</p>
-        <p className="text-xs">PNG, JPG, GIF, WebP, MP4 — stored in Firebase Storage</p>
+        <p className="text-xs">PNG, JPG, GIF, WebP, MP4 — stored in Supabase Storage</p>
         {uploading && (
           <div className="w-full max-w-sm space-y-1">
             <Progress value={progress} className="h-1.5" />
@@ -203,7 +203,7 @@ export function MediaManager() {
         open={!!deleting}
         onOpenChange={(v) => !v && setDeleting(null)}
         title="Delete file?"
-        description={`This will permanently delete "${deleting?.name}" from Storage and Firestore.`}
+        description={`This will permanently delete "${deleting?.name}" from storage and the media library.`}
         onConfirm={handleDelete}
       />
 

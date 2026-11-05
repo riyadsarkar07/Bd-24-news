@@ -132,7 +132,11 @@ function dateStr(v: unknown, fallback = ""): string {
   return fallback;
 }
 
-function startPolling<T>(fetcher: () => Promise<T[]>, listener: (rows: T[]) => void): () => void {
+function startPolling<T>(
+  fetcher: () => Promise<T[]>,
+  listener: (rows: T[]) => void,
+  onError?: (err: unknown) => void,
+): () => void {
   if (typeof window === "undefined") return () => {};
   let stopped = false;
   const run = async () => {
@@ -142,6 +146,7 @@ function startPolling<T>(fetcher: () => Promise<T[]>, listener: (rows: T[]) => v
       if (!stopped) listener(rows);
     } catch (err) {
       console.error("Supabase polling error:", err);
+      if (!stopped) onError?.(err);
     }
   };
   void run();
@@ -205,8 +210,8 @@ export async function listCategories(): Promise<AdminCategoryRow[]> {
   }
 }
 
-export function subscribeCategories(listener: (rows: AdminCategoryRow[]) => void): () => void {
-  return startPolling(listCategories, listener);
+export function subscribeCategories(listener: (rows: AdminCategoryRow[]) => void, onError?: (err: unknown) => void): () => void {
+  return startPolling(listCategories, listener, onError);
 }
 
 export async function saveCategory(id: string, input: { slug: string; nameBn: string; name: string; color: string; status: "active" | "inactive"; menu: boolean; featured: boolean }): Promise<void> {
@@ -260,8 +265,8 @@ export async function listTags(): Promise<AdminTagRow[]> {
   }
 }
 
-export function subscribeTags(listener: (rows: AdminTagRow[]) => void): () => void {
-  return startPolling(listTags, listener);
+export function subscribeTags(listener: (rows: AdminTagRow[]) => void, onError?: (err: unknown) => void): () => void {
+  return startPolling(listTags, listener, onError);
 }
 
 export async function saveTag(id: string, input: { name: string; trending: boolean }): Promise<void> {
@@ -317,8 +322,8 @@ export async function listAuthors(): Promise<AdminAuthorRow[]> {
   }
 }
 
-export function subscribeAuthors(listener: (rows: AdminAuthorRow[]) => void): () => void {
-  return startPolling(listAuthors, listener);
+export function subscribeAuthors(listener: (rows: AdminAuthorRow[]) => void, onError?: (err: unknown) => void): () => void {
+  return startPolling(listAuthors, listener, onError);
 }
 
 export async function saveAuthor(id: string, input: { slug: string; nameBn: string; name: string; role: string; avatar: string; followers: number; verified: boolean; active: boolean }): Promise<void> {
@@ -362,8 +367,8 @@ export async function listUsers(): Promise<AdminUserRow[]> {
   }
 }
 
-export function subscribeUsers(listener: (rows: AdminUserRow[]) => void): () => void {
-  return startPolling(listUsers, listener);
+export function subscribeUsers(listener: (rows: AdminUserRow[]) => void, onError?: (err: unknown) => void): () => void {
+  return startPolling(listUsers, listener, onError);
 }
 
 export async function saveUser(id: string, input: { name: string; email: string; avatar?: string; role: UserRole; status: UserStatus }): Promise<void> {
@@ -425,8 +430,8 @@ export async function listAds(): Promise<AdminAdRow[]> {
   }
 }
 
-export function subscribeAds(listener: (rows: AdminAdRow[]) => void): () => void {
-  return startPolling(listAds, listener);
+export function subscribeAds(listener: (rows: AdminAdRow[]) => void, onError?: (err: unknown) => void): () => void {
+  return startPolling(listAds, listener, onError);
 }
 
 export async function saveAd(id: string, input: Omit<AdminAdRow, "id">): Promise<void> {
@@ -479,8 +484,8 @@ export async function listComments(): Promise<AdminCommentRow[]> {
   }
 }
 
-export function subscribeCommentsAdmin(listener: (rows: AdminCommentRow[]) => void): () => void {
-  return startPolling(listComments, listener);
+export function subscribeCommentsAdmin(listener: (rows: AdminCommentRow[]) => void, onError?: (err: unknown) => void): () => void {
+  return startPolling(listComments, listener, onError);
 }
 
 export async function updateComment(id: string, patch: Partial<AdminCommentRow>): Promise<void> {
@@ -521,8 +526,8 @@ export async function listSubscribers(): Promise<AdminSubscriberRow[]> {
   }
 }
 
-export function subscribeSubscribers(listener: (rows: AdminSubscriberRow[]) => void): () => void {
-  return startPolling(listSubscribers, listener);
+export function subscribeSubscribers(listener: (rows: AdminSubscriberRow[]) => void, onError?: (err: unknown) => void): () => void {
+  return startPolling(listSubscribers, listener, onError);
 }
 
 export async function addSubscriber(email: string, source = "Website form", name = ""): Promise<void> {
@@ -575,8 +580,8 @@ export async function listRoles(): Promise<AdminRoleRow[]> {
   }
 }
 
-export function subscribeRoles(listener: (rows: AdminRoleRow[]) => void): () => void {
-  return startPolling(listRoles, listener);
+export function subscribeRoles(listener: (rows: AdminRoleRow[]) => void, onError?: (err: unknown) => void): () => void {
+  return startPolling(listRoles, listener, onError);
 }
 
 export async function saveRole(id: string, input: { slug: string; name: string; description: string; permissions: string[]; system: boolean }): Promise<void> {
@@ -620,8 +625,8 @@ export async function listNewsletters(): Promise<AdminNewsletterRow[]> {
   }
 }
 
-export function subscribeNewsletters(listener: (rows: AdminNewsletterRow[]) => void): () => void {
-  return startPolling(listNewsletters, listener);
+export function subscribeNewsletters(listener: (rows: AdminNewsletterRow[]) => void, onError?: (err: unknown) => void): () => void {
+  return startPolling(listNewsletters, listener, onError);
 }
 
 export async function saveNewsletter(id: string, input: Partial<AdminNewsletterRow>): Promise<void> {

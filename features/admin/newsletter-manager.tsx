@@ -13,6 +13,8 @@ import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import toast from "react-hot-toast";
+import { useAdminCollection } from "@/features/admin/use-admin-collection";
+import { CollectionError, TableSkeleton } from "@/features/admin/collection-state";
 import {
   subscribeNewsletters,
   saveNewsletter,
@@ -28,7 +30,7 @@ const statusColor: Record<AdminNewsletterRow["status"], string> = {
 };
 
 export function NewsletterManager() {
-  const [data, setData] = React.useState<AdminNewsletterRow[]>([]);
+  const { data, loading, error } = useAdminCollection<AdminNewsletterRow>(subscribeNewsletters);
   const [subscribersCount, setSubscribersCount] = React.useState(0);
   const [search, setSearch] = React.useState("");
   const [composeOpen, setComposeOpen] = React.useState(false);
@@ -39,11 +41,11 @@ export function NewsletterManager() {
 
   React.useEffect(() => {
     let mounted = true;
-    const unsub = subscribeNewsletters((rows) => mounted && setData(rows));
-    listSubscribers().then((rows) => mounted && setSubscribersCount(rows.length));
+    listSubscribers()
+      .then((rows) => mounted && setSubscribersCount(rows.length))
+      .catch(() => mounted && setSubscribersCount(0));
     return () => {
       mounted = false;
-      unsub();
     };
   }, []);
 
@@ -135,13 +137,24 @@ export function NewsletterManager() {
         action={<Button onClick={() => setComposeOpen(true)}><Plus className="h-4 w-4" /> Compose</Button>}
       />
       <Toolbar search={search} onSearch={setSearch} placeholder="Search campaigns…" />
-      <AdminTable columns={columns} data={filtered} actions={(r) => (
-        r.status === "draft" && (
-          <Button variant="ghost" size="icon-sm" onClick={() => sendDraft(r)} aria-label="Send now">
-            <Send className="h-4 w-4 text-success" />
-          </Button>
-        )
-      )} />
+      {error && <CollectionError />}
+      {loading ? (
+        <TableSkeleton />
+      ) : (
+        <AdminTable
+          columns={columns}
+          data={filtered}
+          emptyTitle="No campaigns yet"
+          emptyDescription="Compose your first newsletter to reach subscribers."
+          actions={(r) =>
+            r.status === "draft" ? (
+              <Button variant="ghost" size="icon-sm" onClick={() => sendDraft(r)} aria-label="Send now">
+                <Send className="h-4 w-4 text-success" />
+              </Button>
+            ) : null
+          }
+        />
+      )}
 
       <Dialog open={composeOpen} onOpenChange={setComposeOpen}>
         <DialogContent className="max-w-lg">

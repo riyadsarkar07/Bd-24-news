@@ -81,7 +81,10 @@ export interface Article {
   seoTitle?: string;
   seoDescription?: string;
   status?: "published" | "draft";
+  commentsEnabled?: boolean;
 }
+
+export type CommentStatus = "published" | "pending" | "spam";
 
 export interface Comment {
   id: string;
@@ -92,6 +95,9 @@ export interface Comment {
   createdAt: string;
   likes: number;
   replies: Comment[];
+  status?: CommentStatus;
+  isOfficial?: boolean;
+  parentId?: string | null;
 }
 
 export interface SearchResult {

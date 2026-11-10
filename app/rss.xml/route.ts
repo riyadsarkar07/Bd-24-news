@@ -18,7 +18,8 @@ async function buildRss(): Promise<string> {
     .slice(0, 50)
     .map((a) => {
       const url = `${siteConfig.url}/article/${a.slug}`;
-      const pubDate = new Date(a.publishedAt).toUTCString();
+      const parsed = new Date(a.publishedAt);
+      const pubDate = Number.isNaN(parsed.getTime()) ? new Date().toUTCString() : parsed.toUTCString();
       const title = escapeXml(a.title);
       const description = escapeXml(a.excerpt);
       return `    <item>

@@ -43,6 +43,7 @@ export interface ArticleInput {
   seoDescription?: string;
   status: ArticleStatus;
   publishedAt?: string;
+  commentsEnabled?: boolean;
 }
 
 const DEFAULT_AUTHOR = { name: "Riyad", nameBn: "রিয়াদ", role: "Editor" };
@@ -56,7 +57,20 @@ function buildArticlePayload(input: ArticleInput, existing?: Article): Record<st
   const authorNameBn = input.authorNameBn?.trim() || DEFAULT_AUTHOR.nameBn;
   const authorRole = input.authorRole?.trim() || DEFAULT_AUTHOR.role;
   const status = input.status === "draft" ? "draft" : "published";
-  const publishedAt = status === "published" ? input.publishedAt || now : existing?.publishedAt ?? "";
+
+  // Published time rules:
+  //  * an existing published article always keeps its original timestamp
+  //  * an explicit editor-provided timestamp wins for scheduled/first publish
+  //  * otherwise the timestamp is set the first time the article goes live
+  let publishedAt: string | null;
+  if (status === "draft") {
+    publishedAt = existing?.publishedAt || input.publishedAt || null;
+  } else if (existing?.status === "published" && existing.publishedAt) {
+    publishedAt = existing.publishedAt;
+  } else {
+    publishedAt = input.publishedAt || now;
+  }
+
   const body = input.body || "";
   const words = body.split(/\s+/).filter(Boolean).length;
 
@@ -76,7 +90,7 @@ function buildArticlePayload(input: ArticleInput, existing?: Article): Record<st
     author_role: authorRole,
     cover_image: input.coverImage || "",
     images: input.images && input.images.length > 0 ? input.images : input.coverImage ? [input.coverImage] : [],
-    published_at: publishedAt || now,
+    published_at: publishedAt,
     updated_at: now,
     views: existing?.views ?? 0,
     likes: existing?.likes ?? 0,
@@ -93,6 +107,7 @@ function buildArticlePayload(input: ArticleInput, existing?: Article): Record<st
     seo_title: input.seoTitle || "",
     seo_description: input.seoDescription || "",
     status,
+    comments_enabled: input.commentsEnabled ?? existing?.commentsEnabled ?? true,
   };
 }
 
@@ -135,13 +150,24 @@ export async function saveArticle(input: ArticleInput, existingId?: string): Pro
   if (!supabase) throw new Error("Supabase is not configured. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY environment variables.");
   const existing = existingId ? await getArticleById(existingId) : undefined;
   const payload = buildArticlePayload(input, existing);
-  const { data, error } = await supabase
-    .from("articles")
-    .upsert(payload, { onConflict: "slug" })
-    .select("id,slug")
-    .single();
+
+  const upsert = (body: Record<string, unknown>) =>
+    supabase.from("articles").upsert(body, { onConflict: "slug" }).select("id,slug").single();
+
+  let { data, error } = await upsert(payload);
+
+  // The comments_enabled column is added by an additive migration. Until it
+  // has been applied, save the article without it instead of failing.
+  if (error && /comments_enabled/i.test(error.message)) {
+    const { comments_enabled: _drop, ...withoutFlag } = payload;
+    void _drop;
+    const retry = await upsert(withoutFlag);
+    data = retry.data;
+    error = retry.error;
+  }
+
   if (error) throw error;
-  return { id: str(data.slug, str(data.id)), slug: str(data.slug, str(data.id)) };
+  return { id: str(data?.slug, str(data?.id)), slug: str(data?.slug, str(data?.id)) };
 }
 
 function str(v: unknown, fallback = ""): string {
@@ -174,15 +200,40 @@ export async function setArticlesStatus(ids: string[], status: ArticleStatus): P
   if (!supabase || ids.length === 0) return;
   const uuids = ids.filter((id) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id));
   const slugs = ids.filter((id) => !uuids.includes(id));
-  const payload: Record<string, unknown> = { status, updated_at: new Date().toISOString() };
-  if (status === "published") payload.published_at = new Date().toISOString();
-  if (uuids.length > 0) {
-    const { error } = await supabase.from("articles").update(payload).in("id", uuids);
+  const now = new Date().toISOString();
+  const payload: Record<string, unknown> = { status, updated_at: now };
+
+  async function run(column: "id" | "slug", values: string[]) {
+    if (values.length === 0) return;
+    // Never overwrite an existing publish timestamp when re-publishing.
+    if (status === "published") {
+      const { error: stampError } = await supabase!
+        .from("articles")
+        .update({ published_at: now })
+        .in(column, values)
+        .is("published_at", null);
+      if (stampError) throw stampError;
+    }
+    const { error } = await supabase!.from("articles").update(payload).in(column, values);
     if (error) throw error;
   }
-  if (slugs.length > 0) {
-    const { error } = await supabase.from("articles").update(payload).in("slug", slugs);
-    if (error) throw error;
+
+  await run("id", uuids);
+  await run("slug", slugs);
+}
+
+export async function setArticleCommentsEnabled(id: string, enabled: boolean): Promise<void> {
+  const supabase = getSupabase();
+  if (!supabase) throw new Error("Supabase is not configured.");
+  const { error } = await supabase
+    .from("articles")
+    .update({ comments_enabled: enabled, updated_at: new Date().toISOString() })
+    .eq("id", id);
+  if (error) {
+    if (/comments_enabled/i.test(error.message)) {
+      throw new Error("Run the latest database migration before changing comment settings.");
+    }
+    throw error;
   }
 }
 
@@ -215,6 +266,7 @@ export async function duplicateArticle(id: string): Promise<{ id: string; slug: 
       slug: newSlug,
       status: existing.status as ArticleStatus,
       publishedAt: existing.publishedAt,
+      commentsEnabled: existing.commentsEnabled,
     },
     newSlug,
   );

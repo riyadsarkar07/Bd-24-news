@@ -29,12 +29,14 @@ import { SectionHeading } from "@/components/shared/section-heading";
 import { ArticleCard } from "@/components/shared/article-card";
 import { ShareButtons } from "@/components/shared/share-buttons";
 import { CommentSection } from "@/components/shared/comment-section";
+import { ArticleBody } from "@/components/shared/article-body";
 import { ReadingProgress } from "@/components/shared/reading-progress";
 import { ImageWithFallback } from "@/components/shared/image-with-fallback";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn, formatDateTime, formatNumber, toBanglaNumerals } from "@/lib/utils";
+import { recordArticleView } from "@/services/viewService";
 import { siteConfig } from "@/config/site";
 
 const FONT_SIZES = [
@@ -56,6 +58,7 @@ export function ArticlePage({ article: initialArticle }: { article: Article }) {
   const [fontSize, setFontSize] = React.useState(1);
   const [speaking, setSpeaking] = React.useState(false);
   const [fontMenu, setFontMenu] = React.useState(false);
+  const [viewCount, setViewCount] = React.useState<number | null>(null);
 
   const url = `${siteConfig.url}${pathname}`;
 
@@ -65,6 +68,19 @@ export function ArticlePage({ article: initialArticle }: { article: Article }) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [article?.slug]);
+
+  React.useEffect(() => {
+    if (!initialArticle.id) return;
+    let active = true;
+    recordArticleView(initialArticle.id).then((result) => {
+      if (active && typeof result.views === "number") setViewCount(result.views);
+    });
+    return () => {
+      active = false;
+    };
+    // Count once per article, not on every re-render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialArticle.id]);
 
   const toggleSpeech = () => {
     if (typeof window === "undefined" || !("speechSynthesis" in window)) {
@@ -164,7 +180,7 @@ export function ArticlePage({ article: initialArticle }: { article: Article }) {
               </span>
               <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 <Eye className="h-3.5 w-3.5" />
-                {formatNumber(article.views, lang)}
+                {formatNumber(viewCount ?? article.views, lang)}
               </span>
             </div>
             <div className="flex flex-wrap items-center gap-2">
@@ -256,18 +272,8 @@ export function ArticlePage({ article: initialArticle }: { article: Article }) {
           </div>
 
           <div className="min-w-0 flex-1">
-            <div className={cn("prose-news font-bengali", FONT_SIZES[fontSize]?.scale)} itemProp="articleBody">
-              {article.body.split("\n\n").map((para, i) => (
-                <motion.p
-                  key={i}
-                  initial={{ opacity: 0, y: 12 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: "-40px" }}
-                  transition={{ duration: 0.45, delay: i * 0.03 }}
-                >
-                  {para}
-                </motion.p>
-              ))}
+            <div itemProp="articleBody">
+              <ArticleBody body={article.body} className={FONT_SIZES[fontSize]?.scale} />
             </div>
 
             <div className="mt-8 flex flex-wrap items-center gap-2">
@@ -336,7 +342,10 @@ export function ArticlePage({ article: initialArticle }: { article: Article }) {
               </div>
             )}
 
-            <CommentSection articleId={article.id} />
+            <CommentSection
+              articleId={article.id}
+              commentsEnabled={initialArticle.commentsEnabled !== false}
+            />
           </div>
         </div>
       </motion.article>

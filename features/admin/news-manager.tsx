@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Plus, Edit3, Trash2, Copy, LayoutGrid, List, Database, CheckCircle2, FileText } from "lucide-react";
+import { Plus, Edit3, Trash2, Copy, LayoutGrid, List, Database, CheckCircle2, FileText, Eye, Minus, MessageSquareOff, MessageSquare } from "lucide-react";
 import { motion } from "framer-motion";
 import { PageHeader, Toolbar, AdminTable, StatusBadge, ConfirmDialog, type AdminColumn } from "@/features/admin/admin-table";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +10,16 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import toast from "react-hot-toast";
 import type { Article } from "@/types";
 import {
@@ -19,9 +29,12 @@ import {
   setArticlesStatus,
   duplicateArticle,
   seedSampleArticles,
+  setArticleCommentsEnabled,
 } from "@/services/adminService";
+import { setArticleViews, adjustArticleViews } from "@/services/viewService";
+import { formatDateTime } from "@/lib/utils";
 
-type ArticleRow = Pick<Article, "id" | "slug" | "title" | "titleBn" | "category" | "authorAvatar" | "author" | "publishedAt" | "views" | "featured" | "breaking"> & { status: "published" | "draft" };
+type ArticleRow = Pick<Article, "id" | "slug" | "title" | "titleBn" | "category" | "authorAvatar" | "author" | "publishedAt" | "views" | "featured" | "breaking" | "commentsEnabled"> & { status: "published" | "draft" };
 
 export function NewsManager() {
   const [data, setData] = React.useState<ArticleRow[]>([]);
@@ -34,6 +47,10 @@ export function NewsManager() {
   const [selected, setSelected] = React.useState<string[]>([]);
   const [bulkBusy, setBulkBusy] = React.useState(false);
   const [bulkDeleteOpen, setBulkDeleteOpen] = React.useState(false);
+  const [viewsRow, setViewsRow] = React.useState<ArticleRow | null>(null);
+  const [viewsValue, setViewsValue] = React.useState("0");
+  const [viewsBusy, setViewsBusy] = React.useState(false);
+  const [commentBusyId, setCommentBusyId] = React.useState<string | null>(null);
 
   const load = React.useCallback(() => {
     listAllArticles()
@@ -89,6 +106,64 @@ export function NewsManager() {
     }
   }
 
+  function openViews(r: ArticleRow) {
+    setViewsRow(r);
+    setViewsValue(String(r.views));
+  }
+
+  function applyViews(next: number) {
+    setData((rows) => rows.map((x) => (x.id === viewsRow?.id ? { ...x, views: next } : x)));
+    setViewsValue(String(next));
+    setViewsRow((r) => (r ? { ...r, views: next } : r));
+  }
+
+  async function changeViews(delta: number) {
+    if (!viewsRow) return;
+    try {
+      setViewsBusy(true);
+      const next = await adjustArticleViews(viewsRow.id, delta);
+      applyViews(next);
+      toast.success(`Views updated to ${next.toLocaleString()}`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to update views");
+    } finally {
+      setViewsBusy(false);
+    }
+  }
+
+  async function saveViews() {
+    if (!viewsRow) return;
+    const parsed = Number(viewsValue);
+    if (!Number.isFinite(parsed) || parsed < 0) {
+      toast.error("Enter a valid non-negative number");
+      return;
+    }
+    try {
+      setViewsBusy(true);
+      const next = await setArticleViews(viewsRow.id, Math.floor(parsed));
+      applyViews(next);
+      toast.success(`Views set to ${next.toLocaleString()}`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to set views");
+    } finally {
+      setViewsBusy(false);
+    }
+  }
+
+  async function toggleComments(r: ArticleRow) {
+    const next = r.commentsEnabled === false;
+    try {
+      setCommentBusyId(r.id);
+      await setArticleCommentsEnabled(r.id, next);
+      setData((rows) => rows.map((x) => (x.id === r.id ? { ...x, commentsEnabled: next } : x)));
+      toast.success(next ? "Comments enabled" : "Comments disabled");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to update comments");
+    } finally {
+      setCommentBusyId(null);
+    }
+  }
+
   const columns: AdminColumn<ArticleRow>[] = [
     {
       key: "title",
@@ -131,12 +206,48 @@ export function NewsManager() {
       key: "views",
       header: "Views",
       className: "text-right",
-      render: (r) => <span className="tabular-nums">{r.views.toLocaleString()}</span>,
+      render: (r) => (
+        <button
+          type="button"
+          onClick={() => openViews(r)}
+          className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 tabular-nums transition-colors hover:bg-brand/10 hover:text-brand"
+          title="Manage views"
+        >
+          <Eye className="h-3.5 w-3.5" />
+          {r.views.toLocaleString()}
+        </button>
+      ),
+    },
+    {
+      key: "comments",
+      header: "Comments",
+      className: "text-center",
+      render: (r) => (
+        <button
+          type="button"
+          disabled={commentBusyId === r.id}
+          onClick={() => toggleComments(r)}
+          title={r.commentsEnabled === false ? "Enable comments" : "Disable comments"}
+          className="inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-xs font-semibold transition-colors hover:border-brand/40 hover:text-brand disabled:opacity-50"
+        >
+          {r.commentsEnabled === false ? (
+            <>
+              <MessageSquareOff className="h-3.5 w-3.5 text-danger" /> Off
+            </>
+          ) : (
+            <>
+              <MessageSquare className="h-3.5 w-3.5 text-success" /> On
+            </>
+          )}
+        </button>
+      ),
     },
     {
       key: "publishedAt",
       header: "Published",
-      render: (r) => <span className="whitespace-nowrap text-xs text-muted-foreground">{new Date(r.publishedAt).toLocaleDateString()}</span>,
+      render: (r) => (
+        <span className="whitespace-nowrap text-xs text-muted-foreground">{formatDateTime(r.publishedAt)}</span>
+      ),
     },
   ];
 
@@ -192,8 +303,10 @@ export function NewsManager() {
           </div>
           <p className="mt-1 line-clamp-1 text-xs text-muted-foreground">{r.title}</p>
           <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
-            <span className="font-semibold text-foreground">{r.views.toLocaleString()} views</span>
-            <span>{new Date(r.publishedAt).toLocaleDateString()}</span>
+            <button type="button" onClick={() => openViews(r)} className="font-semibold text-foreground hover:text-brand">
+              {r.views.toLocaleString()} views
+            </button>
+            <span>{formatDateTime(r.publishedAt)}</span>
           </div>
           <div className="mt-3 flex gap-2">
             <Link href={`/admin/news/edit/${r.id}`}>
@@ -328,6 +441,54 @@ export function NewsManager() {
         confirmLabel="Delete all"
         onConfirm={bulkDelete}
       />
+
+      <Dialog open={!!viewsRow} onOpenChange={(open) => !open && !viewsBusy && setViewsRow(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Manage views</DialogTitle>
+            <DialogDescription className="line-clamp-2">{viewsRow?.titleBn}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between rounded-xl border bg-muted/30 px-4 py-3">
+              <span className="text-sm font-semibold">Current views</span>
+              <span className="text-lg font-black tabular-nums">{(viewsRow?.views ?? 0).toLocaleString()}</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" size="sm" disabled={viewsBusy} onClick={() => changeViews(1)}>
+                <Plus className="h-4 w-4" /> Add 1
+              </Button>
+              <Button variant="outline" size="sm" disabled={viewsBusy} onClick={() => changeViews(100)}>
+                <Plus className="h-4 w-4" /> Add 100
+              </Button>
+              <Button variant="outline" size="sm" disabled={viewsBusy} onClick={() => changeViews(-1)}>
+                <Minus className="h-4 w-4" /> Remove 1
+              </Button>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="views-exact">Set exact count</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="views-exact"
+                  type="number"
+                  min={0}
+                  value={viewsValue}
+                  onChange={(e) => setViewsValue(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), saveViews())}
+                />
+                <Button onClick={saveViews} disabled={viewsBusy}>
+                  Save
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">Counts can never go below zero.</p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setViewsRow(null)} disabled={viewsBusy}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

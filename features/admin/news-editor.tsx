@@ -22,6 +22,8 @@ import {
   Send,
   Eye,
   Hash,
+  MessageSquare,
+  CalendarClock,
 } from "lucide-react";
 import { PageHeader } from "@/features/admin/admin-table";
 import { Button } from "@/components/ui/button";
@@ -43,6 +45,7 @@ import { saveArticle, getArticleById, type ArticleInput } from "@/services/admin
 import { slugify } from "@/services/newsService";
 import { newsKeys } from "@/hooks/useNews";
 import { CoverImageUpload } from "@/features/admin/cover-image-upload";
+import { formatDateTime } from "@/lib/utils";
 import type { Article } from "@/types";
 
 const schema = z.object({
@@ -84,6 +87,7 @@ export function NewsEditor({ id }: { id?: string }) {
   const [breaking, setBreaking] = React.useState(false);
   const [trending, setTrending] = React.useState(false);
   const [editorPick, setEditorPick] = React.useState(false);
+  const [commentsEnabled, setCommentsEnabled] = React.useState(true);
 
   const { register, handleSubmit, reset, control, formState: { errors } } = useForm<Schema>({
     resolver: zodResolver(schema),
@@ -109,6 +113,7 @@ export function NewsEditor({ id }: { id?: string }) {
           setBreaking(a.breaking);
           setTrending(a.trending);
           setEditorPick(a.editorPick);
+          setCommentsEnabled(a.commentsEnabled !== false);
           reset({
             titleBn: a.titleBn,
             titleEn: a.title,
@@ -157,6 +162,8 @@ export function NewsEditor({ id }: { id?: string }) {
       authorNameBn: existing?.authorNameBn ?? "রিয়াদ",
       authorAvatar: existing?.authorAvatar ?? "",
       authorRole: existing?.authorRole ?? "Editor",
+      publishedAt: existing?.publishedAt,
+      commentsEnabled,
     };
     const result = await saveArticle(input, id);
     return result;
@@ -360,7 +367,26 @@ export function NewsEditor({ id }: { id?: string }) {
                 <Label htmlFor="editorPick">Editor's pick</Label>
                 <Switch id="editorPick" checked={editorPick} onCheckedChange={setEditorPick} />
               </div>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="commentsEnabled" className="flex items-center gap-1.5">
+                  <MessageSquare className="h-3.5 w-3.5" /> Allow comments
+                </Label>
+                <Switch id="commentsEnabled" checked={commentsEnabled} onCheckedChange={setCommentsEnabled} />
+              </div>
             </div>
+            {existing?.publishedAt && (
+              <div className="mt-4 flex items-start gap-2 rounded-xl border border-border/60 bg-muted/30 px-3 py-2 text-xs">
+                <CalendarClock className="mt-0.5 h-3.5 w-3.5 shrink-0 text-brand" />
+                <span>
+                  <span className="font-semibold">Published:</span>{" "}
+                  <span className="tabular-nums">{formatDateTime(existing.publishedAt)}</span>{" "}
+                  <span className="text-muted-foreground">(Asia/Dhaka)</span>
+                  <span className="mt-0.5 block text-muted-foreground">
+                    The original publish time is kept when you edit and re-publish.
+                  </span>
+                </span>
+              </div>
+            )}
           </div>
 
           <div className="rounded-2xl border bg-background p-5">

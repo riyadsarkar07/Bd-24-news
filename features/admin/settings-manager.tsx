@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import toast from "react-hot-toast";
-import { Save, Building2, Languages, Bell, Palette, Globe2, ShieldCheck } from "lucide-react";
+import { Save, Building2, Languages, Bell, Palette, ShieldCheck, MessageSquare } from "lucide-react";
 import { PageHeader } from "@/features/admin/admin-table";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -16,16 +16,30 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLanguage } from "@/providers/language-provider";
-import { getSettings, saveSettings, DEFAULT_SETTINGS, type SiteSettings } from "@/services/settingsService";
+import {
+  getSettings,
+  saveSettings,
+  DEFAULT_SETTINGS,
+  getCommentSettings,
+  saveCommentSettings,
+  DEFAULT_COMMENT_SETTINGS,
+  type SiteSettings,
+  type CommentSettings,
+} from "@/services/settingsService";
 
 export function SettingsManager() {
   const { lang } = useLanguage();
   const [settings, setSettings] = React.useState<SiteSettings>(DEFAULT_SETTINGS);
+  const [commentSettings, setCommentSettings] = React.useState<CommentSettings>(DEFAULT_COMMENT_SETTINGS);
   const [saving, setSaving] = React.useState(false);
 
   React.useEffect(() => {
     getSettings().then(setSettings).catch(() => setSettings(DEFAULT_SETTINGS));
+    getCommentSettings().then(setCommentSettings).catch(() => setCommentSettings(DEFAULT_COMMENT_SETTINGS));
   }, []);
+
+  const setComment = <K extends keyof CommentSettings>(key: K, value: CommentSettings[K]) =>
+    setCommentSettings((c) => ({ ...c, [key]: value }));
 
   const set = <K extends keyof SiteSettings>(key: K, value: SiteSettings[K]) => setSettings((s) => ({ ...s, [key]: value }));
   const setSocial = (key: keyof SiteSettings["social"], value: string) => setSettings((s) => ({ ...s, social: { ...s.social, [key]: value } }));
@@ -33,7 +47,7 @@ export function SettingsManager() {
   const save = async () => {
     setSaving(true);
     try {
-      await saveSettings(settings);
+      await Promise.all([saveSettings(settings), saveCommentSettings(commentSettings)]);
       toast.success(lang === "bn" ? "সেটিংস সংরক্ষিত হয়েছে" : "Settings saved");
     } catch {
       toast.error(lang === "bn" ? "সংরক্ষণ ব্যর্থ হয়েছে" : "Failed to save settings");
@@ -55,6 +69,7 @@ export function SettingsManager() {
           <TabsTrigger value="general"><Building2 className="h-4 w-4" /> General</TabsTrigger>
           <TabsTrigger value="appearance"><Palette className="h-4 w-4" /> Appearance</TabsTrigger>
           <TabsTrigger value="language"><Languages className="h-4 w-4" /> Language</TabsTrigger>
+          <TabsTrigger value="comments"><MessageSquare className="h-4 w-4" /> Comments</TabsTrigger>
           <TabsTrigger value="notifications"><Bell className="h-4 w-4" /> Notifications</TabsTrigger>
           <TabsTrigger value="security"><ShieldCheck className="h-4 w-4" /> Security</TabsTrigger>
         </TabsList>
@@ -182,6 +197,96 @@ export function SettingsManager() {
                     <SelectItem value="en">English</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="comments" className="mt-4 space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>{lang === "bn" ? "মন্তব্য নিয়ন্ত্রণ" : "Comment controls"}</CardTitle>
+              <CardDescription>
+                Moderation rules apply to every article. Individual articles can still be switched off.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-semibold">Allow comments site-wide</p>
+                  <p className="text-xs text-muted-foreground">Turn off to close comments on all articles</p>
+                </div>
+                <Switch checked={commentSettings.enabled} onCheckedChange={(v) => setComment("enabled", v)} />
+              </div>
+              <Separator />
+              <div className="space-y-2">
+                <Label htmlFor="comment-moderation">New comments appear</Label>
+                <Select
+                  value={commentSettings.moderation}
+                  onValueChange={(v) => setComment("moderation", v as CommentSettings["moderation"])}
+                >
+                  <SelectTrigger id="comment-moderation"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pending">After moderator approval (recommended)</SelectItem>
+                    <SelectItem value="published">Immediately</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Even when publishing immediately, spam-prone input is length-checked server side.
+                </p>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="comment-rate">Rate limit (seconds)</Label>
+                  <Input
+                    id="comment-rate"
+                    type="number"
+                    min={0}
+                    max={3600}
+                    value={commentSettings.rateLimitSeconds}
+                    onChange={(e) => setComment("rateLimitSeconds", Number(e.target.value))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="comment-max">Max length</Label>
+                  <Input
+                    id="comment-max"
+                    type="number"
+                    min={40}
+                    max={5000}
+                    value={commentSettings.maxLength}
+                    onChange={(e) => setComment("maxLength", Number(e.target.value))}
+                  />
+                </div>
+              </div>
+              <Separator />
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-semibold">Send automated acknowledgement</p>
+                  <p className="text-xs text-muted-foreground">
+                    Reply labelled as official BD24News automation. Only sent to approved comments.
+                  </p>
+                </div>
+                <Switch checked={commentSettings.autoAckEnabled} onCheckedChange={(v) => setComment("autoAckEnabled", v)} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="ack-bn">Acknowledgement template (Bangla)</Label>
+                <Textarea
+                  id="ack-bn"
+                  rows={2}
+                  value={commentSettings.autoAckTemplateBn}
+                  onChange={(e) => setComment("autoAckTemplateBn", e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="ack-en">Acknowledgement template (English)</Label>
+                <Textarea
+                  id="ack-en"
+                  rows={2}
+                  value={commentSettings.autoAckTemplateEn}
+                  onChange={(e) => setComment("autoAckTemplateEn", e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">Use <code className="rounded bg-muted px-1">{"{name}"}</code> to insert the reader&apos;s name.</p>
               </div>
             </CardContent>
           </Card>

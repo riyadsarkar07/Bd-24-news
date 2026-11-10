@@ -72,6 +72,8 @@ export interface AdminCommentRow {
   createdAt: string;
   likes: number;
   status: "published" | "pending" | "spam";
+  isOfficial: boolean;
+  parentId: string | null;
 }
 
 export interface AdminSubscriberRow {
@@ -461,8 +463,21 @@ export async function listComments(): Promise<AdminCommentRow[]> {
     const articleIds = [...new Set(rows.map((r) => str(r.article_id)))];
     const titles = new Map<string, string>();
     if (articleIds.length > 0) {
-      const { data: articles } = await supabase.from("articles").select("slug,title_bn,title").in("slug", articleIds);
-      (articles ?? []).forEach((d) => titles.set(str(d.slug), str(d.title_bn, str(d.title))));
+      const uuidIds = articleIds.filter((id) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id));
+      const [bySlug, byId] = await Promise.all([
+        supabase.from("articles").select("slug,title_bn,title").in("slug", articleIds),
+        uuidIds.length > 0
+          ? supabase.from("articles").select("id,slug,title_bn,title").in("id", uuidIds)
+          : Promise.resolve({ data: [] as Record<string, unknown>[] }),
+      ]);
+      (bySlug.data ?? []).forEach((d) => {
+        titles.set(str(d.slug), str(d.title_bn, str(d.title)));
+      });
+      (byId.data ?? []).forEach((d) => {
+        const title = str(d.title_bn, str(d.title));
+        titles.set(str(d.id), title);
+        if (str(d.slug)) titles.set(str(d.slug), title);
+      });
     }
     return rows.map((d) => {
       const articleId = str(d.article_id, "");
@@ -476,6 +491,8 @@ export async function listComments(): Promise<AdminCommentRow[]> {
         createdAt: dateStr(d.created_at, nowIso()),
         likes: num(d.likes),
         status: (d.status as AdminCommentRow["status"]) ?? "published",
+        isOfficial: Boolean(d.is_official),
+        parentId: (d.parent_id as string | null) ?? null,
       };
     });
   } catch (err) {
@@ -488,14 +505,38 @@ export function subscribeCommentsAdmin(listener: (rows: AdminCommentRow[]) => vo
   return startPolling(listComments, listener, onError);
 }
 
-export async function updateComment(id: string, patch: Partial<AdminCommentRow>): Promise<void> {
+export async function updateComment(id: string, patch: Pick<AdminCommentRow, "status">): Promise<void> {
   const supabase = getSupabase();
   if (!supabase) throw new Error("Supabase is not configured.");
-  const payload: Record<string, unknown> = { ...patch, updated_at: nowIso() };
-  delete payload.id;
-  delete payload.articleId;
-  delete payload.article;
-  const { error } = await supabase.from("comments").update(payload).eq("id", id);
+  const { error } = await supabase
+    .from("comments")
+    .update({ status: patch.status, updated_at: nowIso() })
+    .eq("id", id);
+  if (error) throw error;
+}
+
+/** Admin reply posted on behalf of BD24News; always labelled as official. */
+export async function replyToComment(
+  articleId: string,
+  content: string,
+  parentId: string | null,
+  articleTitle = "",
+): Promise<void> {
+  const supabase = getSupabase();
+  if (!supabase) throw new Error("Supabase is not configured.");
+  const clean = content.trim();
+  if (clean.length < 2) throw new Error("Reply is too short.");
+  const { error } = await supabase.from("comments").insert({
+    article_id: articleId,
+    article_title: articleTitle,
+    author: "BD24News Editorial",
+    content: clean.slice(0, 2000),
+    status: "published",
+    is_official: true,
+    parent_id: parentId,
+    created_at: nowIso(),
+    updated_at: nowIso(),
+  });
   if (error) throw error;
 }
 

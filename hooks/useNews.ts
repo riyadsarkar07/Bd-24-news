@@ -16,7 +16,7 @@ import {
   filterAndSort,
   type ArticleQueryOptions,
 } from "@/services/newsService";
-import { addComment } from "@/services/commentService";
+import { addComment, type CommentSubmitInput } from "@/services/commentService";
 import type { Article, Comment } from "@/types";
 
 export const newsKeys = {
@@ -207,7 +207,7 @@ export function useComments(articleId: string) {
 export function useAddComment(articleId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (content: string) => addComment(articleId, content),
+    mutationFn: async (input: CommentSubmitInput) => addComment(articleId, input),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: newsKeys.comments(articleId) });
     },

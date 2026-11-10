@@ -40,8 +40,8 @@ export function mapArticleRow(row: ArticleRow): Article {
     authorRole: (row.author_role as string) ?? "Editor",
     coverImage: (row.cover_image as string) ?? "",
     images: Array.isArray(row.images) ? (row.images as string[]) : [],
-    publishedAt: (row.published_at as string) ?? new Date().toISOString(),
-    updatedAt: (row.updated_at as string) ?? new Date().toISOString(),
+    publishedAt: (row.published_at as string) || (row.updated_at as string) || "",
+    updatedAt: (row.updated_at as string) || (row.published_at as string) || "",
     views: Number(row.views ?? 0),
     likes: Number(row.likes ?? 0),
     commentsCount: Number(row.comments_count ?? 0),
@@ -57,6 +57,9 @@ export function mapArticleRow(row: ArticleRow): Article {
     seoTitle: (row.seo_title as string) ?? "",
     seoDescription: (row.seo_description as string) ?? "",
     status: (row.status as "published" | "draft") ?? "published",
+    commentsEnabled: row.comments_enabled === undefined || row.comments_enabled === null
+      ? true
+      : Boolean(row.comments_enabled),
   };
 }
 
@@ -376,16 +379,36 @@ export async function getAuthorArticles(slug: string): Promise<Article[]> {
 }
 
 export function mapCommentRow(id: string, row: Record<string, unknown>, articleId: string): Comment {
+  const status = row.status as Comment["status"];
   return {
     id,
     articleId: (row.article_id as string) ?? articleId,
     author: (row.author as string) ?? "Anonymous",
     avatar: (row.avatar as string) ?? "",
     content: (row.content as string) ?? "",
-    createdAt: (row.created_at as string) ?? new Date().toISOString(),
+    createdAt: (row.created_at as string) || "",
     likes: Number(row.likes ?? 0),
     replies: [],
+    status: status === "published" || status === "pending" || status === "spam" ? status : "published",
+    isOfficial: Boolean(row.is_official),
+    parentId: (row.parent_id as string | null) ?? null,
   };
+}
+
+/** Groups a flat comment list into top-level comments with nested replies. */
+export function buildCommentTree(comments: Comment[]): Comment[] {
+  const map = new Map<string, Comment>();
+  comments.forEach((c) => map.set(c.id, { ...c, replies: [] }));
+  const roots: Comment[] = [];
+  map.forEach((c) => {
+    const parent = c.parentId ? map.get(c.parentId) : undefined;
+    if (parent) parent.replies.push(c);
+    else roots.push(c);
+  });
+  const byNewest = (a: Comment, b: Comment) => +new Date(b.createdAt) - +new Date(a.createdAt);
+  roots.sort(byNewest);
+  roots.forEach((r) => r.replies.sort((a, b) => +new Date(a.createdAt) - +new Date(b.createdAt)));
+  return roots;
 }
 
 export function subscribeComments(articleId: string, listener: (comments: Comment[]) => void): () => void {
@@ -396,7 +419,11 @@ export function subscribeComments(articleId: string, listener: (comments: Commen
     try {
       const supabase = getSupabase();
       if (!supabase) return;
-      const { data } = await supabase.from("comments").select("*").eq("article_id", articleId);
+      const { data } = await supabase
+        .from("comments")
+        .select("*")
+        .eq("article_id", articleId)
+        .order("created_at", { ascending: true });
       if (!stopped) listener((data ?? []).map((r) => mapCommentRow(String(r.id), r as Record<string, unknown>, articleId)));
     } catch (err) {
       console.error("Supabase comments poll error:", err);
@@ -414,7 +441,11 @@ export async function getComments(articleId: string): Promise<Comment[]> {
   const supabase = getSupabase();
   if (!supabase) return [];
   try {
-    const { data } = await supabase.from("comments").select("*").eq("article_id", articleId);
+    const { data } = await supabase
+      .from("comments")
+      .select("*")
+      .eq("article_id", articleId)
+      .order("created_at", { ascending: true });
     return (data ?? []).map((r) => mapCommentRow(String(r.id), r as Record<string, unknown>, articleId));
   } catch (err) {
     console.error("Supabase comments read failed:", err);
@@ -424,6 +455,7 @@ export async function getComments(articleId: string): Promise<Comment[]> {
 
 export async function getArchiveYears(): Promise<number[]> {
   const all = await getPublishedArticles();
-  const years = [...new Set(all.map((a) => new Date(a.publishedAt).getFullYear()))].sort((a, b) => b - a);
+  const years = [...new Set(all.map((a) => new Date(a.publishedAt).getFullYear()).filter((y) => Number.isFinite(y)))]
+    .sort((a, b) => b - a);
   return years;
 }

@@ -10,7 +10,7 @@ import { ArticleCard } from "@/components/shared/article-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useLanguage } from "@/providers/language-provider";
-import { toBanglaNumerals } from "@/lib/utils";
+import { dhakaDateParts, toBanglaNumerals } from "@/lib/utils";
 
 const years = ["2026", "2025", "2024", "2023", "2022"];
 const months = ["জানুয়ারি", "ফেব্রুয়ারি", "মার্চ", "এপ্রিল", "মে", "জুন", "জুলাই", "আগস্ট", "সেপ্টেম্বর", "অক্টোবর", "নভেম্বর", "ডিসেম্বর"];
@@ -22,8 +22,9 @@ export function ArchivePage() {
   const [month, setMonth] = React.useState("all");
 
   const filtered = (articles ?? []).filter((a) => {
-    const d = new Date(a.publishedAt);
-    return String(d.getFullYear()) === year && (month === "all" || d.getMonth() === months.indexOf(month));
+    const d = dhakaDateParts(a.publishedAt);
+    if (!d) return false;
+    return String(d.year) === year && (month === "all" || d.month === months.indexOf(month));
   });
 
   return (

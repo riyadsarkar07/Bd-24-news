@@ -88,6 +88,26 @@ export const DEFAULT_SEO: SeoSettings = {
   twitterHandle: "@bd24news",
 };
 
+export interface CommentSettings {
+  enabled: boolean;
+  moderation: "published" | "pending";
+  autoAckEnabled: boolean;
+  autoAckTemplateBn: string;
+  autoAckTemplateEn: string;
+  rateLimitSeconds: number;
+  maxLength: number;
+}
+
+export const DEFAULT_COMMENT_SETTINGS: CommentSettings = {
+  enabled: true,
+  moderation: "pending",
+  autoAckEnabled: true,
+  autoAckTemplateBn: "ধন্যবাদ {name}, আপনার মন্তব্যের জন্য। এটি বিডি২৪নিউজের স্বয়ংক্রিয় বার্তা।",
+  autoAckTemplateEn: "Thank you {name} for your comment. This is an automated message from BD24News.",
+  rateLimitSeconds: 30,
+  maxLength: 2000,
+};
+
 function mergeSettings(data: Record<string, unknown> | undefined, defaults: SiteSettings): SiteSettings {
   if (!data) return defaults;
   const social = (data.social as Partial<SiteSettings["social"]>) ?? {};
@@ -132,6 +152,23 @@ export async function getSettings(): Promise<SiteSettings> {
 export async function saveSettings(input: Partial<SiteSettings>): Promise<void> {
   const current = await getSettings();
   await saveSettingJson("general", { ...current, ...input, updatedAt: new Date().toISOString() } as Record<string, unknown>);
+}
+
+export async function getCommentSettings(): Promise<CommentSettings> {
+  const data = await getSettingJson("comments");
+  if (!data) return DEFAULT_COMMENT_SETTINGS;
+  return {
+    ...DEFAULT_COMMENT_SETTINGS,
+    ...(data as Partial<CommentSettings>),
+    moderation: (data as Partial<CommentSettings>).moderation === "published" ? "published" : "pending",
+    rateLimitSeconds: Number((data as Partial<CommentSettings>).rateLimitSeconds ?? DEFAULT_COMMENT_SETTINGS.rateLimitSeconds),
+    maxLength: Number((data as Partial<CommentSettings>).maxLength ?? DEFAULT_COMMENT_SETTINGS.maxLength),
+  };
+}
+
+export async function saveCommentSettings(input: Partial<CommentSettings>): Promise<void> {
+  const current = await getCommentSettings();
+  await saveSettingJson("comments", { ...current, ...input, updatedAt: new Date().toISOString() } as Record<string, unknown>);
 }
 
 export async function getSeoSettings(): Promise<SeoSettings> {

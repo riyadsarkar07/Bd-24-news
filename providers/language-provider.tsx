@@ -139,19 +139,16 @@ interface LanguageContextValue {
 const LanguageContext = React.createContext<LanguageContextValue | undefined>(undefined);
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [lang, setLang] = React.useState<Language>(() => {
-    if (typeof window === "undefined") return "bn";
-    return (localStorage.getItem("bd24news_lang") as Language) ?? "bn";
-  });
-
-  const toggle = React.useCallback(() => {
-    setLang((prev) => {
-      const next = prev === "bn" ? "en" : "bn";
-      localStorage.setItem("bd24news_lang", next);
-      document.documentElement.lang = next === "bn" ? "bn" : "en";
-      return next;
-    });
+  const [lang, update] = React.useState<Language>("bn");
+  const setLang = React.useCallback((value: Language) => {
+    update(value);
+    document.documentElement.lang = value;
+    try { localStorage.setItem("bd24news_lang", value); } catch { /* Storage may be disabled. */ }
   }, []);
+  React.useEffect(() => {
+    try { setLang(localStorage.getItem("bd24news_lang") === "en" ? "en" : "bn"); } catch { setLang("bn"); }
+  }, [setLang]);
+  const toggle = React.useCallback(() => setLang(lang === "bn" ? "en" : "bn"), [lang, setLang]);
 
   const t = React.useCallback(
     (key: TranslationKey) => translations[lang][key] ?? translations.en[key],

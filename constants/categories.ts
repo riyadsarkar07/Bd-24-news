@@ -43,3 +43,8 @@ export function getCategoryBySlug(slug: string): Category {
     }
   );
 }
+
+export function categoryLabel(slug: string, lang: "bn" | "en") {
+  const category = getCategory(slug);
+  return (lang === "bn" ? category?.nameBn : category?.name) ?? slug;
+}

@@ -57,6 +57,7 @@ function MarketRow({
 }
 
 function MarketTable({ title, titleBn, icon, color, children }: { title: string; titleBn: string; icon: React.ReactNode; color: string; children: React.ReactNode }) {
+  const { lang } = useLanguage();
   return (
     <motion.section
       initial={{ opacity: 0, y: 20 }}
@@ -69,7 +70,7 @@ function MarketTable({ title, titleBn, icon, color, children }: { title: string;
           {icon}
         </span>
         <div>
-          <h3 className="font-bengali text-lg font-bold">{titleBn}</h3>
+          <h3 className="font-bengali text-lg font-bold">{lang === "bn" ? titleBn : title}</h3>
           <p className="text-[11px] uppercase tracking-wider text-muted-foreground">{title}</p>
         </div>
       </div>
@@ -77,9 +78,9 @@ function MarketTable({ title, titleBn, icon, color, children }: { title: string;
         <table className="w-full min-w-[480px] text-sm">
           <thead>
             <tr className="border-b border-border/50 text-xs uppercase tracking-wider text-muted-foreground">
-              <th className="px-4 py-3 text-left font-semibold">Name</th>
-              <th className="px-4 py-3 text-right font-semibold">Price</th>
-              <th className="px-4 py-3 text-right font-semibold">Change</th>
+              <th className="px-4 py-3 text-left font-semibold">{lang === "bn" ? "নাম" : "Name"}</th>
+              <th className="px-4 py-3 text-right font-semibold">{lang === "bn" ? "দাম" : "Price"}</th>
+              <th className="px-4 py-3 text-right font-semibold">{lang === "bn" ? "পরিবর্তন" : "Change"}</th>
               <th className="px-4 py-3 text-right font-semibold">%</th>
             </tr>
           </thead>

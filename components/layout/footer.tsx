@@ -42,10 +42,10 @@ export function Footer() {
           <div className="lg:col-span-4">
             <Logo />
             <p className="mt-4 max-w-sm text-sm leading-relaxed text-white/60">
-              {siteConfig.description}
+              {lang === "bn" ? "বাংলাদেশ ও বিশ্বের সর্বশেষ খবর, রাজনীতি, অর্থনীতি, খেলাধুলা ও প্রযুক্তির সংবাদ।" : "News from Bangladesh and around the world, including politics, business, sports and technology."}
             </p>
             <p className="mt-2 font-bengali text-sm font-semibold text-brand-300">
-              সত্যের সাথে সবসময় — Always with the truth
+              {lang === "bn" ? siteConfig.tagline : siteConfig.taglineEn}
             </p>
             <div className="mt-5">
               <p className="mb-3 text-xs font-bold uppercase tracking-widest text-white/40">
@@ -94,7 +94,7 @@ export function Footer() {
                 <li key={s.href}>
                   <Link href={s.href} className="group flex items-center gap-2 text-sm text-white/60 transition-colors hover:text-white">
                     <span className="h-1 w-1 rounded-full bg-accentblue transition-all group-hover:w-3" />
-                    {s.nameBn}
+                    {lang === "bn" ? s.nameBn : s.name}
                   </Link>
                 </li>
               ))}

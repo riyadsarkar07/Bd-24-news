@@ -114,12 +114,12 @@ export function MobileNav({ open, onClose }: { open: boolean; onClose: () => voi
 
               <div className="mt-2 grid grid-cols-2 gap-2 border-t pt-4">
                 {[
-                  { label: "ভিডিও", href: "/videos", icon: Clapperboard },
-                  { label: "ফটো", href: "/gallery", icon: Images },
-                  { label: "লাইভ টিভি", href: "/live-tv", icon: Radio },
-                  { label: "আর্কাইভ", href: "/archive", icon: Archive },
-                  { label: "ব্রেকিং", href: "/breaking-news", icon: Flame },
-                  { label: "মতামত", href: "/category/opinion", icon: UserRound },
+                  { label: lang === "bn" ? "ভিডিও" : "Videos", href: "/videos", icon: Clapperboard },
+                  { label: lang === "bn" ? "ফটো" : "Photos", href: "/gallery", icon: Images },
+                  { label: lang === "bn" ? "লাইভ টিভি" : "Live TV", href: "/live-tv", icon: Radio },
+                  { label: lang === "bn" ? "আর্কাইভ" : "Archive", href: "/archive", icon: Archive },
+                  { label: lang === "bn" ? "ব্রেকিং" : "Breaking", href: "/breaking-news", icon: Flame },
+                  { label: lang === "bn" ? "মতামত" : "Opinion", href: "/category/opinion", icon: UserRound },
                 ].map((s) => (
                   <Link
                     key={s.href}

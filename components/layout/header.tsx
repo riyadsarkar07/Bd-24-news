@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 
 export function Header({ onOpenMobile }: { onOpenMobile: () => void }) {
   const { setOpen } = useSearchDialog();
-  const { t } = useLanguage();
+  const { t, lang, toggle } = useLanguage();
   const { scrolled } = useScroll();
 
   return (
@@ -82,6 +82,7 @@ export function Header({ onOpenMobile }: { onOpenMobile: () => void }) {
             <Newspaper className="h-4 w-4" />
             {t("subscribe")}
           </Button>
+          <button type="button" className="px-1.5 text-sm font-semibold lg:hidden" onClick={toggle}>{lang === "bn" ? "English" : "বাংলা"}</button>
           <NotificationsDropdown />
           <ThemeToggle />
           <Link href="/login" aria-label="Account">

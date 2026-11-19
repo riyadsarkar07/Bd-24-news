@@ -1,5 +1,6 @@
 "use client";
 
+import { categoryLabel } from "@/constants/categories";
 import * as React from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -50,7 +51,10 @@ export function ArticlePage({ article: initialArticle }: { article: Article }) {
   const { lang } = useLanguage();
   const pathname = usePathname();
   const router = useRouter();
-  const { data: article } = useArticle(initialArticle.slug, initialArticle);
+  const { data: stored } = useArticle(initialArticle.slug, initialArticle);
+  const article = stored && (lang === "bn" ? stored : {
+    ...stored, titleBn: stored.title, location: stored.location === "ঢাকা" ? "Dhaka" : stored.location, excerpt: stored.excerptEn ?? "", body: stored.bodyEn ?? "",
+  });
   const { data: related } = useRelatedArticles(initialArticle.slug, []);
   const { isBookmarked, toggleBookmark } = useBookmarks();
   const { addToHistory } = useReadingHistory();
@@ -60,6 +64,11 @@ export function ArticlePage({ article: initialArticle }: { article: Article }) {
   const [fontMenu, setFontMenu] = React.useState(false);
   const [viewCount, setViewCount] = React.useState<number | null>(null);
 
+  React.useEffect(() => {
+    window.speechSynthesis?.cancel();
+    setSpeaking(false);
+  }, [lang]);
+
   const url = `${siteConfig.url}${pathname}`;
 
   React.useEffect(() => {
@@ -67,7 +76,7 @@ export function ArticlePage({ article: initialArticle }: { article: Article }) {
       addToHistory({ slug: article.slug, title: article.titleBn, category: article.category, image: article.coverImage });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [article?.slug]);
+  }, [article?.slug, lang]);
 
   React.useEffect(() => {
     if (!initialArticle.id) return;
@@ -95,7 +104,7 @@ export function ArticlePage({ article: initialArticle }: { article: Article }) {
     const utterance = new SpeechSynthesisUtterance(
       `${article?.titleBn ?? ""}. ${article?.body.replace(/[#*`>]/g, "") ?? ""}`,
     );
-    utterance.lang = "bn-BD";
+    utterance.lang = lang === "bn" ? "bn-BD" : "en-US";
     utterance.rate = 0.95;
     utterance.onend = () => setSpeaking(false);
     window.speechSynthesis.speak(utterance);
@@ -120,7 +129,7 @@ export function ArticlePage({ article: initialArticle }: { article: Article }) {
       <div className="container-page py-6">
         <Breadcrumb
           items={[
-            { label: article.category.charAt(0).toUpperCase() + article.category.slice(1), href: `/category/${article.category}` },
+            { label: categoryLabel(article.category, lang), href: `/category/${article.category}` },
             { label: article.titleBn.slice(0, 28) + "…" },
           ]}
         />
@@ -137,7 +146,7 @@ export function ArticlePage({ article: initialArticle }: { article: Article }) {
         <header>
           <div className="flex flex-wrap items-center gap-2">
             <span className="badge-cat" style={{ background: article.categoryColor }} itemProp="articleSection">
-              {article.category}
+              {categoryLabel(article.category, lang)}
             </span>
             <span className="rounded-md bg-muted px-2 py-1 text-[11px] font-semibold text-muted-foreground">
               {article.readingMinutes} {lang === "bn" ? "মিনিট পড়া" : "min read"}
@@ -294,7 +303,7 @@ export function ArticlePage({ article: initialArticle }: { article: Article }) {
                 <AvatarFallback>{article.author.slice(0, 2)}</AvatarFallback>
               </Avatar>
               <div className="flex-1">
-                <p className="text-sm font-bold">{article.author}</p>
+                <p className="text-sm font-bold">{lang === "bn" ? (article.authorNameBn || article.author) : article.author}</p>
                 <p className="text-xs text-muted-foreground">{article.authorRole}</p>
                 <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
                   {lang === "bn" ? `${article.author} বিডি২৪নিউজের প্রতিনিধি হিসেবে লিখছেন।` : `${article.author} writes for ${siteConfig.name}.`}

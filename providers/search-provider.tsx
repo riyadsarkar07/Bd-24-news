@@ -113,7 +113,7 @@ export function SearchProvider({ children }: { children: React.ReactNode }) {
                           <ImageWithFallback src={r.image} alt="" fill sizes="64px" className="object-cover" />
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className="line-clamp-1 text-sm font-semibold">{r.title}</p>
+                          <p className="line-clamp-1 text-sm font-semibold">{lang === "en" ? r.titleEn : r.title}</p>
                           <span className="text-xs font-bold" style={{ color: r.categoryColor }}>
                             {cat?.nameBn ?? r.category}
                           </span>
@@ -137,7 +137,7 @@ export function SearchProvider({ children }: { children: React.ReactNode }) {
                     {lang === "bn" ? "ট্রেন্ডিং" : "Trending"}
                   </p>
                   <div className="flex flex-wrap gap-2">
-                    {trendingSearches.map((s, i) => (
+                    {(lang === "bn" ? trendingSearches : ["Metro rail", "Tigers", "Gold prices", "Budget 2026", "AI technology", "BPL", "Dengue", "Tourism"]).map((s, i) => (
                       <button
                         key={s}
                         onClick={() => submit(s)}

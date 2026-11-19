@@ -7,7 +7,7 @@ import { Breadcrumb } from "@/components/shared/breadcrumb";
 import { SectionHeading } from "@/components/shared/section-heading";
 import { prayerTimes } from "@/constants/widgets";
 import { useLanguage } from "@/providers/language-provider";
-import { toBanglaNumerals } from "@/lib/utils";
+import { localizedDigits } from "@/lib/utils";
 import { useClock } from "@/hooks/use-clock";
 import { cn } from "@/lib/utils";
 
@@ -42,11 +42,11 @@ export function PrayerPage() {
         <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-emerald-500/20 blur-[90px]" />
         <div className="relative flex flex-col items-center gap-2 text-center">
           <p className="font-bengali text-lg font-bold text-emerald-300">{lang === "bn" ? "পরবর্তী নামাজ" : "Next Prayer"}</p>
-          <p className="font-bengali text-5xl font-black">{next?.nameBn}</p>
+          <p className="font-bengali text-5xl font-black">{lang === "bn" ? next?.nameBn : next?.name}</p>
           <p className="font-mono text-4xl font-black text-emerald-400">{next?.time}</p>
           <p className="text-sm text-white/50">
             {lang === "bn" ? "ঢাকা, বাংলাদেশ" : "Dhaka, Bangladesh"} ·{" "}
-            {now ? `${toBanglaNumerals(now.getDate())}-${toBanglaNumerals(now.getMonth() + 1)}-${toBanglaNumerals(now.getFullYear())}` : ""}
+            {now ? `${localizedDigits(lang, now.getDate())}-${localizedDigits(lang, now.getMonth() + 1)}-${localizedDigits(lang, now.getFullYear())}` : ""}
           </p>
         </div>
       </div>
@@ -72,7 +72,7 @@ export function PrayerPage() {
                 </span>
               )}
               <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{p.name}</p>
-              <p className="mt-1 font-bengali text-2xl font-black">{p.nameBn}</p>
+              <p className="mt-1 font-bengali text-2xl font-black">{lang === "bn" ? p.nameBn : p.name}</p>
               <p className="font-mono text-xl font-bold text-brand">{p.time}</p>
             </motion.div>
           );

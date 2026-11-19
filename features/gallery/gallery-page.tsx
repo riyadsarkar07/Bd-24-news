@@ -8,7 +8,7 @@ import { Breadcrumb } from "@/components/shared/breadcrumb";
 import { SectionHeading } from "@/components/shared/section-heading";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/providers/language-provider";
-import { toBanglaNumerals } from "@/lib/utils";
+import { localizedDigits } from "@/lib/utils";
 
 export function GalleryPage() {
   const { data: galleries, isLoading } = useArticles({ media: "gallery", limit: 15 });
@@ -56,7 +56,7 @@ export function GalleryPage() {
                 <p className="line-clamp-2 text-xs font-bold text-white">{lang === "bn" ? g.titleBn : g.title}</p>
                 <p className="mt-1 flex items-center gap-2 text-[10px] text-white/70">
                   <Images className="h-3 w-3" />
-                  {toBanglaNumerals(6 + (i % 12))} {lang === "bn" ? "ছবি" : "photos"}
+                  {localizedDigits(lang, 6 + (i % 12))} {lang === "bn" ? "ছবি" : "photos"}
                 </p>
               </div>
             </motion.button>
@@ -110,7 +110,7 @@ export function GalleryPage() {
                 <div>
                   <p className="font-bengali text-lg font-bold">{lang === "bn" ? active.titleBn : active.title}</p>
                   <p className="text-xs text-white/60">
-                    {toBanglaNumerals(lightbox + 1)} / {toBanglaNumerals(items.length)} · {active.category}
+                    {localizedDigits(lang, lightbox + 1)} / {localizedDigits(lang, items.length)} · {active.category}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">

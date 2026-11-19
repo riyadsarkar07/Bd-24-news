@@ -16,7 +16,7 @@ import {
 import { weatherData, prayerTimes } from "@/constants/widgets";
 import { stockMarket, goldPrices, currencyRates, cryptoPrices } from "@/constants/social";
 import { useClock } from "@/hooks/use-clock";
-import { toBanglaNumerals } from "@/lib/utils";
+import { localizedDigits } from "@/lib/utils";
 import { useLanguage } from "@/providers/language-provider";
 import { cn } from "@/lib/utils";
 
@@ -63,13 +63,13 @@ export function WidgetBar() {
         <div className="mt-3 flex items-center justify-between">
           <div>
             <p className="font-bengali text-2xl font-bold text-foreground">
-              {lang === "bn" ? toBanglaNumerals(weatherData[0]?.temp ?? 31) : weatherData[0]?.temp}°
+              {lang === "bn" ? localizedDigits(lang, weatherData[0]?.temp ?? 31) : weatherData[0]?.temp}°
             </p>
             <p className="text-[11px] text-muted-foreground">
               {lang === "bn" ? weatherData[0]?.conditionBn : weatherData[0]?.condition}
             </p>
           </div>
-          <p className="font-bengali text-xs font-bold text-brand">ঢাকা</p>
+          <p className="font-bengali text-xs font-bold text-brand">{lang === "bn" ? "ঢাকা" : "Dhaka"}</p>
         </div>
       </div>
 
@@ -84,12 +84,12 @@ export function WidgetBar() {
           <p className="font-bengali text-sm font-bold">
             {nextPrayer ? (lang === "bn" ? nextPrayer.nameBn : nextPrayer.name) : lang === "bn" ? "নামাজ" : "Prayer"}
             <span className="ml-1 text-[10px] font-medium text-success">
-              {nextPrayer ? (lang === "bn" ? `বাকি ${toBanglaNumerals(hh)}:${toBanglaNumerals(String(mm).padStart(2, "0"))}` : `${hh}:${String(mm).padStart(2, "0")} left`) : ""}
+              {nextPrayer ? (lang === "bn" ? `বাকি ${localizedDigits(lang, hh)}:${localizedDigits(lang, String(mm).padStart(2, "0"))}` : `${hh}:${String(mm).padStart(2, "0")} left`) : ""}
             </span>
           </p>
           <p className="font-mono text-2xl font-black text-brand">
             {now
-              ? `${toBanglaNumerals(String(hh).padStart(2, "0"))}:${toBanglaNumerals(String(mm).padStart(2, "0"))}:${toBanglaNumerals(String(ss).padStart(2, "0"))}`
+              ? `${localizedDigits(lang, String(hh).padStart(2, "0"))}:${localizedDigits(lang, String(mm).padStart(2, "0"))}:${localizedDigits(lang, String(ss).padStart(2, "0"))}`
               : "--:--:--"}
           </p>
         </div>
@@ -104,12 +104,12 @@ export function WidgetBar() {
         </div>
         <div className="mt-3">
           <p className="font-mono text-xl font-black text-foreground">
-            {toBanglaNumerals(stockMarket[0]!.price.toLocaleString("en-US", { minimumFractionDigits: 2 }))}
+            {localizedDigits(lang, stockMarket[0]!.price.toLocaleString("en-US", { minimumFractionDigits: 2 }))}
           </p>
           <p className={cn("text-xs font-bold", stockMarket[0]!.change > 0 ? "text-success" : "text-danger")}>
             {stockMarket[0]!.change > 0 ? "+" : ""}
-            {toBanglaNumerals(stockMarket[0]!.change)} ({stockMarket[0]!.changePercent > 0 ? "+" : ""}
-            {toBanglaNumerals(stockMarket[0]!.changePercent)}%)
+            {localizedDigits(lang, stockMarket[0]!.change)} ({stockMarket[0]!.changePercent > 0 ? "+" : ""}
+            {localizedDigits(lang, stockMarket[0]!.changePercent)}%)
           </p>
         </div>
       </div>
@@ -123,9 +123,9 @@ export function WidgetBar() {
         </div>
         <div className="mt-3">
           <p className="font-bengali text-xl font-black text-foreground">
-            ৳ {toBanglaNumerals(goldPrices[0]!.price.toLocaleString())}
+            ৳ {localizedDigits(lang, goldPrices[0]!.price.toLocaleString())}
           </p>
-          <p className="text-xs font-bold text-success">+{toBanglaNumerals(goldPrices[0]!.changePercent)}%</p>
+          <p className="text-xs font-bold text-success">+{localizedDigits(lang, goldPrices[0]!.changePercent)}%</p>
         </div>
       </div>
 
@@ -137,7 +137,7 @@ export function WidgetBar() {
           <DollarSign className="h-4 w-4 text-success" />
         </div>
         <div className="mt-3 flex items-center justify-between">
-          <p className="font-mono text-xl font-black text-foreground">{toBanglaNumerals(currencyRates[0]!.price)}</p>
+          <p className="font-mono text-xl font-black text-foreground">{localizedDigits(lang, currencyRates[0]!.price)}</p>
           <p className="text-[11px] text-muted-foreground">{lang === "bn" ? "ডলার" : "USD"}</p>
         </div>
       </div>
@@ -148,7 +148,7 @@ export function WidgetBar() {
             <motion.div key={c.symbol} className="flex items-center gap-2 text-xs" whileHover={{ scale: 1.05 }}>
               <Bitcoin className="h-4 w-4 text-warning" />
               <span className="font-bold">{c.symbol}</span>
-              <span className="font-mono text-muted-foreground">{toBanglaNumerals(c.price.toLocaleString("en-US", { maximumFractionDigits: 2 }))}</span>
+              <span className="font-mono text-muted-foreground">{localizedDigits(lang, c.price.toLocaleString("en-US", { maximumFractionDigits: 2 }))}</span>
               <span className={c.changePercent > 0 ? "text-success" : "text-danger"}>{c.changePercent > 0 ? "+" : ""}{c.changePercent}%</span>
             </motion.div>
           ))}

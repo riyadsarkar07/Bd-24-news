@@ -50,8 +50,8 @@ export function ArchivePage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">{lang === "bn" ? "সব মাস" : "All months"}</SelectItem>
-              {months.map((m) => (
-                <SelectItem key={m} value={m}>{m}</SelectItem>
+              {months.map((m, index) => (
+                <SelectItem key={m} value={m}>{lang === "bn" ? m : new Date(2000, index, 1).toLocaleString("en", { month: "long" })}</SelectItem>
               ))}
             </SelectContent>
           </Select>

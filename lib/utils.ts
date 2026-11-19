@@ -102,6 +102,10 @@ const BN_DIGITS: Record<string, string> = {
   "9": "৯",
 };
 
+export function localizedDigits(lang: "bn" | "en", value: string | number) {
+  return lang === "bn" ? toBanglaNumerals(value) : String(value);
+}
+
 export function toBanglaNumerals(value: string | number): string {
   return String(value).replace(/[0-9]/g, (d) => BN_DIGITS[d] ?? d);
 }

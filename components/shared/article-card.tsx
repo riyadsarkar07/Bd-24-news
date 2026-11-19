@@ -1,3 +1,4 @@
+import { categoryLabel } from "@/constants/categories";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Clock, Eye, PlayCircle, Images, Flame } from "lucide-react";
@@ -67,7 +68,7 @@ export function ArticleCard({ article, variant = "default", priority, className 
             className="badge-cat mb-1.5 !px-2 !py-0.5 !text-[10px]"
             style={{ background: article.categoryColor }}
           >
-            {article.category}
+            {categoryLabel(article.category, lang)}
           </span>
           <h4 className="line-clamp-2 text-sm font-bold leading-snug transition-colors group-hover:text-brand">
             {title}
@@ -94,13 +95,13 @@ export function ArticleCard({ article, variant = "default", priority, className 
         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
         <div className="absolute inset-x-0 bottom-0 p-5">
           <span className="badge-cat mb-2" style={{ background: article.categoryColor }}>
-            {article.category}
+            {categoryLabel(article.category, lang)}
           </span>
           <h3 className="line-clamp-3 text-xl font-bold leading-snug text-white transition-colors group-hover:text-brand-100">
             {title}
           </h3>
           <div className="mt-2 flex items-center gap-3 text-xs text-white/70">
-            <span>{article.author}</span>
+            <span>{lang === "bn" ? (article.authorNameBn || article.author) : article.author}</span>
             <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{timeAgo(article.publishedAt, lang)}</span>
             <span className="flex items-center gap-1"><Eye className="h-3 w-3" />{formatNumber(article.views, lang)}</span>
           </div>
@@ -158,7 +159,7 @@ export function ArticleCard({ article, variant = "default", priority, className 
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
         <span className="absolute left-3 top-3 badge-cat" style={{ background: article.categoryColor }}>
-          {article.category}
+          {categoryLabel(article.category, lang)}
         </span>
         {article.breaking ? (
           <span className="absolute right-3 top-3 flex items-center gap-1 rounded-full bg-white/95 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-brand shadow backdrop-blur">
@@ -182,14 +183,14 @@ export function ArticleCard({ article, variant = "default", priority, className 
           {title}
         </h3>
         <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">
-          {article.excerpt}
+          {lang === "bn" ? article.excerpt : article.excerptEn}
         </p>
         <div className="mt-3 flex items-center justify-between gap-2 border-t border-border/50 pt-3 text-[11px] text-muted-foreground">
           <span className="flex min-w-0 items-center gap-1.5 font-medium text-foreground/70">
             <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand/10 text-[9px] font-bold text-brand">
               {article.author.slice(0, 1)}
             </span>
-            <span className="truncate">{article.author}</span>
+            <span className="truncate">{lang === "bn" ? (article.authorNameBn || article.author) : article.author}</span>
           </span>
           <span className="flex shrink-0 items-center gap-2">
             <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{timeAgo(article.publishedAt, lang)}</span>

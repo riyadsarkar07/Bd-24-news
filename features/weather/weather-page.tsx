@@ -7,7 +7,7 @@ import { Breadcrumb } from "@/components/shared/breadcrumb";
 import { SectionHeading } from "@/components/shared/section-heading";
 import { weatherData } from "@/constants/widgets";
 import { useLanguage } from "@/providers/language-provider";
-import { toBanglaNumerals } from "@/lib/utils";
+import { localizedDigits } from "@/lib/utils";
 
 const iconMap: Record<string, React.ReactNode> = {
   sunny: <Sun className="h-8 w-8 text-warning" />,
@@ -40,24 +40,24 @@ export function WeatherPage() {
             <div className="pointer-events-none absolute -right-8 -top-8 h-28 w-28 rounded-full bg-accentblue/10 blur-2xl" />
             <div className="flex items-start justify-between">
               <div>
-                <h3 className="font-bengali text-lg font-bold">{w.cityBn}</h3>
-                <p className="text-xs text-muted-foreground">{w.city}</p>
+                <h3 className="font-bengali text-lg font-bold">{lang === "bn" ? w.cityBn : w.city}</h3>
+
               </div>
               {iconMap[w.icon] ?? iconMap["partly-cloudy"]}
             </div>
             <div className="mt-4 flex items-end justify-between">
               <div>
-                <p className="font-bengali text-5xl font-black">{toBanglaNumerals(w.temp)}°</p>
+                <p className="font-bengali text-5xl font-black">{localizedDigits(lang, w.temp)}°</p>
                 <p className="mt-1 text-sm font-semibold text-muted-foreground">
                   {lang === "bn" ? w.conditionBn : w.condition}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {lang === "bn" ? `সর্বোচ্চ ${toBanglaNumerals(w.high)}° · সর্বনিম্ন ${toBanglaNumerals(w.low)}°` : `H ${w.high}° · L ${w.low}°`}
+                  {lang === "bn" ? `সর্বোচ্চ ${localizedDigits(lang, w.high)}° · সর্বনিম্ন ${localizedDigits(lang, w.low)}°` : `H ${w.high}° · L ${w.low}°`}
                 </p>
               </div>
               <div className="space-y-2 text-xs text-muted-foreground">
-                <p className="flex items-center gap-1.5"><Droplets className="h-3.5 w-3.5 text-accentblue" />{toBanglaNumerals(w.humidity)}%</p>
-                <p className="flex items-center gap-1.5"><Wind className="h-3.5 w-3.5 text-accentblue" />{toBanglaNumerals(w.wind)} km/h</p>
+                <p className="flex items-center gap-1.5"><Droplets className="h-3.5 w-3.5 text-accentblue" />{localizedDigits(lang, w.humidity)}%</p>
+                <p className="flex items-center gap-1.5"><Wind className="h-3.5 w-3.5 text-accentblue" />{localizedDigits(lang, w.wind)} km/h</p>
               </div>
             </div>
           </motion.div>

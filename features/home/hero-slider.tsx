@@ -91,7 +91,7 @@ export function HeroSlider({ articles }: { articles: Article[] }) {
                   <h2 className="mt-3 line-clamp-3 font-bengali text-2xl font-bold leading-tight text-white transition-colors group-hover:text-brand-100 sm:text-3xl lg:text-4xl">
                     {lang === "bn" ? a.titleBn : a.title}
                   </h2>
-                  <p className="mt-3 hidden max-w-2xl line-clamp-2 text-sm text-white/70 sm:block">{a.excerpt}</p>
+                  <p className="mt-3 hidden max-w-2xl line-clamp-2 text-sm text-white/70 sm:block">{lang === "bn" ? a.excerpt : a.excerptEn}</p>
                   <div className="mt-4 flex flex-wrap items-center gap-4 text-xs text-white/60">
                     <span className="flex items-center gap-2">
                       <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/15 text-[10px] font-bold text-white backdrop-blur">

@@ -6,10 +6,10 @@ import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/providers/language-provider";
 
 const notifications = [
-  { icon: Zap, color: "#E50914", title: "ব্রেকিং: মেট্রোরেল নতুন রুটে চালু", time: "২ মিনিট আগে" },
-  { icon: Trophy, color: "#22C55E", title: "বিপিএল ফাইনালে বরিশালের জয়", time: "১৫ মিনিট আগে" },
-  { icon: TrendingUp, color: "#2563EB", title: "সোনার দামে নতুন রেকর্ড", time: "১ ঘণ্টা আগে" },
-  { icon: Flame, color: "#F59E0B", title: "টাইগারদের বিশ্বকাপ বাছাই আজ", time: "২ ঘণ্টা আগে" },
+  { icon: Zap, color: "#E50914", title: "ব্রেকিং: মেট্রোরেল নতুন রুটে চালু", time: "২ মিনিট আগে", en: "Breaking: Metro rail opens new route", timeEn: "2 minutes ago" },
+  { icon: Trophy, color: "#22C55E", title: "বিপিএল ফাইনালে বরিশালের জয়", time: "১৫ মিনিট আগে", en: "Barishal wins BPL final", timeEn: "15 minutes ago" },
+  { icon: TrendingUp, color: "#2563EB", title: "সোনার দামে নতুন রেকর্ড", time: "১ ঘণ্টা আগে", en: "Gold prices hit a new record", timeEn: "1 hour ago" },
+  { icon: Flame, color: "#F59E0B", title: "টাইগারদের বিশ্বকাপ বাছাই আজ", time: "২ ঘণ্টা আগে", en: "Tigers play World Cup qualifier today", timeEn: "2 hours ago" },
 ];
 
 export function NotificationsDropdown() {
@@ -27,7 +27,7 @@ export function NotificationsDropdown() {
       <PopoverContent align="end" className="w-80 p-0">
         <div className="flex items-center justify-between border-b p-3">
           <p className="font-bengali text-sm font-bold">{lang === "bn" ? "নোটিফিকেশন" : "Notifications"}</p>
-          <span className="rounded-full bg-brand/10 px-2 py-0.5 text-[10px] font-bold text-brand">4 নতুন</span>
+          <span className="rounded-full bg-brand/10 px-2 py-0.5 text-[10px] font-bold text-brand">{lang === "bn" ? "৪ নতুন" : "4 new"}</span>
         </div>
         <div className="max-h-72 overflow-y-auto">
           {notifications.map((n, i) => (
@@ -39,8 +39,8 @@ export function NotificationsDropdown() {
                 <n.icon className="h-4 w-4" />
               </span>
               <span>
-                <span className="block text-sm font-semibold leading-snug">{n.title}</span>
-                <span className="text-[11px] text-muted-foreground">{n.time}</span>
+                <span className="block text-sm font-semibold leading-snug">{lang === "bn" ? n.title : n.en}</span>
+                <span className="text-[11px] text-muted-foreground">{lang === "bn" ? n.time : n.timeEn}</span>
               </span>
             </button>
           ))}

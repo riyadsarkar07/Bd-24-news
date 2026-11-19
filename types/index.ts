@@ -54,6 +54,8 @@ export interface Article {
   titleBn: string;
   excerpt: string;
   body: string;
+  bodyEn?: string;
+  excerptEn?: string;
   category: string;
   categoryColor: string;
   tags: string[];
@@ -101,6 +103,7 @@ export interface Comment {
 }
 
 export interface SearchResult {
+  titleEn?: string;
   id: string;
   title: string;
   category: string;

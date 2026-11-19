@@ -10,7 +10,7 @@ import { SectionHeading } from "@/components/shared/section-heading";
 import { ArticleCard } from "@/components/shared/article-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/providers/language-provider";
-import { timeAgo, toBanglaNumerals } from "@/lib/utils";
+import { timeAgo, localizedDigits } from "@/lib/utils";
 import { ImageWithFallback } from "@/components/shared/image-with-fallback";
 
 export function LatestSection({ initialData }: { initialData?: { latest?: Article[]; editorPicks?: Article[] } }) {
@@ -117,7 +117,7 @@ export function LatestSection({ initialData }: { initialData?: { latest?: Articl
                   className="group flex items-start gap-3 rounded-lg p-1.5 transition-colors hover:bg-white/5"
                 >
                   <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded bg-brand/20 text-[10px] font-black text-brand">
-                    {toBanglaNumerals(i + 1)}
+                    {localizedDigits(lang, i + 1)}
                   </span>
                   <span className="line-clamp-2 text-xs font-medium text-white/75 transition-colors group-hover:text-brand-300">
                     {lang === "bn" ? a.titleBn : a.title}

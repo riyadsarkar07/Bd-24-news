@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useLanguage } from "@/providers/language-provider";
 import Link from "next/link";
 import { ChevronRight, Home } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -11,6 +12,7 @@ export interface Crumb {
 }
 
 export function Breadcrumb({ items, className }: { items: Crumb[]; className?: string }) {
+  const { t } = useLanguage();
   return (
     <nav
       aria-label="Breadcrumb"
@@ -21,7 +23,7 @@ export function Breadcrumb({ items, className }: { items: Crumb[]; className?: s
     >
       <Link href="/" className="flex shrink-0 items-center gap-1 transition-colors hover:text-brand">
         <Home className="h-3.5 w-3.5" />
-        Home
+        {t("home")}
       </Link>
       {items.map((item, i) => (
         <React.Fragment key={i}>

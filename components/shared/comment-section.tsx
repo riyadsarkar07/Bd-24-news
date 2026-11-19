@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { timeAgo, toBanglaNumerals } from "@/lib/utils";
+import { timeAgo, localizedDigits } from "@/lib/utils";
 import { localizedCommentError } from "@/services/commentService";
 import { buildCommentTree } from "@/services/newsService";
 import type { Comment } from "@/types";
@@ -88,7 +88,7 @@ export function CommentSection({
     );
   };
 
-  const count = toBanglaNumerals(total);
+  const count = localizedDigits(lang, total);
 
   return (
     <section className="mt-10" aria-label={lang === "bn" ? "মন্তব্য" : "Comments"}>
@@ -140,7 +140,7 @@ export function CommentSection({
           />
           <div className="flex flex-wrap items-center justify-between gap-2">
             <span className="text-[11px] text-muted-foreground">
-              {toBanglaNumerals(content.length)}/{toBanglaNumerals(MAX_LENGTH)}
+              {localizedDigits(lang, content.length)}/{localizedDigits(lang, MAX_LENGTH)}
             </span>
             <Button type="submit" disabled={addComment.isPending || !content.trim() || !name.trim()}>
               {addComment.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
@@ -235,7 +235,7 @@ function CommentItem({
           <div className="mt-3 flex items-center gap-3 text-xs text-muted-foreground">
             <button className="flex items-center gap-1 transition-colors hover:text-brand">
               <ThumbsUp className="h-3.5 w-3.5" />
-              {toBanglaNumerals(comment.likes)}
+              {localizedDigits(lang, comment.likes)}
             </button>
             {!comment.isOfficial && (
               <button

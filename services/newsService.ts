@@ -23,14 +23,20 @@ export const slugify = (name: string) =>
 
 type ArticleRow = Record<string, unknown>;
 
-export function mapArticleRow(row: ArticleRow): Article {
+export function mapArticleRow(row: ArticleRow, editorial = false): Article {
+  const edition = row.article_editions as { body_en?: string; excerpt_en?: string; excerpt_bn?: string } | null;
+  const body = String(row.body ?? "");
+  const headline = `ঢাকা, ${row.title}।`;
+  const localizeHeadline = !editorial && edition?.excerpt_bn && row.title_bn && body.startsWith(headline);
   return {
     id: (row.id as string) ?? (row.slug as string) ?? "",
     slug: (row.slug as string) ?? (row.id as string) ?? "",
     title: (row.title as string) ?? "",
     titleBn: (row.title_bn as string) ?? "",
-    excerpt: (row.excerpt as string) ?? "",
-    body: (row.body as string) ?? "",
+    excerpt: String((!editorial && edition?.excerpt_bn) || row.excerpt || ""),
+    bodyEn: String(row.body_en || edition?.body_en || ""),
+    excerptEn: String(row.excerpt_en || edition?.excerpt_en || ""),
+    body: localizeHeadline ? `ঢাকা, ${row.title_bn}।${body.slice(headline.length)}` : body,
     category: String(row.category ?? "bangladesh").trim().toLowerCase() || "bangladesh",
     categoryColor: (row.category_color as string) ?? "#E50914",
     tags: Array.isArray(row.tags) ? (row.tags as string[]) : [],
@@ -93,6 +99,7 @@ export function filterAndSort(articles: Article[], options: ArticleQueryOptions 
         a.title.toLowerCase().includes(q) ||
         a.titleBn.includes(options.search as string) ||
         a.excerpt.toLowerCase().includes(q) ||
+        a.excerptEn?.toLowerCase().includes(q) ||
         a.tags.some((t) => t.toLowerCase().includes(q)),
     );
   }
@@ -113,7 +120,7 @@ export function filterAndSort(articles: Article[], options: ArticleQueryOptions 
 }
 
 const LIST_COLUMNS =
-  "id,slug,title,title_bn,excerpt,category,category_color,tags,author,author_name_bn,author_slug,author_avatar,author_role,cover_image,images,published_at,updated_at,views,likes,comments_count,reading_minutes,featured,breaking,trending,editor_pick,is_video,is_gallery,video_url,location,seo_title,seo_description,status";
+  "id,slug,title,title_bn,excerpt,excerpt_en,article_editions(excerpt_bn,excerpt_en),category,category_color,tags,author,author_name_bn,author_slug,author_avatar,author_role,cover_image,images,published_at,updated_at,views,likes,comments_count,reading_minutes,featured,breaking,trending,editor_pick,is_video,is_gallery,video_url,location,seo_title,seo_description,status";
 
 const FETCH_TIMEOUT_MS = 8000;
 
@@ -238,7 +245,7 @@ async function queryArticles(options: ArticleQueryOptions = {}): Promise<Article
     if (options.tag) q = q.contains("tags", [options.tag]);
     if (options.search) {
       const term = options.search.replace(/[%_,]/g, " ").trim();
-      if (term) q = q.or(`title.ilike.%${term}%,title_bn.ilike.%${term}%,excerpt.ilike.%${term}%`);
+      if (term) q = q.or(`title.ilike.%${term}%,title_bn.ilike.%${term}%,excerpt.ilike.%${term}%,excerpt_en.ilike.%${term}%`);
     }
     if (options.sort === "popular") q = q.order("views", { ascending: false });
     else if (options.sort === "oldest") q = q.order("published_at", { ascending: true });
@@ -292,7 +299,7 @@ export async function getArticleBySlug(slug: string): Promise<Article | undefine
   const supabase = getSupabase();
   if (!supabase) return undefined;
   const { data, error } = await withTimeout(
-    supabase.from("articles").select("*").eq("status", "published").eq("slug", slug).maybeSingle(),
+    supabase.from("articles").select("*,article_editions(body_en,excerpt_en,excerpt_bn)").eq("status", "published").eq("slug", slug).maybeSingle(),
   );
   if (error) throw new Error(error.message);
   return data ? mapArticleRow(data as ArticleRow) : undefined;
@@ -328,6 +335,7 @@ export async function searchNews(query: string, limit = 10): Promise<SearchResul
   return results.map((a) => ({
     id: a.id,
     title: a.titleBn,
+    titleEn: a.title,
     category: a.category,
     categoryColor: a.categoryColor,
     image: a.coverImage,

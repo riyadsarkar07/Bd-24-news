@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { CalendarDays, CloudSun, Languages, Moon } from "lucide-react";
-import { format } from "date-fns";
 import { useClock } from "@/hooks/use-clock";
 import { useLanguage } from "@/providers/language-provider";
 import { useTheme } from "next-themes";
@@ -16,14 +15,9 @@ export function TopBar() {
   const { lang, toggle } = useLanguage();
   const { setTheme, resolvedTheme } = useTheme();
 
-  const dateStr =
-    now == null
-      ? ""
-      : lang === "bn"
-        ? toBanglaNumerals(format(now, "eeee, d MMMM yyyy"))
-        : format(now, "EEEE, do MMMM yyyy");
-  const timeStr =
-    now == null ? "" : lang === "bn" ? toBanglaNumerals(format(now, "h:mm:ss a")) : format(now, "h:mm:ss a");
+  const locale = lang === "bn" ? "bn-BD" : "en-GB";
+  const dateStr = now?.toLocaleDateString(locale, { timeZone: "Asia/Dhaka", dateStyle: "full" }) ?? "";
+  const timeStr = now?.toLocaleTimeString(locale, { timeZone: "Asia/Dhaka", hour12: true }) ?? "";
 
   return (
     <div className="hidden border-b border-white/10 bg-navy-950 text-white lg:block">
@@ -48,7 +42,7 @@ export function TopBar() {
             className="flex items-center gap-1.5 rounded-full bg-white/5 px-3 py-1 text-white/75 transition-colors hover:bg-white/10 hover:text-white"
           >
             <CloudSun className="h-3.5 w-3.5 text-warning" />
-            নমুনা · ঢাকা {toBanglaNumerals(weatherData[0]?.temp ?? 31)}°C
+            {lang === "bn" ? "নমুনা · ঢাকা" : "Sample · Dhaka"} {lang === "bn" ? toBanglaNumerals(weatherData[0]?.temp ?? 31) : weatherData[0]?.temp}°C
           </Link>
           <span className="mx-1 h-3 w-px bg-white/15" />
           <Button

@@ -1,4 +1,5 @@
 import { articles as seedArticles } from "@/data/articles";
+import { englishFields } from "@/lib/editor-translation";
 import type { Article } from "@/types";
 import { getSupabase } from "@/lib/supabase/client";
 import { mapArticleRow, slugify } from "@/services/newsService";
@@ -24,6 +25,8 @@ export interface ArticleInput {
   title: string;
   excerpt: string;
   body: string;
+  excerptEn?: string;
+  bodyEn?: string;
   category: string;
   categoryColor?: string;
   tags: string[];
@@ -52,7 +55,7 @@ const DEFAULT_AUTHOR = { name: "Riyad", nameBn: "রিয়াদ", role: "Edi
 
 function buildArticlePayload(input: ArticleInput, existing?: Article): Record<string, unknown> {
   const now = new Date().toISOString();
-  const slug = input.slug?.trim() || slugify(input.title) || `article-${Date.now()}`;
+  const slug = input.slug?.trim() || slugify(input.title || input.titleBn) || `article-${Date.now()}`;
   const category = input.category || "bangladesh";
   const categoryColor = input.categoryColor || "#E50914";
   const authorName = input.author?.trim() || DEFAULT_AUTHOR.name;
@@ -117,7 +120,7 @@ export async function listAllArticles(): Promise<Article[]> {
   const supabase = getSupabase();
   if (!supabase) return [];
   try {
-    const { data } = await supabase.from("articles").select("*").order("updated_at", { ascending: false });
+    const { data } = await supabase.from("articles").select("*,article_editions(body_en,excerpt_en)").order("updated_at", { ascending: false });
     return (data ?? []).map((r) => {
       const article = mapArticleRow(r as Record<string, unknown>);
       article.status = (r.status as ArticleStatus) ?? "published";
@@ -134,9 +137,9 @@ export async function getArticleById(id: string): Promise<Article | undefined> {
   if (!supabase) return undefined;
   try {
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
-    const { data } = await supabase.from("articles").select("*").eq(isUuid ? "id" : "slug", id).limit(1).maybeSingle();
+    const { data } = await supabase.from("articles").select("*,article_editions(body_en,excerpt_en)").eq(isUuid ? "id" : "slug", id).limit(1).maybeSingle();
     if (data) {
-      const article = mapArticleRow(data as Record<string, unknown>);
+      const article = mapArticleRow(data as Record<string, unknown>, true);
       article.status = (data.status as ArticleStatus) ?? "published";
       article.publishedAt = data.published_at ?? "";
       return article;
@@ -153,7 +156,12 @@ export async function saveArticle(input: ArticleInput, existingId?: string): Pro
   if (!supabase) throw new Error("Supabase is not configured. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY environment variables.");
   const existing = existingId ? await getArticleById(existingId) : undefined;
   if (existingId && !existing) throw new Error("Article could not be loaded.");
-  const payload = buildArticlePayload(input, existing);
+  const source = [input.titleBn, input.excerpt, input.body];
+  const supplied = [input.title, input.excerptEn ?? "", input.bodyEn ?? ""];
+  const translated = input.status === "published" ? await englishFields(source, supplied) : supplied;
+  const payload = buildArticlePayload({ ...input, title: translated[0]! }, existing);
+  payload.excerpt_en = translated[1];
+  payload.body_en = translated[2];
 
   if (existing) {
     delete payload.views;
@@ -210,6 +218,22 @@ export async function deleteArticles(ids: string[]): Promise<void> {
 export async function setArticlesStatus(ids: string[], status: ArticleStatus): Promise<void> {
   const supabase = getSupabase();
   if (!supabase || ids.length === 0) return;
+  if (status === "published") {
+    for (const id of ids) {
+      const article = await getArticleById(id);
+      if (!article) throw new Error("Article unavailable.");
+      if (article.status === "published") continue;
+      const [title, excerpt_en, body_en] = await englishFields(
+        [article.titleBn, article.excerpt, article.body],
+        [article.title, article.excerptEn ?? "", article.bodyEn ?? ""],
+      );
+      const { error } = await supabase.from("articles")
+        .update({ title, excerpt_en, body_en, status, published_at: article.publishedAt || new Date().toISOString() })
+        .eq("id", article.id).eq("status", "draft").eq("updated_at", article.updatedAt).select("id").single();
+      if (error) throw error;
+    }
+    return;
+  }
   const uuids = ids.filter((id) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id));
   const slugs = ids.filter((id) => !uuids.includes(id));
   const now = new Date().toISOString();
@@ -217,15 +241,6 @@ export async function setArticlesStatus(ids: string[], status: ArticleStatus): P
 
   async function run(column: "id" | "slug", values: string[]) {
     if (values.length === 0) return;
-    // Never overwrite an existing publish timestamp when re-publishing.
-    if (status === "published") {
-      const { error: stampError } = await supabase!
-        .from("articles")
-        .update({ published_at: now })
-        .in(column, values)
-        .is("published_at", null);
-      if (stampError) throw stampError;
-    }
     const { error } = await supabase!.from("articles").update(payload).in(column, values);
     if (error) throw error;
   }
@@ -259,6 +274,8 @@ export async function duplicateArticle(id: string): Promise<{ id: string; slug: 
       title: existing.title,
       excerpt: existing.excerpt,
       body: existing.body,
+      bodyEn: existing.bodyEn,
+      excerptEn: existing.excerptEn,
       category: existing.category,
       categoryColor: existing.categoryColor,
       tags: existing.tags,

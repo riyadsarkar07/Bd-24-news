@@ -1,5 +1,6 @@
 "use client";
 
+import { useLanguage } from "@/providers/language-provider";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { ShieldCheck } from "lucide-react";
@@ -7,6 +8,7 @@ import { Logo } from "@/components/shared/logo";
 import { cn } from "@/lib/utils";
 
 export function AuthLayout({ title, titleBn, subtitle, children, footer }: { title: string; titleBn: string; subtitle?: string; children: React.ReactNode; footer?: React.ReactNode }) {
+  const { lang } = useLanguage();
   return (
     <div className="relative flex min-h-[80vh] items-center justify-center overflow-hidden px-4 py-12">
       <div className="bg-grid pointer-events-none absolute inset-0 opacity-40" />
@@ -22,7 +24,7 @@ export function AuthLayout({ title, titleBn, subtitle, children, footer }: { tit
         <div className="glass-card rounded-3xl p-8">
           <div className="flex flex-col items-center text-center">
             <Logo compact />
-            <h1 className="mt-4 font-bengali text-2xl font-black">{titleBn}</h1>
+            <h1 className="mt-4 font-bengali text-2xl font-black">{lang === "bn" ? titleBn : title}</h1>
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{title}</p>
             {subtitle && <p className="mt-2 text-sm text-muted-foreground">{subtitle}</p>}
           </div>

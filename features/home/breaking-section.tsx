@@ -45,7 +45,7 @@ export function BreakingSpotlight({ initialData }: { initialData?: Article[] }) 
               <h2 className="line-clamp-3 font-bengali text-2xl font-bold leading-tight transition-colors group-hover:text-brand-300 sm:text-3xl">
                 {lang === "bn" ? lead.titleBn : lead.title}
               </h2>
-              <p className="mt-3 line-clamp-2 text-sm text-white/60">{lead.excerpt}</p>
+              <p className="mt-3 line-clamp-2 text-sm text-white/60">{lang === "bn" ? lead.excerpt : lead.excerptEn}</p>
               <p className="mt-4 flex items-center gap-2 text-xs text-white/40">
                 <span className="h-1 w-1 rounded-full bg-brand/70" />
                 {lead.author} · {timeAgo(lead.publishedAt, lang)}

@@ -13,11 +13,11 @@ import { cn } from "@/lib/utils";
 import { useLanguage } from "@/providers/language-provider";
 
 const sectionLinks = [
-  { label: "ভিডিও", href: "/videos", icon: Clapperboard },
-  { label: "ফটো", href: "/gallery", icon: Images },
-  { label: "লাইভ", href: "/live-tv", icon: Radio },
-  { label: "ব্রেকিং", href: "/breaking-news", icon: Flame },
-  { label: "আর্কাইভ", href: "/archive", icon: Archive },
+  { label: "ভিডিও", english: "Videos", href: "/videos", icon: Clapperboard },
+  { label: "ফটো", english: "Photos", href: "/gallery", icon: Images },
+  { label: "লাইভ", english: "Live", href: "/live-tv", icon: Radio },
+  { label: "ব্রেকিং", english: "Breaking", href: "/breaking-news", icon: Flame },
+  { label: "আর্কাইভ", english: "Archive", href: "/archive", icon: Archive },
 ];
 
 function CategoryDropdown({ category, onClose }: { category: Category; onClose: () => void }) {
@@ -28,9 +28,9 @@ function CategoryDropdown({ category, onClose }: { category: Category; onClose: 
     <div className="container-page grid grid-cols-12 gap-8 py-6">
       <div className="col-span-3">
         <p className="font-bengali text-lg font-bold" style={{ color: category.color }}>
-          {category.nameBn}
+          {lang === "bn" ? category.nameBn : category.name}
         </p>
-        <p className="mt-1 text-sm text-muted-foreground">{category.description}</p>
+        <p className="mt-1 text-sm text-muted-foreground">{lang === "bn" ? category.description : category.name + " news"}</p>
         <Link
           href={`/category/${category.slug}`}
           onClick={onClose}
@@ -155,7 +155,7 @@ export function MegaNav() {
               )}
             >
               <item.icon className="h-4 w-4" />
-              {item.label}
+              {lang === "bn" ? item.label : item.english}
             </Link>
           ))}
         </div>

@@ -50,7 +50,9 @@ import type { Article } from "@/types";
 
 const schema = z.object({
   titleBn: z.string().min(5, "Title is too short"),
-  titleEn: z.string().min(5, "English title is too short"),
+  titleEn: z.string(),
+  bodyEn: z.string(),
+  excerptEn: z.string(),
   category: z.string().min(1, "Select a category"),
   excerpt: z.string().min(20, "Excerpt must be at least 20 characters"),
   body: z.string().min(40, "Body must be at least 40 characters"),
@@ -67,6 +69,10 @@ const richActions = [
   { icon: Link2, label: "Link" },
   { icon: ImageIcon, label: "Image" },
 ];
+
+function freshEnglish(source: string, previous: string | undefined, english: string, previousEnglish?: string) {
+  return previous !== undefined && source !== previous && english === previousEnglish ? "" : english;
+}
 
 export function NewsEditor({ id }: { id?: string }) {
   const router = useRouter();
@@ -94,7 +100,7 @@ export function NewsEditor({ id }: { id?: string }) {
 
   const { register, handleSubmit, reset, control, formState: { errors } } = useForm<Schema>({
     resolver: zodResolver(schema),
-    defaultValues: { titleBn: "", titleEn: "", category: "bangladesh", excerpt: "", body: "" },
+    defaultValues: { titleBn: "", titleEn: "", bodyEn: "", excerptEn: "", category: "bangladesh", excerpt: "", body: "" },
   });
 
   React.useEffect(() => {
@@ -123,6 +129,8 @@ export function NewsEditor({ id }: { id?: string }) {
           reset({
             titleBn: a.titleBn,
             titleEn: a.title,
+            bodyEn: a.bodyEn ?? "",
+            excerptEn: a.excerptEn ?? "",
             category: a.category || "bangladesh",
             excerpt: a.excerpt,
             body: a.body,
@@ -148,7 +156,9 @@ export function NewsEditor({ id }: { id?: string }) {
   const persist = async (values: Schema, status: "published" | "draft") => {
     const input: ArticleInput = {
       titleBn: values.titleBn,
-      title: values.titleEn,
+      title: freshEnglish(values.titleBn, existing?.titleBn, values.titleEn, existing?.title),
+      excerptEn: freshEnglish(values.excerpt, existing?.excerpt, values.excerptEn, existing?.excerptEn),
+      bodyEn: freshEnglish(values.body, existing?.body, values.bodyEn, existing?.bodyEn),
       excerpt: values.excerpt,
       body: values.body,
       category: values.category,
@@ -162,7 +172,7 @@ export function NewsEditor({ id }: { id?: string }) {
       videoUrl: videoUrl.trim(),
       isGallery,
       images: galleryImages.split(/\n/).map((url) => url.trim()).filter(Boolean),
-      slug: slug || slugify(values.titleEn),
+      slug: slug || undefined,
       status,
       location,
       seoTitle,
@@ -238,10 +248,18 @@ export function NewsEditor({ id }: { id?: string }) {
                 {errors.titleBn && <p className="text-xs font-medium text-danger">{errors.titleBn.message}</p>}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="titleEn">English title *</Label>
+                <Label htmlFor="titleEn">English title (optional)</Label>
                 <Input id="titleEn" placeholder="Enter English title…" {...register("titleEn")} />
                 {errors.titleEn && <p className="text-xs font-medium text-danger">{errors.titleEn.message}</p>}
               </div>
+              <details className="space-y-2">
+                <summary className="cursor-pointer">English translation</summary>
+                <p className="text-sm text-muted-foreground">Publishing translates missing fields on this device. The first translation downloads a language model. You can also enter or edit the translation here.</p>
+                <Label htmlFor="excerptEn">English summary</Label>
+                <Textarea id="excerptEn" {...register("excerptEn")} />
+                <Label htmlFor="bodyEn">English article</Label>
+                <Textarea id="bodyEn" rows={8} {...register("bodyEn")} />
+              </details>
               <div className="space-y-2">
                 <Label htmlFor="excerpt">Excerpt *</Label>
                 <Textarea id="excerpt" rows={3} placeholder="Short summary shown in cards…" {...register("excerpt")} />

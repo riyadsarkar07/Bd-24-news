@@ -5,16 +5,14 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { useLanguage } from "@/providers/language-provider";
 import { useArticles } from "@/hooks/useNews";
-import { breakingNewsItems } from "@/constants/widgets";
 
 export function NewsTicker() {
   const { t, lang } = useLanguage();
   const { data: breaking } = useArticles({ breaking: true, limit: 10, sort: "latest" });
-  const fallback = breakingNewsItems;
   const items =
     breaking && breaking.length > 0
       ? breaking.map((a) => (lang === "bn" ? a.titleBn : a.title)).filter(Boolean)
-      : fallback;
+      : [];
   const doubled = [...items, ...items];
 
   if (doubled.length === 0) return null;

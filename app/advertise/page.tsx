@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { StaticPage } from "@/features/static/static-page";
+import { StaticPage, Copy } from "@/features/static/static-page";
 import { siteConfig } from "@/config/site";
 
 export const metadata: Metadata = {
@@ -14,33 +14,34 @@ export default function AdvertisePage() {
       title="Advertise With Us"
       titleBn="বিজ্ঞাপন দিন"
       breadcrumb="বিজ্ঞাপন"
+      subtitleEn="Reach more than 2.4 million readers each month."
       subtitle="মাসিক ২.৪ মিলিয়নের বেশি পাঠকের কাছে আপনার ব্র্যান্ড পৌঁছে দিন"
     >
       <div className="grid gap-4 sm:grid-cols-3">
         {[
-          { big: "2.4M+", small: "মাসিক পাঠক" },
-          { big: "30M+", small: "মাসিক পেজ ভিউ" },
-          { big: "85%", small: "মোবাইল ব্যবহারকারী" },
+          { big: "2.4M+", small: "মাসিক পাঠক", en: "Monthly readers" },
+          { big: "30M+", small: "মাসিক পেজ ভিউ", en: "Monthly page views" },
+          { big: "85%", small: "মোবাইল ব্যবহারকারী", en: "Mobile users" },
         ].map((s) => (
           <div key={s.small} className="rounded-2xl border border-border/60 bg-card p-6 text-center shadow-card">
             <p className="font-bengali text-3xl font-black text-brand">{s.big}</p>
-            <p className="mt-1 text-sm font-semibold text-muted-foreground">{s.small}</p>
+            <p className="mt-1 text-sm font-semibold text-muted-foreground"><Copy en={s.en}>{s.small}</Copy></p>
           </div>
         ))}
       </div>
-      <h2 className="mt-8 font-bengali text-2xl font-bold">বিজ্ঞাপনের সুযোগ</h2>
+      <h2 className="mt-8 font-bengali text-2xl font-bold"><Copy en={<>Advertising options</>}>বিজ্ঞাপনের সুযোগ</Copy></h2>
       <ul className="list-disc space-y-2 pl-6">
-        <li>হেডার ব্যানার ও স্টিকি অ্যাড</li>
-        <li>সাইডবার ডিসপ্লে বিজ্ঞাপন</li>
-        <li>আর্টিকেলের ভেতরে ইনলাইন বিজ্ঞাপন</li>
-        <li>নেটিভ কনটেন্ট ও স্পন্সরড আর্টিকেল</li>
-        <li>ভিডিও বিজ্ঞাপন</li>
-        <li>নিউজলেটার স্পনসরশিপ</li>
+        <li><Copy en={<>Header banners and sticky ads</>}>হেডার ব্যানার ও স্টিকি অ্যাড</Copy></li>
+        <li><Copy en={<>Sidebar display advertising</>}>সাইডবার ডিসপ্লে বিজ্ঞাপন</Copy></li>
+        <li><Copy en={<>Inline advertisements in articles</>}>আর্টিকেলের ভেতরে ইনলাইন বিজ্ঞাপন</Copy></li>
+        <li><Copy en={<>Native content and sponsored articles</>}>নেটিভ কনটেন্ট ও স্পন্সরড আর্টিকেল</Copy></li>
+        <li><Copy en={<>Video ads</>}>ভিডিও বিজ্ঞাপন</Copy></li>
+        <li><Copy en={<>Newsletter sponsorship</>}>নিউজলেটার স্পনসরশিপ</Copy></li>
       </ul>
-      <p className="mt-6">
+      <p className="mt-6"><Copy en={<>For advertising details, contact <a href={'mailto:' + siteConfig.email}>{siteConfig.email}</a> or <a href={'tel:' + siteConfig.phone}>{siteConfig.phone}</a>.</>}>
         বিজ্ঞাপনের বিস্তারিত জানতে যোগাযোগ করুন: <a className="font-bold text-brand" href={`mailto:${siteConfig.email}`}>{siteConfig.email}</a> বা{" "}
         <a className="font-bold text-brand" href={`tel:${siteConfig.phone}`}>{siteConfig.phone}</a>
-      </p>
+      </Copy></p>
     </StaticPage>
   );
 }

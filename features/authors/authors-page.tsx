@@ -59,7 +59,7 @@ export function AuthorsPage() {
                     <AvatarFallback className="bg-brand text-white">{(a.name || a.nameBn || "?").slice(0, 2)}</AvatarFallback>
                   </Avatar>
                   <h3 className="mt-3 flex items-center justify-center gap-1.5 font-bengali text-lg font-bold">
-                    {a.nameBn || a.name}
+                    {lang === "bn" ? a.nameBn || a.name : a.name}
                     {a.verified && <BadgeCheck className="h-4 w-4 text-accentblue" />}
                   </h3>
                   <p className="text-xs font-semibold text-brand">{a.role}</p>

@@ -37,7 +37,7 @@ export function AuthorProfile({ slug }: { slug: string }) {
 
   return (
     <div className="container-page py-8">
-      <Breadcrumb items={[{ label: lang === "bn" ? "লেখকবৃন্দ" : "Authors", href: "/authors" }, { label: author.nameBn }]} />
+      <Breadcrumb items={[{ label: lang === "bn" ? "লেখকবৃন্দ" : "Authors", href: "/authors" }, { label: lang === "bn" ? author.nameBn : author.name }]} />
 
       <div className="relative mt-6 overflow-hidden rounded-3xl border border-border/60 bg-card shadow-soft-lg">
         <div className="relative h-40 overflow-hidden sm:h-48">
@@ -52,7 +52,7 @@ export function AuthorProfile({ slug }: { slug: string }) {
           </Avatar>
           <div className="flex-1">
             <h1 className="flex items-center gap-2 font-bengali text-2xl font-black">
-              {author.nameBn}
+              {lang === "bn" ? author.nameBn : author.name}
               {author.verified && <BadgeCheck className="h-5 w-5 text-accentblue" />}
             </h1>
             <p className="text-sm font-bold text-brand">{author.role}</p>
@@ -77,7 +77,7 @@ export function AuthorProfile({ slug }: { slug: string }) {
       </div>
 
       <div className="mt-10">
-        <SectionHeading title="Articles by Author" titleBn={`${author.nameBn} এর লেখা`} color="#7C3AED" />
+        <SectionHeading title="Articles by Author" titleBn={`${lang === "bn" ? author.nameBn : author.name} এর লেখা`} color="#7C3AED" />
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {articles?.map((a, i) => (
             <motion.div

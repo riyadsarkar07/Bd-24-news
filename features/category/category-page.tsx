@@ -47,7 +47,7 @@ export function CategoryPage({ slug, initialData }: { slug: string; initialData?
 
   return (
     <div className="container-page py-8">
-      <Breadcrumb items={[{ label: cat?.nameBn ?? slug, href: `/category/${slug}` }]} />
+      <Breadcrumb items={[{ label: (lang === "bn" ? cat?.nameBn : cat?.name) ?? slug, href: `/category/${slug}` }]} />
 
       <div className="mt-4 flex flex-col gap-6 lg:flex-row">
         <div className="min-w-0 flex-1">
@@ -57,7 +57,7 @@ export function CategoryPage({ slug, initialData }: { slug: string; initialData?
             color={cat?.color}
             icon={<Icon className="h-4 w-4" />}
           />
-          <p className="-mt-2 mb-6 text-sm text-muted-foreground">{cat?.description}</p>
+          <p className="-mt-2 mb-6 text-sm text-muted-foreground">{lang === "bn" ? cat?.description : (cat?.name ?? slug) + " news"}</p>
 
           <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
             <Tabs value={sort} onValueChange={(v) => setSort(v as typeof sort)}>
@@ -130,7 +130,7 @@ export function CategoryPage({ slug, initialData }: { slug: string; initialData?
                           <h3 className="line-clamp-2 font-bengali text-lg font-bold leading-snug transition-colors group-hover:text-brand">
                             {lang === "bn" ? a.titleBn : a.title}
                           </h3>
-                          <p className="mt-1.5 line-clamp-2 text-sm text-muted-foreground">{a.excerpt}</p>
+                          <p className="mt-1.5 line-clamp-2 text-sm text-muted-foreground">{lang === "bn" ? a.excerpt : a.excerptEn}</p>
                           <div className="mt-3 flex flex-wrap items-center gap-3 text-[11px] text-muted-foreground">
                             <span className="font-semibold text-foreground/70">{a.author}</span>
                             <span>{timeAgo(a.publishedAt, lang)}</span>

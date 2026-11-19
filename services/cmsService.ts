@@ -1,7 +1,7 @@
 import { getSupabase } from "@/lib/supabase/client";
 import { slugify } from "@/services/newsService";
 
-export type UserRole = "Admin" | "Editor" | "Journalist" | "Subscriber";
+export type UserRole = string;
 export type UserStatus = "active" | "banned" | "pending";
 
 export interface AdminUserRow {
@@ -376,14 +376,8 @@ export function subscribeUsers(listener: (rows: AdminUserRow[]) => void, onError
 export async function saveUser(id: string, input: { name: string; email: string; avatar?: string; role: UserRole; status: UserStatus }): Promise<void> {
   const supabase = getSupabase();
   if (!supabase) throw new Error("Supabase is not configured.");
-  const { error } = await supabase.from("profiles").insert({
-    email: input.email.toLowerCase(),
-    name: input.name,
-    avatar: input.avatar ?? "",
-    role: input.role,
-    status: input.status,
-    joined_at: nowIso(),
-    updated_at: nowIso(),
+  const { error } = await supabase.rpc("assign_newsroom_user", {
+    account_email: input.email, display_name: input.name, assigned_role: input.role, account_status: input.status,
   });
   if (error) throw error;
 }
@@ -398,6 +392,7 @@ export async function updateUser(id: string, patch: Partial<AdminUserRow>): Prom
   delete payload.lastActive;
   delete payload.posts;
   if (payload.role === undefined) delete payload.role;
+  else payload.newsroom_role_confirmed = true;
   const { error } = await supabase.from("profiles").update(payload).eq("id", id);
   if (error) throw error;
 }
@@ -674,6 +669,7 @@ export async function saveNewsletter(id: string, input: Partial<AdminNewsletterR
   const supabase = getSupabase();
   if (!supabase) throw new Error("Supabase is not configured.");
   const payload: Record<string, unknown> = {
+    id,
     subject_bn: input.subjectBn,
     subject_en: input.subjectEn,
     body: input.body,

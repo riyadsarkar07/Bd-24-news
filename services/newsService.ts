@@ -3,6 +3,7 @@ import { getSupabase } from "@/lib/supabase/client";
 
 export interface ArticleQueryOptions {
   category?: string;
+  media?: "video" | "gallery";
   limit?: number;
   featured?: boolean;
   breaking?: boolean;
@@ -65,6 +66,8 @@ export function mapArticleRow(row: ArticleRow): Article {
 
 export function filterAndSort(articles: Article[], options: ArticleQueryOptions = {}): Article[] {
   let result = [...articles];
+  if (options.media === "video") result = result.filter((a) => a.isVideo && a.videoUrl);
+  if (options.media === "gallery") result = result.filter((a) => a.isGallery);
   if (options.category) {
     result = result.filter((a) => a.category === options.category);
   }
@@ -225,6 +228,8 @@ async function queryArticles(options: ArticleQueryOptions = {}): Promise<Article
   if (!supabase) return null;
   try {
     let q = supabase.from("articles").select(LIST_COLUMNS).eq("status", "published");
+    if (options.media === "video") q = q.eq("is_video", true).not("video_url", "is", null).neq("video_url", "");
+    if (options.media === "gallery") q = q.eq("is_gallery", true);
     if (options.category) q = q.eq("category", options.category);
     if (options.featured !== undefined) q = q.eq("featured", options.featured);
     if (options.breaking !== undefined) q = q.eq("breaking", options.breaking);
@@ -278,25 +283,19 @@ export async function getHomepageData() {
     international: filterAndSort(all, { category: "international", limit: 6 }),
     education: filterAndSort(all, { category: "education", limit: 6 }),
     opinion: filterAndSort(all, { category: "opinion", limit: 6 }),
-    videos: filterAndSort(all, { category: "entertainment", limit: 4 }),
-    gallery: filterAndSort(all, { category: "travel", limit: 5 }),
+    videos: filterAndSort(all, { media: "video", limit: 4 }),
+    gallery: filterAndSort(all, { media: "gallery", limit: 5 }),
   };
 }
 
 export async function getArticleBySlug(slug: string): Promise<Article | undefined> {
   const supabase = getSupabase();
-  if (supabase) {
-    try {
-      const { data, error } = await withTimeout(
-        supabase.from("articles").select("*").eq("status", "published").eq("slug", slug).limit(1).maybeSingle(),
-      );
-      if (!error && data) return mapArticleRow(data as ArticleRow);
-    } catch (err) {
-      console.error("Supabase article by slug read failed:", err);
-    }
-  }
-  const all = await getPublishedArticles();
-  return all.find((a) => a.slug === slug);
+  if (!supabase) return undefined;
+  const { data, error } = await withTimeout(
+    supabase.from("articles").select("*").eq("status", "published").eq("slug", slug).maybeSingle(),
+  );
+  if (error) throw new Error(error.message);
+  return data ? mapArticleRow(data as ArticleRow) : undefined;
 }
 
 export async function getRelatedArticles(article: Article, limit = 6): Promise<Article[]> {
@@ -454,8 +453,22 @@ export async function getComments(articleId: string): Promise<Comment[]> {
 }
 
 export async function getArchiveYears(): Promise<number[]> {
-  const all = await getPublishedArticles();
-  const years = [...new Set(all.map((a) => new Date(a.publishedAt).getFullYear()).filter((y) => Number.isFinite(y)))]
-    .sort((a, b) => b - a);
-  return years;
+  const client = getSupabase();
+  if (!client) throw new Error("Archive unavailable");
+  const { data, error } = await client.rpc("newsroom_archive_years");
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function getArchivePage(year: number, month: number, page: number) {
+  const client = getSupabase();
+  if (!client) throw new Error("Archive unavailable");
+  const startMonth = month < 0 ? 0 : month;
+  const endMonth = month < 0 ? 12 : month + 1;
+  const midnight = (m: number) => new Date(Date.UTC(year, m, 1, -6)).toISOString();
+  const { data, count, error } = await client.from("articles").select(LIST_COLUMNS, { count: "exact" })
+    .eq("status", "published").gte("published_at", midnight(startMonth)).lt("published_at", midnight(endMonth))
+    .order("published_at", { ascending: false }).order("id").range(page * 24, page * 24 + 23);
+  if (error) throw error;
+  return { articles: mapRows(data), count: count ?? 0 };
 }

@@ -48,7 +48,7 @@ export function TopBar() {
             className="flex items-center gap-1.5 rounded-full bg-white/5 px-3 py-1 text-white/75 transition-colors hover:bg-white/10 hover:text-white"
           >
             <CloudSun className="h-3.5 w-3.5 text-warning" />
-            ঢাকা {toBanglaNumerals(weatherData[0]?.temp ?? 31)}°C
+            নমুনা · ঢাকা {toBanglaNumerals(weatherData[0]?.temp ?? 31)}°C
           </Link>
           <span className="mx-1 h-3 w-px bg-white/15" />
           <Button

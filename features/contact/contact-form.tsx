@@ -1,5 +1,6 @@
 "use client";
 
+import { getSupabase } from "@/lib/supabase/client";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -30,7 +31,15 @@ export function ContactForm() {
   } = useForm<Schema>({ resolver: zodResolver(schema) });
 
   const onSubmit = async (data: Schema) => {
-    await new Promise((r) => setTimeout(r, 900));
+    try {
+      const client = getSupabase();
+      if (!client) throw new Error();
+      const { error } = await client.from("contact_messages").insert(data);
+      if (error) throw error;
+    } catch {
+      toast.error(lang === "bn" ? "মেসেজ জমা হয়নি। আবার চেষ্টা করুন।" : "Message could not be submitted.");
+      return;
+    }
     toast.success(lang === "bn" ? "মেসেজ পাঠানো হয়েছে!" : "Message sent!");
     reset();
   };

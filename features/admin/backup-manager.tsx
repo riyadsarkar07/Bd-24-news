@@ -68,7 +68,7 @@ export function BackupManager() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2"><DatabaseBackup className="h-5 w-5 text-brand" /> {lang === "bn" ? "নতুন ব্যাকআপ" : "New Backup"}</CardTitle>
-          <CardDescription>Create a full snapshot of your database tables</CardDescription>
+          <CardDescription>Export newsroom records and media metadata. Uploaded files and sign-in accounts are managed separately.</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex items-center gap-4">

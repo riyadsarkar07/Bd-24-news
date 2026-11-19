@@ -24,8 +24,7 @@ import {
 
 const permissionPool = [
   "news:write", "news:publish", "news:delete", "comments:moderate", "media:upload",
-  "media:manage", "users:manage", "roles:manage", "settings:edit", "analytics:view",
-  "ads:manage", "newsletter:send", "backup:create", "restore:run", "seo:edit",
+  "media:manage",
 ];
 
 export function RolesManager() {

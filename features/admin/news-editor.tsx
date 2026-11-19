@@ -81,6 +81,9 @@ export function NewsEditor({ id }: { id?: string }) {
   const [location, setLocation] = React.useState("");
   const [seoTitle, setSeoTitle] = React.useState("");
   const [seoDescription, setSeoDescription] = React.useState("");
+  const [videoUrl, setVideoUrl] = React.useState("");
+  const [isGallery, setIsGallery] = React.useState(false);
+  const [galleryImages, setGalleryImages] = React.useState("");
   const [coverImage, setCoverImage] = React.useState("");
   const [author, setAuthor] = React.useState("Riyad");
   const [featured, setFeatured] = React.useState(false);
@@ -107,6 +110,9 @@ export function NewsEditor({ id }: { id?: string }) {
           setLocation(a.location ?? "");
           setSeoTitle(a.seoTitle ?? "");
           setSeoDescription(a.seoDescription ?? "");
+          setVideoUrl(a.videoUrl ?? "");
+          setIsGallery(Boolean(a.isGallery));
+          setGalleryImages(a.images.join("\n"));
           setCoverImage(a.coverImage ?? "");
           setAuthor(a.author || "Riyad");
           setFeatured(a.featured);
@@ -153,6 +159,9 @@ export function NewsEditor({ id }: { id?: string }) {
       trending,
       editorPick,
       coverImage,
+      videoUrl: videoUrl.trim(),
+      isGallery,
+      images: galleryImages.split(/\n/).map((url) => url.trim()).filter(Boolean),
       slug: slug || slugify(values.titleEn),
       status,
       location,
@@ -391,6 +400,12 @@ export function NewsEditor({ id }: { id?: string }) {
 
           <div className="rounded-2xl border bg-background p-5">
             <Label className="mb-3 block">Cover image</Label>
+            <Label htmlFor="video-url">Video file URL</Label>
+            <Input id="video-url" type="url" value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} />
+            <Label htmlFor="gallery">Photo gallery</Label>
+            <Switch id="gallery" checked={isGallery} onCheckedChange={setIsGallery} />
+            {isGallery && <><Label htmlFor="gallery-images">Image URLs (one per line)</Label>
+              <Textarea id="gallery-images" value={galleryImages} onChange={(e) => setGalleryImages(e.target.value)} /></>}
             <CoverImageUpload value={coverImage} onChange={setCoverImage} />
           </div>
 

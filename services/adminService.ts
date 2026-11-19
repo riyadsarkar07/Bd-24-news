@@ -33,6 +33,8 @@ export interface ArticleInput {
   editorPick: boolean;
   coverImage: string;
   images?: string[];
+  isGallery?: boolean;
+  videoUrl?: string | null;
   author: string;
   authorNameBn?: string;
   authorSlug?: string;
@@ -100,9 +102,9 @@ function buildArticlePayload(input: ArticleInput, existing?: Article): Record<st
     breaking: Boolean(input.breaking),
     trending: Boolean(input.trending),
     editor_pick: Boolean(input.editorPick),
-    is_video: existing?.isVideo ?? false,
-    is_gallery: existing?.isGallery ?? false,
-    video_url: existing?.videoUrl ?? null,
+    is_video: input.videoUrl === undefined ? existing?.isVideo ?? false : Boolean(input.videoUrl),
+    is_gallery: input.isGallery ?? existing?.isGallery ?? false,
+    video_url: (input.videoUrl ?? existing?.videoUrl) || null,
     location: input.location || "",
     seo_title: input.seoTitle || "",
     seo_description: input.seoDescription || "",
@@ -136,6 +138,7 @@ export async function getArticleById(id: string): Promise<Article | undefined> {
     if (data) {
       const article = mapArticleRow(data as Record<string, unknown>);
       article.status = (data.status as ArticleStatus) ?? "published";
+      article.publishedAt = data.published_at ?? "";
       return article;
     }
     return undefined;
@@ -149,25 +152,34 @@ export async function saveArticle(input: ArticleInput, existingId?: string): Pro
   const supabase = getSupabase();
   if (!supabase) throw new Error("Supabase is not configured. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY environment variables.");
   const existing = existingId ? await getArticleById(existingId) : undefined;
+  if (existingId && !existing) throw new Error("Article could not be loaded.");
   const payload = buildArticlePayload(input, existing);
 
-  const upsert = (body: Record<string, unknown>) =>
-    supabase.from("articles").upsert(body, { onConflict: "slug" }).select("id,slug").single();
-
-  let { data, error } = await upsert(payload);
+  if (existing) {
+    delete payload.views;
+    delete payload.likes;
+    delete payload.comments_count;
+  }
+  const write = (body: Record<string, unknown>) => {
+    const articles = supabase.from("articles");
+    const query = existing ? articles.update(body).eq("id", existing.id) : articles.insert(body);
+    return query.select("id,slug").single();
+  };
+  let { data, error } = await write(payload);
 
   // The comments_enabled column is added by an additive migration. Until it
   // has been applied, save the article without it instead of failing.
   if (error && /comments_enabled/i.test(error.message)) {
     const { comments_enabled: _drop, ...withoutFlag } = payload;
     void _drop;
-    const retry = await upsert(withoutFlag);
+    const retry = await write(withoutFlag);
     data = retry.data;
     error = retry.error;
   }
 
+  if (error?.code === "23505") throw new Error("এই URL ইতিমধ্যে ব্যবহৃত হয়েছে। অন্য URL দিন।");
   if (error) throw error;
-  return { id: str(data?.slug, str(data?.id)), slug: str(data?.slug, str(data?.id)) };
+  return { id: str(data?.id), slug: str(data?.slug) };
 }
 
 function str(v: unknown, fallback = ""): string {
@@ -175,9 +187,7 @@ function str(v: unknown, fallback = ""): string {
 }
 
 export async function deleteArticle(id: string): Promise<void> {
-  const supabase = getSupabase();
-  if (!supabase) return;
-  await supabase.from("articles").delete().or(`slug.eq.${id},id.eq.${id}`);
+  await deleteArticles([id]);
 }
 
 export async function deleteArticles(ids: string[]): Promise<void> {
@@ -186,11 +196,13 @@ export async function deleteArticles(ids: string[]): Promise<void> {
   const uuids = ids.filter((id) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id));
   const slugs = ids.filter((id) => !uuids.includes(id));
   if (uuids.length > 0) {
-    const { error } = await supabase.from("articles").delete().in("id", uuids);
+    const { data, error } = await supabase.from("articles").delete().in("id", uuids).select("id");
+    if (!error && data?.length !== new Set(uuids).size) throw new Error("Some articles could not be deleted.");
     if (error) throw error;
   }
   if (slugs.length > 0) {
-    const { error } = await supabase.from("articles").delete().in("slug", slugs);
+    const { data, error } = await supabase.from("articles").delete().in("slug", slugs).select("id");
+    if (!error && data?.length !== new Set(slugs).size) throw new Error("Some articles could not be deleted.");
     if (error) throw error;
   }
 }
@@ -267,8 +279,9 @@ export async function duplicateArticle(id: string): Promise<{ id: string; slug: 
       status: existing.status as ArticleStatus,
       publishedAt: existing.publishedAt,
       commentsEnabled: existing.commentsEnabled,
+      videoUrl: existing.videoUrl ?? undefined,
+      isGallery: existing.isGallery,
     },
-    newSlug,
   );
 }
 

@@ -12,6 +12,7 @@ import { Progress } from "@/components/ui/progress";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
+import { getSupabase } from "@/lib/supabase/client";
 import toast from "react-hot-toast";
 import { useAdminCollection } from "@/features/admin/use-admin-collection";
 import { CollectionError, TableSkeleton } from "@/features/admin/collection-state";
@@ -19,7 +20,7 @@ import {
   subscribeNewsletters,
   saveNewsletter,
   listSubscribers,
-  uniqueId,
+
   type AdminNewsletterRow,
 } from "@/services/cmsService";
 
@@ -87,46 +88,42 @@ export function NewsletterManager() {
     setBody("");
   };
 
-  const send = async (status: AdminNewsletterRow["status"]) => {
-    if (!subjectBn) {
-      toast.error("Subject is required");
-      return;
-    }
-    setSending(true);
-    try {
-      const id = uniqueId();
-      const sentAt = status === "sent"
-        ? new Date().toISOString()
-        : status === "scheduled"
-          ? new Date(Date.now() + 86400000).toISOString()
-          : new Date().toISOString();
-      await saveNewsletter(id, {
-        subjectBn,
-        subjectEn: subjectEn || subjectBn,
-        body,
-        sentAt,
-        opens: 0,
-        clicks: 0,
-        recipients: subscribersCount,
-        status,
+  const deliver = async (campaign: string, schedule: boolean) => {
+    for (;;) {
+      const session = await getSupabase()?.auth.getSession();
+      if (!session?.data.session) throw new Error("Sign in required.");
+      const response = await fetch("/api/newsletter/deliver", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: "Bearer " + session.data.session.access_token },
+        body: JSON.stringify({ campaign, schedule }),
       });
-      setComposeOpen(false);
-      reset();
-      toast.success(status === "sent" ? "Newsletter sent" : status === "scheduled" ? "Scheduled" : "Saved as draft");
-    } catch {
-      toast.error("Failed to save newsletter");
-    } finally {
-      setSending(false);
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.message ?? "Email delivery failed.");
+      if (result.done) return result.status;
     }
   };
 
-  const sendDraft = async (row: AdminNewsletterRow) => {
+  const send = async (status: AdminNewsletterRow["status"]) => {
+    if (!subjectBn.trim() || !body.trim()) { toast.error("Subject and body are required."); return; }
+    setSending(true);
     try {
-      await saveNewsletter(row.id, { status: "sent", sentAt: new Date().toISOString() });
-      toast.success(`"${row.subjectBn}" sent`);
-    } catch {
-      toast.error("Failed to send newsletter");
-    }
+      const id = crypto.randomUUID();
+      await saveNewsletter(id, {
+        subjectBn, subjectEn: subjectEn || subjectBn, body, status: "draft", recipients: 0,
+      });
+      setComposeOpen(false);
+      reset();
+      if (status === "draft") toast.success("Draft saved");
+      else toast.success(await deliver(id, status === "scheduled") === "scheduled" ? "Accepted for delivery tomorrow" : "Accepted for delivery");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not save or deliver campaign.");
+    } finally { setSending(false); }
+  };
+  const sendDraft = async (row: AdminNewsletterRow) => {
+    setSending(true);
+    try { const status = await deliver(row.id, false); toast.success(status === "scheduled" ? "Scheduled" : "Accepted for delivery"); }
+    catch (error) { toast.error(error instanceof Error ? error.message : "Delivery failed"); }
+    finally { setSending(false); }
   };
 
   return (
@@ -148,7 +145,7 @@ export function NewsletterManager() {
           emptyDescription="Compose your first newsletter to reach subscribers."
           actions={(r) =>
             r.status === "draft" ? (
-              <Button variant="ghost" size="icon-sm" onClick={() => sendDraft(r)} aria-label="Send now">
+              <Button variant="ghost" size="icon-sm" disabled={sending} onClick={() => sendDraft(r)} aria-label="Send now">
                 <Send className="h-4 w-4 text-success" />
               </Button>
             ) : null
@@ -179,7 +176,7 @@ export function NewsletterManager() {
           </div>
           <DialogFooter className="gap-2">
             <Button variant="outline" disabled={sending} onClick={() => send("draft")}><Mail className="h-4 w-4" /> Draft</Button>
-            <Button variant="secondary" disabled={sending} onClick={() => send("scheduled")}>Schedule</Button>
+            <Button variant="secondary" disabled={sending} onClick={() => send("scheduled")}>Schedule for tomorrow</Button>
             <Button disabled={sending} onClick={() => send("sent")}><Send className="h-4 w-4" /> Send now</Button>
           </DialogFooter>
         </DialogContent>

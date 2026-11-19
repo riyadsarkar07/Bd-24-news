@@ -21,6 +21,7 @@ export function WeatherPage() {
 
   return (
     <div className="container-page py-8">
+      <p className="col-span-full text-sm text-muted-foreground">{lang === "bn" ? "নমুনা তথ্য · সরাসরি আপডেট হয় না" : "Sample data · no live updates"}</p>
       <Breadcrumb items={[{ label: lang === "bn" ? "আবহাওয়া" : "Weather" }]} />
       <div className="mt-4">
         <SectionHeading title="Weather Forecast" titleBn="আবহাওয়ার পূর্বাভাস" color="#0EA5E9" icon={<CloudSun className="h-4 w-4" />} />

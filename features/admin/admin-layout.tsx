@@ -47,6 +47,7 @@ const nav = [
     { href: "/admin/media", label: "Media", labelBn: "মিডিয়া", icon: ImageIcon },
   ]},
   { group: "Engagement", items: [
+    { href: "/admin/messages", label: "Contact messages", labelBn: "যোগাযোগ বার্তা", icon: Mail },
     { href: "/admin/ads", label: "Advertisements", labelBn: "বিজ্ঞাপন", icon: Megaphone },
     { href: "/admin/comments", label: "Comments", labelBn: "মন্তব্য", icon: MessageSquare },
     { href: "/admin/newsletter", label: "Newsletter", labelBn: "নিউজলেটার", icon: Mail },
@@ -62,7 +63,9 @@ const nav = [
   ]},
 ];
 
-export function AdminLayout({ children }: { children: React.ReactNode }) {
+export function AdminLayout({ children, sections }: { children: React.ReactNode; sections: string[] }) {
+  const fullAccess = sections.includes("/admin");
+  const visibleNav = fullAccess ? nav : nav.map((group) => ({ ...group, items: group.items.filter((item) => sections.includes(item.href)) })).filter((group) => group.items.length);
   const pathname = usePathname();
   const router = useRouter();
   const { lang } = useLanguage();
@@ -73,7 +76,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
   React.useEffect(() => {
     return onAuthStateChange((user) => {
       setAdminEmail(user?.email ?? "");
-      if (user) {
+      if (user && fullAccess) {
         ensureInitialData().then((result) => {
           if (result.seeded.length > 0) {
             toast.success(`Initialized: ${result.seeded.join(", ")}`);
@@ -81,7 +84,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
         });
       }
     });
-  }, []);
+  }, [fullAccess]);
 
   const handleLogout = async () => {
     try {
@@ -104,7 +107,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
         </Button>
       </div>
       <nav className="flex-1 space-y-4 overflow-y-auto p-3">
-        {nav.map((group) => (
+        {visibleNav.map((group) => (
           <div key={group.group}>
             {!collapsed && (
               <p className="mb-1 px-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground">{group.group}</p>
@@ -133,7 +136,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
       </nav>
       <div className="border-t p-3">
         <Link
-          href="/admin/profile"
+          href={fullAccess ? "/admin/profile" : sections[0] ?? "/admin/login"}
           className={cn("flex items-center gap-3 rounded-xl p-2 transition-colors hover:bg-muted", collapsed && "justify-center")}
         >
           <Avatar className="h-9 w-9 border">
@@ -210,7 +213,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
               ← {lang === "bn" ? "সাইট দেখুন" : "View site"}
             </Link>
             <ThemeToggle />
-            <Link href="/admin/profile">
+            <Link href={fullAccess ? "/admin/profile" : sections[0] ?? "/admin/login"}>
               <Avatar className="h-9 w-9 border">
                 <AvatarFallback className="bg-gradient-to-br from-brand to-accentblue text-white">এড</AvatarFallback>
               </Avatar>

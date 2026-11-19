@@ -51,7 +51,8 @@ export function WidgetBar() {
   const TrendIcon = ({ up }: { up: boolean }) => (up ? <TrendingUp className="h-3.5 w-3.5 text-success" /> : <TrendingDown className="h-3.5 w-3.5 text-danger" />);
 
   return (
-    <section className="container-page grid grid-cols-2 gap-4 pb-2 md:grid-cols-3 xl:grid-cols-5" aria-label="Live widgets">
+    <section className="container-page grid grid-cols-2 gap-4 pb-2 md:grid-cols-3 xl:grid-cols-5" aria-label="Reference data">
+      <p className="col-span-full text-sm text-muted-foreground">{lang === "bn" ? "নমুনা তথ্য · সরাসরি আপডেট হয় না" : "Sample data · no live updates"}</p>
       <div className={widgetClass}>
         <div className="flex items-center justify-between">
           <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">

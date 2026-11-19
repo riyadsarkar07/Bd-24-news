@@ -66,7 +66,16 @@ function countInWindow(rows: DatedRow[], from: number, to: number): number {
 }
 
 /** Builds range-appropriate trend buckets ending at `now`. */
-function buildTrend(published: ArticleRow[], range: AnalyticsRange, now: number): TrendPoint[] {
+type ViewDay = { day: string; views: number };
+
+function countViews(days: ViewDay[], from: number, to: number) {
+  return days.reduce((sum, row) => {
+    const time = Date.parse(row.day + "T00:00:00+06:00");
+    return time >= from && time < to ? sum + Number(row.views) : sum;
+  }, 0);
+}
+
+function buildTrend(published: ArticleRow[], viewDays: ViewDay[], range: AnalyticsRange, now: number): TrendPoint[] {
   const days = RANGE_DAYS[range];
   const buckets = range === "7d" ? 7 : range === "30d" ? 10 : 13;
   const span = (days * DAY_MS) / buckets;
@@ -85,7 +94,7 @@ function buildTrend(published: ArticleRow[], range: AnalyticsRange, now: number)
     const start = new Date(from);
     return {
       label: dayLabel(start),
-      views: inBucket.reduce((sum, doc) => sum + Number(doc.views ?? 0), 0),
+      views: countViews(viewDays, from, to),
       articles: inBucket.length,
     };
   });
@@ -104,7 +113,9 @@ export async function getAnalytics(range: AnalyticsRange = "30d"): Promise<Analy
       supabase.from("comments").select("id,created_at"),
     ]);
 
-    if (articlesRes.error) console.error("Analytics articles read failed:", articlesRes.error.message);
+    for (const result of [articlesRes, profilesRes, subscriberRes, commentRes]) {
+      if (result.error) throw result.error;
+    }
 
     const articles = (articlesRes.data ?? []) as ArticleRow[];
     const profiles = ((profilesRes.data ?? []) as { joined_at?: string }[]).map((r) => ({ at: r.joined_at }));
@@ -115,7 +126,7 @@ export async function getAnalytics(range: AnalyticsRange = "30d"): Promise<Analy
     const drafts = articles.filter((d) => d.status === "draft");
     const totalViews = published.reduce((sum, d) => sum + Number(d.views ?? 0), 0);
 
-    const now = Date.now();
+    const now = Math.floor((Date.now() + 6 * 3600000) / DAY_MS + 1) * DAY_MS - 6 * 3600000;
     const windowMs = RANGE_DAYS[range] * DAY_MS;
     const currentFrom = now - windowMs;
     const previousFrom = now - windowMs * 2;
@@ -124,14 +135,11 @@ export async function getAnalytics(range: AnalyticsRange = "30d"): Promise<Analy
     const articlesCurrent = countInWindow(publishedWithDated, currentFrom, now);
     const articlesPrevious = countInWindow(publishedWithDated, previousFrom, currentFrom);
 
-    const viewsCurrent = published.reduce((sum, d) => {
-      const t = parseTime(d.published_at);
-      return t !== null && t >= currentFrom && t <= now ? sum + Number(d.views ?? 0) : sum;
-    }, 0);
-    const viewsPrevious = published.reduce((sum, d) => {
-      const t = parseTime(d.published_at);
-      return t !== null && t >= previousFrom && t < currentFrom ? sum + Number(d.views ?? 0) : sum;
-    }, 0);
+    const viewResult = await supabase.rpc("newsroom_view_days", { since_at: new Date(previousFrom).toISOString() });
+    if (viewResult.error) throw viewResult.error;
+    const viewDays: ViewDay[] = viewResult.data ?? [];
+    const viewsCurrent = countViews(viewDays, currentFrom, now);
+    const viewsPrevious = countViews(viewDays, previousFrom, currentFrom);
 
     const usersCurrent = countInWindow(profiles, currentFrom, now);
     const usersPrevious = countInWindow(profiles, previousFrom, currentFrom);
@@ -176,7 +184,7 @@ export async function getAnalytics(range: AnalyticsRange = "30d"): Promise<Analy
       totalUsers: profiles.length,
       totalSubscribers: subscribers.length,
       totalComments: comments.length,
-      monthlyTrend: buildTrend(published, range, now),
+      monthlyTrend: buildTrend(published, viewDays, range, now),
       categoryDistribution,
       topPages,
       contentStatus,

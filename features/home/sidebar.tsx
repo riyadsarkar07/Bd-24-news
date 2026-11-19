@@ -83,10 +83,10 @@ export function Sidebar({ initialData }: { initialData?: { trending?: Article[];
         <SectionHeading title="Social Media" titleBn="সোশ্যাল মিডিয়া" icon={<Users className="h-4 w-4" />} color="#7C3AED" />
         <div className="grid grid-cols-2 gap-3">
           {[
-            { label: lang === "bn" ? "ফেসবুক" : "Facebook", count: "2.4M", color: "#1877F2" },
-            { label: lang === "bn" ? "ইউটিউব" : "YouTube", count: "1.8M", color: "#FF0000" },
-            { label: lang === "bn" ? "ইনস্টাগ্রাম" : "Instagram", count: "890K", color: "#E4405F" },
-            { label: lang === "bn" ? "টিকটক" : "TikTok", count: "3.1M", color: "#000000" },
+            { label: lang === "bn" ? "ফেসবুক" : "Facebook", count: lang === "bn" ? "২৪ লাখ" : "2.4M", color: "#1877F2" },
+            { label: lang === "bn" ? "ইউটিউব" : "YouTube", count: lang === "bn" ? "১৮ লাখ" : "1.8M", color: "#FF0000" },
+            { label: lang === "bn" ? "ইনস্টাগ্রাম" : "Instagram", count: lang === "bn" ? "৮.৯ লাখ" : "890K", color: "#E4405F" },
+            { label: lang === "bn" ? "টিকটক" : "TikTok", count: lang === "bn" ? "৩১ লাখ" : "3.1M", color: "#000000" },
           ].map((s) => (
             <div key={s.label} className="group rounded-xl border border-border/60 bg-card p-3 text-center shadow-card transition-all hover:-translate-y-0.5 hover:shadow-soft">
               <span className="font-bengali text-xl font-black transition-transform group-hover:scale-105" style={{ color: s.color }}>{s.count}</span>

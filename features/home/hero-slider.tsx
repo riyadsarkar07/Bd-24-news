@@ -1,4 +1,5 @@
 "use client";
+import { categoryLabel } from "@/constants/categories";
 
 import * as React from "react";
 import Link from "next/link";
@@ -73,7 +74,7 @@ export function HeroSlider({ articles }: { articles: Article[] }) {
                 >
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="badge-cat" style={{ background: a.categoryColor }}>
-                      {a.category}
+                      {categoryLabel(a.category, lang)}
                     </span>
                     {a.breaking && (
                       <span className="flex items-center gap-1.5 rounded-md bg-white/10 px-2 py-1 text-[10px] font-black uppercase tracking-wider text-white backdrop-blur">
@@ -81,7 +82,7 @@ export function HeroSlider({ articles }: { articles: Article[] }) {
                           <span className="absolute h-full w-full animate-ping rounded-full bg-brand opacity-75" />
                           <span className="relative h-2 w-2 rounded-full bg-brand" />
                         </span>
-                        Breaking
+                        {lang === "bn" ? "ব্রেকিং" : "Breaking"}
                       </span>
                     )}
                     <span className="flex items-center gap-1.5 rounded-md bg-black/30 px-2 py-1 text-[10px] font-bold text-white/80 backdrop-blur">
@@ -95,9 +96,9 @@ export function HeroSlider({ articles }: { articles: Article[] }) {
                   <div className="mt-4 flex flex-wrap items-center gap-4 text-xs text-white/60">
                     <span className="flex items-center gap-2">
                       <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/15 text-[10px] font-bold text-white backdrop-blur">
-                        {a.author.slice(0, 2)}
+                        {(lang === "bn" ? a.authorNameBn || a.author : a.author).slice(0, 2)}
                       </span>
-                      <span className="font-semibold text-white/80">{a.author}</span>
+                      <span className="font-semibold text-white/80">{(lang === "bn" ? a.authorNameBn || a.author : a.author)}</span>
                     </span>
                     <span className="flex items-center gap-1">
                       <span className="h-1 w-1 rounded-full bg-white/40" />
@@ -161,7 +162,7 @@ export function HeroSlider({ articles }: { articles: Article[] }) {
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-transparent" />
               <span className="absolute left-2 top-2 badge-cat !text-[9px]" style={{ background: a.categoryColor }}>
-                {a.category}
+                {categoryLabel(a.category, lang)}
               </span>
             </div>
             <div className="absolute inset-x-0 bottom-0 p-3">

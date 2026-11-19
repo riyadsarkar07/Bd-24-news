@@ -53,12 +53,12 @@ export function ResetPasswordForm() {
               {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
-          {errors.password && <p className="text-xs font-medium text-danger">{errors.password.message}</p>}
+          {errors.password && <p className="text-xs font-medium text-danger">{lang === "bn" ? "পাসওয়ার্ড অন্তত ৮ অক্ষরের হতে হবে" : errors.password.message}</p>}
         </div>
         <div className="space-y-2">
           <Label htmlFor="confirm">{lang === "bn" ? "পাসওয়ার্ড নিশ্চিত করুন" : "Confirm password"}</Label>
           <Input id="confirm" type={show ? "text" : "password"} placeholder="••••••••" {...register("confirm")} />
-          {errors.confirm && <p className="text-xs font-medium text-danger">{errors.confirm.message}</p>}
+          {errors.confirm && <p className="text-xs font-medium text-danger">{lang === "bn" ? "পাসওয়ার্ড দুটি মিলছে না" : errors.confirm.message}</p>}
         </div>
         <Button type="submit" disabled={isSubmitting} className="w-full">
           {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <KeyRound className="h-4 w-4" />}

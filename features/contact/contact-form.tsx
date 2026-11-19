@@ -50,23 +50,23 @@ export function ContactForm() {
         <div className="space-y-2">
           <Label htmlFor="name">{lang === "bn" ? "আপনার নাম" : "Your name"}</Label>
           <Input id="name" {...register("name")} placeholder={lang === "bn" ? "নাম" : "Name"} />
-          {errors.name && <p className="text-xs font-medium text-danger">{errors.name.message}</p>}
+          {errors.name && <p className="text-xs font-medium text-danger">{lang === "bn" ? "নাম অন্তত ২ অক্ষরের হতে হবে" : errors.name.message}</p>}
         </div>
         <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email">{lang === "bn" ? "ইমেইল" : "Email"}</Label>
           <Input id="email" type="email" {...register("email")} placeholder="you@example.com" />
-          {errors.email && <p className="text-xs font-medium text-danger">{errors.email.message}</p>}
+          {errors.email && <p className="text-xs font-medium text-danger">{lang === "bn" ? "সঠিক ইমেইল ঠিকানা দিন" : errors.email.message}</p>}
         </div>
       </div>
       <div className="space-y-2">
         <Label htmlFor="subject">{lang === "bn" ? "বিষয়" : "Subject"}</Label>
         <Input id="subject" {...register("subject")} placeholder={lang === "bn" ? "বিষয় লিখুন" : "Subject"} />
-        {errors.subject && <p className="text-xs font-medium text-danger">{errors.subject.message}</p>}
+        {errors.subject && <p className="text-xs font-medium text-danger">{lang === "bn" ? "বিষয় অন্তত ৩ অক্ষরের হতে হবে" : errors.subject.message}</p>}
       </div>
       <div className="space-y-2">
         <Label htmlFor="message">{lang === "bn" ? "মেসেজ" : "Message"}</Label>
         <Textarea id="message" rows={6} {...register("message")} placeholder={lang === "bn" ? "আপনার মেসেজ..." : "Your message..."} />
-        {errors.message && <p className="text-xs font-medium text-danger">{errors.message.message}</p>}
+        {errors.message && <p className="text-xs font-medium text-danger">{lang === "bn" ? "মেসেজ অন্তত ১০ অক্ষরের হতে হবে" : errors.message.message}</p>}
       </div>
       <Button type="submit" disabled={isSubmitting} className="w-full sm:w-auto">
         {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}

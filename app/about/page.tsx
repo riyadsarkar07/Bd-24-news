@@ -15,10 +15,10 @@ export default function AboutPage() {
       titleBn="আমাদের সম্পর্কে"
       breadcrumb="আমাদের সম্পর্কে"
       subtitleEn="BD24News — Always with the truth"
-      subtitle={`${siteConfig.name} — ${siteConfig.tagline}`}
+      subtitle={`${siteConfig.nameBn} — ${siteConfig.tagline}`}
     >
       <p><Copy en={<>Founded in {siteConfig.establishedYear}, {siteConfig.name} is among Bangladesh’s rapidly growing online news outlets. We believe truth is at the heart of journalism. Our motto is “Always with the truth”.</>}>
-        {siteConfig.establishedYear} সালে প্রতিষ্ঠিত {siteConfig.name} বাংলাদেশের অন্যতম দ্রুত বর্ধনশীল অনলাইন সংবাদমাধ্যম।
+        {siteConfig.establishedYear.toLocaleString("bn-BD", { useGrouping: false })} সালে প্রতিষ্ঠিত {siteConfig.nameBn} বাংলাদেশের অন্যতম দ্রুত বর্ধনশীল অনলাইন সংবাদমাধ্যম।
         আমরা বিশ্বাস করি, সত্য হলো সাংবাদিকতার মূল। এই বিশ্বাস থেকেই আমাদের স্লোগান —{" "}
         <strong className="text-brand">সত্যের সাথে সবসময়</strong>।
       </Copy></p>

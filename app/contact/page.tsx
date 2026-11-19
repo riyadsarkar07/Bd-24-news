@@ -32,7 +32,7 @@ export default function ContactPage() {
             </span>
             <div>
               <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground"><Copy en={item.english}>{item.label}</Copy></p>
-              <p className="mt-1 text-sm font-semibold"><Copy en={item.english === "Newsroom" ? "24 hours a day, seven days a week" : item.value}>{item.value}</Copy></p>
+              <p className="mt-1 text-sm font-semibold"><Copy en={item.english === "Newsroom" ? "24 hours a day, seven days a week" : item.value}>{item.english === "Address" ? siteConfig.addressBn : item.value}</Copy></p>
             </div>
           </div>
         ))}

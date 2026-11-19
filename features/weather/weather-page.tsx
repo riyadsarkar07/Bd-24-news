@@ -57,7 +57,7 @@ export function WeatherPage() {
               </div>
               <div className="space-y-2 text-xs text-muted-foreground">
                 <p className="flex items-center gap-1.5"><Droplets className="h-3.5 w-3.5 text-accentblue" />{localizedDigits(lang, w.humidity)}%</p>
-                <p className="flex items-center gap-1.5"><Wind className="h-3.5 w-3.5 text-accentblue" />{localizedDigits(lang, w.wind)} km/h</p>
+                <p className="flex items-center gap-1.5"><Wind className="h-3.5 w-3.5 text-accentblue" />{localizedDigits(lang, w.wind)} {lang === "bn" ? "কিমি/ঘণ্টা" : "km/h"}</p>
               </div>
             </div>
           </motion.div>

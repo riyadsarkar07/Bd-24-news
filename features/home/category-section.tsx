@@ -82,7 +82,7 @@ export function CategorySection({ slug, priority = false, initialData }: { slug:
                 {lang === "bn" ? moreLink.titleBn : moreLink.title}
               </h3>
               <p className="mt-2 text-[11px] text-white/50">
-                {moreLink.author} · {timeAgo(moreLink.publishedAt, lang)}
+                {(lang === "bn" ? moreLink.authorNameBn || moreLink.author : moreLink.author)} · {timeAgo(moreLink.publishedAt, lang)}
               </p>
             </div>
           </Link>

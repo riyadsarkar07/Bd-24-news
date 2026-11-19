@@ -1,4 +1,6 @@
 "use client";
+import { newsLabel } from "@/lib/bengali-news";
+
 
 import * as React from "react";
 import Link from "next/link";
@@ -48,14 +50,14 @@ export function AuthorProfile({ slug }: { slug: string }) {
         <div className="relative -mt-14 flex flex-col items-start gap-4 px-6 pb-6 sm:flex-row sm:items-end">
           <Avatar className="h-28 w-28 border-4 border-background shadow-2xl">
             <AvatarImage src={author.avatar} alt={author.name} />
-            <AvatarFallback className="bg-brand text-3xl text-white">{author.name.slice(0, 2)}</AvatarFallback>
+            <AvatarFallback className="bg-brand text-3xl text-white">{(lang === "bn" ? author.nameBn || author.name : author.name).slice(0, 2)}</AvatarFallback>
           </Avatar>
           <div className="flex-1">
             <h1 className="flex items-center gap-2 font-bengali text-2xl font-black">
               {lang === "bn" ? author.nameBn : author.name}
               {author.verified && <BadgeCheck className="h-5 w-5 text-accentblue" />}
             </h1>
-            <p className="text-sm font-bold text-brand">{author.role}</p>
+            <p className="text-sm font-bold text-brand">{newsLabel(author.role, lang)}</p>
             <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{author.bio}</p>
             <div className="mt-3 flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
               <span className="flex items-center gap-1.5"><Newspaper className="h-3.5 w-3.5" />{formatNumber(author.articlesCount, lang)} {lang === "bn" ? "লেখা" : "stories"}</span>

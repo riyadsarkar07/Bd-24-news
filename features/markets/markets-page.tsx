@@ -36,21 +36,21 @@ function MarketRow({
     >
       <td className="px-4 py-3">
         <p className="font-semibold">{lang === "bn" ? nameBn : name}</p>
-        {symbol && <p className="text-[11px] text-muted-foreground">{symbol}</p>}
+        {lang === "en" && symbol && <p className="text-[11px] text-muted-foreground">{symbol}</p>}
       </td>
       <td className="px-4 py-3 text-right font-mono font-bold">
-        {price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+        {price.toLocaleString(lang === "bn" ? "bn-BD" : "en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
       </td>
       <td className="px-4 py-3 text-right">
         <span className={cn("inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-bold", up ? "bg-success/10 text-success" : "bg-danger/10 text-danger")}>
           {up ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
           {up ? "+" : ""}
-          {change}
+          {lang === "bn" ? toBanglaNumerals(change) : change}
         </span>
       </td>
       <td className={cn("px-4 py-3 text-right font-bold", up ? "text-success" : "text-danger")}>
         {up ? "+" : ""}
-        {changePercent}%
+        {lang === "bn" ? toBanglaNumerals(changePercent) : changePercent}%
       </td>
     </motion.tr>
   );
@@ -71,7 +71,7 @@ function MarketTable({ title, titleBn, icon, color, children }: { title: string;
         </span>
         <div>
           <h3 className="font-bengali text-lg font-bold">{lang === "bn" ? titleBn : title}</h3>
-          <p className="text-[11px] uppercase tracking-wider text-muted-foreground">{title}</p>
+
         </div>
       </div>
       <div className="overflow-x-auto">

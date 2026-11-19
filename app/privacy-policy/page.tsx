@@ -4,7 +4,7 @@ import { siteConfig } from "@/config/site";
 
 export const metadata: Metadata = {
   title: "Privacy Policy — গোপনীয়তা নীতি",
-  description: `${siteConfig.name} এর গোপনীয়তা নীতি।`,
+  description: `${siteConfig.nameBn} এর গোপনীয়তা নীতি।`,
   alternates: { canonical: `${siteConfig.url}/privacy-policy` },
 };
 
@@ -12,7 +12,7 @@ export default function PrivacyPolicyPage() {
   return (
     <StaticPage title="Privacy Policy" titleBn="গোপনীয়তা নীতি" breadcrumb="গোপনীয়তা নীতি">
       <p><Copy en={<>{siteConfig.name} takes your privacy seriously. This policy explains how we collect, use and store information when you use our website.</>}>
-        {siteConfig.name} আপনার ব্যক্তিগত গোপনীয়তাকে গুরুত্বের সাথে বিবেচনা করে। এই নীতি আমাদের ওয়েবসাইট ব্যবহারের সময়
+        {siteConfig.nameBn} আপনার ব্যক্তিগত গোপনীয়তাকে গুরুত্বের সাথে বিবেচনা করে। এই নীতি আমাদের ওয়েবসাইট ব্যবহারের সময়
         আমরা কীভাবে আপনার তথ্য সংগ্রহ, ব্যবহার ও সংরক্ষণ করি তা ব্যাখ্যা করে।
       </Copy></p>
       <h2 className="mt-8 font-bengali text-2xl font-bold"><Copy en={<>Information we collect</>}>আমরা যে তথ্য সংগ্রহ করি</Copy></h2>

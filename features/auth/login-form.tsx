@@ -51,9 +51,9 @@ export function LoginForm() {
     >
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
         <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email">{lang === "bn" ? "ইমেইল" : "Email"}</Label>
           <Input id="email" type="email" placeholder="you@example.com" {...register("email")} />
-          {errors.email && <p className="text-xs font-medium text-danger">{errors.email.message}</p>}
+          {errors.email && <p className="text-xs font-medium text-danger">{lang === "bn" ? "সঠিক ইমেইল ঠিকানা দিন" : errors.email.message}</p>}
         </div>
         <div className="space-y-2">
           <Label htmlFor="password">{lang === "bn" ? "পাসওয়ার্ড" : "Password"}</Label>
@@ -68,7 +68,7 @@ export function LoginForm() {
               {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
-          {errors.password && <p className="text-xs font-medium text-danger">{errors.password.message}</p>}
+          {errors.password && <p className="text-xs font-medium text-danger">{lang === "bn" ? "পাসওয়ার্ড অন্তত ৬ অক্ষরের হতে হবে" : errors.password.message}</p>}
         </div>
         <div className="flex items-center justify-between">
           <Link href="/forgot-password" className="text-sm font-semibold text-brand hover:underline">

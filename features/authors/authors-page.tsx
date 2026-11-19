@@ -1,4 +1,6 @@
 "use client";
+import { newsLabel } from "@/lib/bengali-news";
+
 
 import * as React from "react";
 import Link from "next/link";
@@ -56,13 +58,13 @@ export function AuthorsPage() {
                 <div className="-mt-10 px-5 pb-5 text-center">
                   <Avatar className="mx-auto h-20 w-20 border-4 border-background shadow-lg">
                     <AvatarImage src={a.avatar} alt={a.name} />
-                    <AvatarFallback className="bg-brand text-white">{(a.name || a.nameBn || "?").slice(0, 2)}</AvatarFallback>
+                    <AvatarFallback className="bg-brand text-white">{((lang === "bn" ? a.nameBn : a.name) || a.name || "?").slice(0, 2)}</AvatarFallback>
                   </Avatar>
                   <h3 className="mt-3 flex items-center justify-center gap-1.5 font-bengali text-lg font-bold">
                     {lang === "bn" ? a.nameBn || a.name : a.name}
                     {a.verified && <BadgeCheck className="h-4 w-4 text-accentblue" />}
                   </h3>
-                  <p className="text-xs font-semibold text-brand">{a.role}</p>
+                  <p className="text-xs font-semibold text-brand">{newsLabel(a.role, lang)}</p>
                   <p className="mt-2 line-clamp-2 text-xs text-muted-foreground">{a.bio}</p>
                   <div className="mt-4 flex items-center justify-center gap-4 text-xs text-muted-foreground">
                     <span className="flex items-center gap-1">

@@ -1,5 +1,6 @@
 "use client";
 
+import { newsLabel } from "@/lib/bengali-news";
 import { categoryLabel } from "@/constants/categories";
 import * as React from "react";
 import Link from "next/link";
@@ -120,6 +121,7 @@ export function ArticlePage({ article: initialArticle }: { article: Article }) {
     );
   }
 
+  const authorName = lang === "bn" ? article.authorNameBn || article.author : article.author;
   const nextPrev = related?.slice(0, 2);
 
   return (
@@ -149,7 +151,7 @@ export function ArticlePage({ article: initialArticle }: { article: Article }) {
               {categoryLabel(article.category, lang)}
             </span>
             <span className="rounded-md bg-muted px-2 py-1 text-[11px] font-semibold text-muted-foreground">
-              {article.readingMinutes} {lang === "bn" ? "মিনিট পড়া" : "min read"}
+              {lang === "bn" ? toBanglaNumerals(article.readingMinutes) : article.readingMinutes} {lang === "bn" ? "মিনিট পড়া" : "min read"}
             </span>
           </div>
           <h1
@@ -166,14 +168,14 @@ export function ArticlePage({ article: initialArticle }: { article: Article }) {
             <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
               <Link href={`/authors/${article.authorSlug}`} className="group flex items-center gap-2">
                 <Avatar className="h-10 w-10 border-2 border-brand/30">
-                  <AvatarImage src={article.authorAvatar} alt={article.author} />
-                  <AvatarFallback>{article.author.slice(0, 2)}</AvatarFallback>
+                  <AvatarImage src={article.authorAvatar} alt={authorName} />
+                  <AvatarFallback>{authorName.slice(0, 2)}</AvatarFallback>
                 </Avatar>
                 <span>
                   <span className="block text-sm font-bold transition-colors group-hover:text-brand" itemProp="author">
-                    {article.author}
+                    {authorName}
                   </span>
-                  <span className="block text-[11px] text-muted-foreground">{article.authorRole}</span>
+                  <span className="block text-[11px] text-muted-foreground">{newsLabel(article.authorRole, lang)}</span>
                 </span>
               </Link>
               <span className="hidden h-6 w-px bg-border sm:block" />
@@ -289,24 +291,24 @@ export function ArticlePage({ article: initialArticle }: { article: Article }) {
               {article.tags.map((tag) => (
                 <Link
                   key={tag}
-                  href={`/search?q=${encodeURIComponent(tag)}`}
+                  href={`/search?tag=${encodeURIComponent(tag)}`}
                   className="rounded-full border border-border bg-muted/40 px-3 py-1 text-xs font-semibold text-muted-foreground transition-all hover:border-brand hover:text-brand"
                 >
-                  #{tag}
+                  #{newsLabel(tag, lang)}
                 </Link>
               ))}
             </div>
 
             <div className="mt-8 flex items-center gap-3 rounded-2xl border border-border/60 bg-card p-5 shadow-card">
               <Avatar className="h-16 w-16 border-2 border-brand/30">
-                <AvatarImage src={article.authorAvatar} alt={article.author} />
-                <AvatarFallback>{article.author.slice(0, 2)}</AvatarFallback>
+                <AvatarImage src={article.authorAvatar} alt={authorName} />
+                <AvatarFallback>{authorName.slice(0, 2)}</AvatarFallback>
               </Avatar>
               <div className="flex-1">
-                <p className="text-sm font-bold">{lang === "bn" ? (article.authorNameBn || article.author) : article.author}</p>
-                <p className="text-xs text-muted-foreground">{article.authorRole}</p>
+                <p className="text-sm font-bold">{authorName}</p>
+                <p className="text-xs text-muted-foreground">{newsLabel(article.authorRole, lang)}</p>
                 <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
-                  {lang === "bn" ? `${article.author} বিডি২৪নিউজের প্রতিনিধি হিসেবে লিখছেন।` : `${article.author} writes for ${siteConfig.name}.`}
+                  {lang === "bn" ? `${authorName} বিডি২৪নিউজের প্রতিনিধি হিসেবে লিখছেন।` : `${authorName} writes for ${siteConfig.name}.`}
                 </p>
               </div>
               <Link href={`/authors/${article.authorSlug}`}>

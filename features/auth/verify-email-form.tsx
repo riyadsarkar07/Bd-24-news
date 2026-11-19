@@ -48,7 +48,7 @@ export function VerifyEmailForm() {
       subtitle={lang === "bn" ? "আপনার ইমেইলে পাঠানো ৬ ডিজিটের কোড দিন" : "Enter the 6-digit code sent to your email"}
     >
       <div className="space-y-6">
-        <label className="block">Email<input className="block w-full rounded border p-2" type="email" value={email} onChange={(e) => setEmail(e.target.value)} /></label>
+        <label className="block">{lang === "bn" ? "ইমেইল" : "Email"}<input className="block w-full rounded border p-2" type="email" value={email} onChange={(e) => setEmail(e.target.value)} /></label>
         <div className="flex justify-center gap-2">
           {code.map((c, i) => (
             <input

@@ -147,9 +147,9 @@ export function WidgetBar() {
           {cryptoPrices.map((c) => (
             <motion.div key={c.symbol} className="flex items-center gap-2 text-xs" whileHover={{ scale: 1.05 }}>
               <Bitcoin className="h-4 w-4 text-warning" />
-              <span className="font-bold">{c.symbol}</span>
+              <span className="font-bold">{lang === "bn" ? c.nameBn : c.symbol}</span>
               <span className="font-mono text-muted-foreground">{localizedDigits(lang, c.price.toLocaleString("en-US", { maximumFractionDigits: 2 }))}</span>
-              <span className={c.changePercent > 0 ? "text-success" : "text-danger"}>{c.changePercent > 0 ? "+" : ""}{c.changePercent}%</span>
+              <span className={c.changePercent > 0 ? "text-success" : "text-danger"}>{c.changePercent > 0 ? "+" : ""}{localizedDigits(lang, c.changePercent)}%</span>
             </motion.div>
           ))}
           <span className="ml-auto hidden items-center gap-1 text-xs font-bold text-brand sm:flex">

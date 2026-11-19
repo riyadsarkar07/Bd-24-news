@@ -38,7 +38,7 @@ export function BreakingSpotlight({ initialData }: { initialData?: Article[] }) 
                   <span className="relative h-2 w-2 rounded-full bg-white" />
                 </span>
                 <Zap className="h-3.5 w-3.5" />
-                Breaking
+                {lang === "bn" ? "ব্রেকিং" : "Breaking"}
               </span>
             </div>
             <Link href={`/article/${lead.slug}`} className="group mt-4 block">
@@ -48,7 +48,7 @@ export function BreakingSpotlight({ initialData }: { initialData?: Article[] }) 
               <p className="mt-3 line-clamp-2 text-sm text-white/60">{lang === "bn" ? lead.excerpt : lead.excerptEn}</p>
               <p className="mt-4 flex items-center gap-2 text-xs text-white/40">
                 <span className="h-1 w-1 rounded-full bg-brand/70" />
-                {lead.author} · {timeAgo(lead.publishedAt, lang)}
+                {(lang === "bn" ? lead.authorNameBn || lead.author : lead.author)} · {timeAgo(lead.publishedAt, lang)}
               </p>
             </Link>
           </div>

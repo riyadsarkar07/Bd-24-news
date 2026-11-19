@@ -115,7 +115,7 @@ export function SearchProvider({ children }: { children: React.ReactNode }) {
                         <div className="min-w-0 flex-1">
                           <p className="line-clamp-1 text-sm font-semibold">{lang === "en" ? r.titleEn : r.title}</p>
                           <span className="text-xs font-bold" style={{ color: r.categoryColor }}>
-                            {cat?.nameBn ?? r.category}
+                            {(lang === "bn" ? cat?.nameBn : cat?.name) ?? r.category}
                           </span>
                         </div>
                         <ArrowRight className="h-4 w-4 text-muted-foreground" />

@@ -56,9 +56,9 @@ export function ForgotPasswordForm() {
       ) : (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">{lang === "bn" ? "ইমেইল" : "Email"}</Label>
             <Input id="email" type="email" placeholder="you@example.com" {...register("email")} />
-            {errors.email && <p className="text-xs font-medium text-danger">{errors.email.message}</p>}
+            {errors.email && <p className="text-xs font-medium text-danger">{lang === "bn" ? "সঠিক ইমেইল ঠিকানা দিন" : errors.email.message}</p>}
           </div>
           <Button type="submit" disabled={isSubmitting} className="w-full">
             {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <MailCheck className="h-4 w-4" />}

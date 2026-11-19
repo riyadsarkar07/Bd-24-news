@@ -15,7 +15,7 @@ export function Logo({ className, compact = false }: { className?: string; compa
       {!compact && (
         <span className="flex flex-col leading-none">
           <span className="font-sans text-xl font-black tracking-tight text-foreground">
-            BD<span className="text-brand">24</span>
+            {lang === "bn" ? "বিডি" : "BD"}<span className="text-brand">{lang === "bn" ? "২৪" : "24"}</span>
             <span className="font-bengali ml-1 align-middle text-sm font-bold">{lang === "bn" ? "নিউজ" : "News"}</span>
           </span>
           <span className="mt-1 font-bengali text-[10px] font-medium tracking-wide text-muted-foreground">

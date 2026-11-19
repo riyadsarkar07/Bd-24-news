@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { LayoutGrid, List, Loader2, Eye } from "lucide-react";
 import { useArticles, useMostRead, useTrending } from "@/hooks/useNews";
 import type { Article } from "@/types";
-import { getCategory } from "@/constants/categories";
+import { categoryLabel, getCategory } from "@/constants/categories";
 import { Breadcrumb } from "@/components/shared/breadcrumb";
 import { SectionHeading } from "@/components/shared/section-heading";
 import { ArticleCard } from "@/components/shared/article-card";
@@ -123,7 +123,7 @@ export function CategoryPage({ slug, initialData }: { slug: string; initialData?
                             className="transition-transform duration-500 group-hover:scale-105"
                           />
                           <span className="absolute left-2 top-2 badge-cat !text-[10px]" style={{ background: a.categoryColor }}>
-                            {a.category}
+                            {categoryLabel(a.category, lang)}
                           </span>
                         </div>
                         <div className="min-w-0 flex-1">
@@ -132,11 +132,11 @@ export function CategoryPage({ slug, initialData }: { slug: string; initialData?
                           </h3>
                           <p className="mt-1.5 line-clamp-2 text-sm text-muted-foreground">{lang === "bn" ? a.excerpt : a.excerptEn}</p>
                           <div className="mt-3 flex flex-wrap items-center gap-3 text-[11px] text-muted-foreground">
-                            <span className="font-semibold text-foreground/70">{a.author}</span>
+                            <span className="font-semibold text-foreground/70">{lang === "bn" ? a.authorNameBn || a.author : a.author}</span>
                             <span>{timeAgo(a.publishedAt, lang)}</span>
                             <span className="flex items-center gap-1">
                               <Eye className="h-3 w-3" />
-                              {toBanglaNumerals(a.views)}
+                              {lang === "bn" ? toBanglaNumerals(a.views) : a.views}
                             </span>
                           </div>
                         </div>

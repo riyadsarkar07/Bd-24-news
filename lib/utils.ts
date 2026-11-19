@@ -125,8 +125,9 @@ export function slugify(text: string): string {
 }
 
 export function formatNumber(n: number, locale: "en" | "bn" = "en"): string {
+  if (locale === "bn") return new Intl.NumberFormat("bn-BD", { notation: "compact", maximumFractionDigits: 1 }).format(n);
   const formatted = n >= 1000000 ? `${(n / 1000000).toFixed(1)}M` : n >= 1000 ? `${(n / 1000).toFixed(1)}K` : String(n);
-  return locale === "bn" ? toBanglaNumerals(formatted) : formatted;
+  return formatted;
 }
 
 export function truncate(text: string, length: number): string {

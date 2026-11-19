@@ -10,12 +10,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { newsLabel } from "@/lib/bengali-news";
 import { categories } from "@/constants/categories";
 import { useLanguage } from "@/providers/language-provider";
 import { toBanglaNumerals } from "@/lib/utils";
 
 export function SearchPage() {
   const searchParams = useSearchParams();
+  const tag = searchParams.get("tag");
   const initialQuery = searchParams.get("q") ?? "";
   const { lang } = useLanguage();
   const [query, setQuery] = React.useState(initialQuery);
@@ -31,6 +33,7 @@ export function SearchPage() {
 
   const { data: results, isLoading, isFetching } = useArticles({
     search: debounced,
+    tag: tag && !debounced ? tag : undefined,
     category: category === "all" ? undefined : category,
     sort,
     limit: 60,
@@ -45,6 +48,7 @@ export function SearchPage() {
       <Breadcrumb items={[{ label: lang === "bn" ? "অনুসন্ধান" : "Search" }]} />
 
       <div className="mx-auto mt-6 max-w-2xl">
+        {tag && !debounced && <p className="mb-2 font-bold">#{newsLabel(tag, lang)}</p>}
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -74,7 +78,7 @@ export function SearchPage() {
             <SelectContent>
               <SelectItem value="all">{lang === "bn" ? "সব বিভাগ" : "All categories"}</SelectItem>
               {categories.map((c) => (
-                <SelectItem key={c.slug} value={c.slug}>{c.nameBn}</SelectItem>
+                <SelectItem key={c.slug} value={c.slug}>{lang === "bn" ? c.nameBn : c.name}</SelectItem>
               ))}
             </SelectContent>
           </Select>

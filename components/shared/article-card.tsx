@@ -3,7 +3,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { Clock, Eye, PlayCircle, Images, Flame } from "lucide-react";
 import type { Article } from "@/types";
-import { cn, formatNumber, timeAgo } from "@/lib/utils";
+import { cn, localizedDigits, formatNumber, timeAgo } from "@/lib/utils";
 import { ImageWithFallback } from "@/components/shared/image-with-fallback";
 import { useLanguage } from "@/providers/language-provider";
 
@@ -25,7 +25,7 @@ export function ArticleCard({ article, variant = "default", priority, className 
         className={cn("group flex items-start gap-3 rounded-xl p-2 transition-all hover:bg-muted/50", className)}
       >
         <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-brand to-brand-700 text-sm font-black text-white shadow-glow">
-          {String(article.id).slice(-2)}
+          <Flame className="h-4 w-4" />
         </span>
         <div className="min-w-0 flex-1">
           <h4 className="line-clamp-2 text-sm font-semibold leading-snug transition-colors group-hover:text-brand">
@@ -134,7 +134,7 @@ export function ArticleCard({ article, variant = "default", priority, className 
           <h3 className="line-clamp-2 text-sm font-bold leading-snug text-white">
             {title}
           </h3>
-          <span className="mt-1 text-[11px] text-white/70">{article.readingMinutes} min</span>
+          <span className="mt-1 text-[11px] text-white/70">{localizedDigits(lang, article.readingMinutes)} {lang === "bn" ? "মিনিট" : "min"}</span>
         </div>
       </Link>
     );
@@ -164,7 +164,7 @@ export function ArticleCard({ article, variant = "default", priority, className 
         {article.breaking ? (
           <span className="absolute right-3 top-3 flex items-center gap-1 rounded-full bg-white/95 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-brand shadow backdrop-blur">
             <Flame className="h-3 w-3" />
-            Breaking
+            {lang === "bn" ? "ব্রেকিং" : "Breaking"}
           </span>
         ) : article.isGallery ? (
           <span className="absolute right-3 top-3 flex items-center gap-1 rounded-full bg-black/55 px-2 py-0.5 text-[10px] font-bold text-white backdrop-blur">
@@ -174,7 +174,7 @@ export function ArticleCard({ article, variant = "default", priority, className 
         ) : article.isVideo ? (
           <span className="absolute right-3 top-3 flex items-center gap-1 rounded-full bg-black/55 px-2 py-0.5 text-[10px] font-bold text-white backdrop-blur">
             <PlayCircle className="h-3 w-3" />
-            Video
+            {lang === "bn" ? "ভিডিও" : "Video"}
           </span>
         ) : null}
       </div>
@@ -188,7 +188,7 @@ export function ArticleCard({ article, variant = "default", priority, className 
         <div className="mt-3 flex items-center justify-between gap-2 border-t border-border/50 pt-3 text-[11px] text-muted-foreground">
           <span className="flex min-w-0 items-center gap-1.5 font-medium text-foreground/70">
             <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand/10 text-[9px] font-bold text-brand">
-              {article.author.slice(0, 1)}
+              {(lang === "bn" ? article.authorNameBn || article.author : article.author).slice(0, 1)}
             </span>
             <span className="truncate">{lang === "bn" ? (article.authorNameBn || article.author) : article.author}</span>
           </span>

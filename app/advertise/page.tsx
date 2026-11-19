@@ -19,12 +19,12 @@ export default function AdvertisePage() {
     >
       <div className="grid gap-4 sm:grid-cols-3">
         {[
-          { big: "2.4M+", small: "মাসিক পাঠক", en: "Monthly readers" },
-          { big: "30M+", small: "মাসিক পেজ ভিউ", en: "Monthly page views" },
-          { big: "85%", small: "মোবাইল ব্যবহারকারী", en: "Mobile users" },
+          { big: "2.4M+", bigBn: "২৪ লাখ+", small: "মাসিক পাঠক", en: "Monthly readers" },
+          { big: "30M+", bigBn: "৩ কোটি+", small: "মাসিক পেজ ভিউ", en: "Monthly page views" },
+          { big: "85%", bigBn: "৮৫%", small: "মোবাইল ব্যবহারকারী", en: "Mobile users" },
         ].map((s) => (
           <div key={s.small} className="rounded-2xl border border-border/60 bg-card p-6 text-center shadow-card">
-            <p className="font-bengali text-3xl font-black text-brand">{s.big}</p>
+            <p className="font-bengali text-3xl font-black text-brand"><Copy en={s.big}>{s.bigBn}</Copy></p>
             <p className="mt-1 text-sm font-semibold text-muted-foreground"><Copy en={s.en}>{s.small}</Copy></p>
           </div>
         ))}

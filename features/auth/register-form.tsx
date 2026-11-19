@@ -62,12 +62,12 @@ export function RegisterForm() {
         <div className="space-y-2">
           <Label htmlFor="name">{lang === "bn" ? "পুরো নাম" : "Full name"}</Label>
           <Input id="name" placeholder={lang === "bn" ? "আপনার নাম" : "Your name"} {...register("name")} />
-          {errors.name && <p className="text-xs font-medium text-danger">{errors.name.message}</p>}
+          {errors.name && <p className="text-xs font-medium text-danger">{lang === "bn" ? "নাম অন্তত ২ অক্ষরের হতে হবে" : errors.name.message}</p>}
         </div>
         <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email">{lang === "bn" ? "ইমেইল" : "Email"}</Label>
           <Input id="email" type="email" placeholder="you@example.com" {...register("email")} />
-          {errors.email && <p className="text-xs font-medium text-danger">{errors.email.message}</p>}
+          {errors.email && <p className="text-xs font-medium text-danger">{lang === "bn" ? "সঠিক ইমেইল ঠিকানা দিন" : errors.email.message}</p>}
         </div>
         <div className="space-y-2">
           <Label htmlFor="password">{lang === "bn" ? "পাসওয়ার্ড" : "Password"}</Label>
@@ -82,12 +82,12 @@ export function RegisterForm() {
               {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
-          {errors.password && <p className="text-xs font-medium text-danger">{errors.password.message}</p>}
+          {errors.password && <p className="text-xs font-medium text-danger">{lang === "bn" ? "পাসওয়ার্ড অন্তত ৮ অক্ষরের হতে হবে" : errors.password.message}</p>}
         </div>
         <div className="space-y-2">
           <Label htmlFor="confirm">{lang === "bn" ? "পাসওয়ার্ড নিশ্চিত করুন" : "Confirm password"}</Label>
           <Input id="confirm" type={show ? "text" : "password"} placeholder="••••••••" {...register("confirm")} />
-          {errors.confirm && <p className="text-xs font-medium text-danger">{errors.confirm.message}</p>}
+          {errors.confirm && <p className="text-xs font-medium text-danger">{lang === "bn" ? "পাসওয়ার্ড দুটি মিলছে না" : errors.confirm.message}</p>}
         </div>
         <label className="flex cursor-pointer items-start gap-2 text-sm text-muted-foreground">
           <Checkbox className="mt-0.5" {...register("terms")} />
@@ -102,7 +102,7 @@ export function RegisterForm() {
             </Link>
           </span>
         </label>
-        {errors.terms && <p className="text-xs font-medium text-danger">{errors.terms.message}</p>}
+        {errors.terms && <p className="text-xs font-medium text-danger">{lang === "bn" ? "শর্তাবলীতে সম্মতি দিন" : errors.terms.message}</p>}
         <Button type="submit" disabled={isSubmitting} className="w-full">
           {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserPlus className="h-4 w-4" />}
           {lang === "bn" ? "নিবন্ধন করুন" : "Create account"}
@@ -111,7 +111,7 @@ export function RegisterForm() {
 
       <div className="my-5 flex items-center gap-3">
         <Separator className="flex-1" />
-        <span className="text-xs text-muted-foreground">OR</span>
+        <span className="text-xs text-muted-foreground">{lang === "bn" ? "অথবা" : "OR"}</span>
         <Separator className="flex-1" />
       </div>
 
@@ -123,11 +123,11 @@ export function RegisterForm() {
             <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18A10.96 10.96 0 0 0 1 12c0 1.77.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
             <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
           </svg>
-          Google
+          {lang === "bn" ? "গুগল" : "Google"}
         </Button>
         <Button variant="outline" onClick={() => toast.success("Facebook")}>
           <Facebook className="h-4 w-4 text-[#1877F2]" />
-          Facebook
+          {lang === "bn" ? "ফেসবুক" : "Facebook"}
         </Button>
       </div>
 

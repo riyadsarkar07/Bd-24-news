@@ -25,14 +25,14 @@ export function AuthLayout({ title, titleBn, subtitle, children, footer }: { tit
           <div className="flex flex-col items-center text-center">
             <Logo compact />
             <h1 className="mt-4 font-bengali text-2xl font-black">{lang === "bn" ? titleBn : title}</h1>
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{title}</p>
+
             {subtitle && <p className="mt-2 text-sm text-muted-foreground">{subtitle}</p>}
           </div>
           <div className="mt-6">{children}</div>
           {footer && <div className="mt-6 border-t border-border/60 pt-5 text-center text-sm text-muted-foreground">{footer}</div>}
           <div className="mt-6 flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground">
             <ShieldCheck className="h-3.5 w-3.5 text-success" />
-            <span>256-bit SSL encrypted connection</span>
+            <span>{lang === "bn" ? "এনক্রিপ্ট করা সংযোগ" : "Encrypted connection"}</span>
           </div>
         </div>
       </motion.div>

@@ -3,7 +3,7 @@
 import * as React from "react";
 import { Toaster } from "react-hot-toast";
 import { ThemeProvider } from "@/providers/theme-provider";
-import { LanguageProvider } from "@/providers/language-provider";
+import { LanguageProvider, useLanguage } from "@/providers/language-provider";
 import { QueryProvider } from "@/providers/query-provider";
 import { SearchProvider } from "@/providers/search-provider";
 import { TopBar } from "@/components/layout/top-bar";
@@ -13,6 +13,10 @@ import { MobileNav } from "@/components/layout/mobile-nav";
 import { Footer } from "@/components/layout/footer";
 import { NewsTicker } from "@/components/shared/news-ticker";
 import { PageTransition } from "@/components/shared/page-transition";
+
+function SkipLabel() {
+  return useLanguage().lang === "bn" ? "মূল লেখায় যান" : "Skip to main content";
+}
 
 export function SiteShell({ children }: { children: React.ReactNode }) {
   const [mobileOpen, setMobileOpen] = React.useState(false);
@@ -27,7 +31,7 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
                 href="#main-content"
                 className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-brand focus:px-4 focus:py-2 focus:text-white"
               >
-                Skip to main content
+                <SkipLabel />
               </a>
               <TopBar />
               <Header onOpenMobile={() => setMobileOpen(true)} />

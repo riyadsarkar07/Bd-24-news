@@ -1,3 +1,4 @@
+import { bengaliEdition } from "@/lib/bengali-news";
 import type { Article, Author, Comment, SearchResult } from "@/types";
 import { getSupabase } from "@/lib/supabase/client";
 
@@ -28,15 +29,16 @@ export function mapArticleRow(row: ArticleRow, editorial = false): Article {
   const body = String(row.body ?? "");
   const headline = `ঢাকা, ${row.title}।`;
   const localizeHeadline = !editorial && edition?.excerpt_bn && row.title_bn && body.startsWith(headline);
+  const display = !editorial && edition ? bengaliEdition : (text: string) => text;
   return {
     id: (row.id as string) ?? (row.slug as string) ?? "",
     slug: (row.slug as string) ?? (row.id as string) ?? "",
     title: (row.title as string) ?? "",
-    titleBn: (row.title_bn as string) ?? "",
-    excerpt: String((!editorial && edition?.excerpt_bn) || row.excerpt || ""),
+    titleBn: display(String(row.title_bn ?? "")),
+    excerpt: display(String((!editorial && edition?.excerpt_bn) || row.excerpt || "")),
     bodyEn: String(row.body_en || edition?.body_en || ""),
     excerptEn: String(row.excerpt_en || edition?.excerpt_en || ""),
-    body: localizeHeadline ? `ঢাকা, ${row.title_bn}।${body.slice(headline.length)}` : body,
+    body: display(localizeHeadline ? `ঢাকা, ${row.title_bn}।${body.slice(headline.length)}` : body),
     category: String(row.category ?? "bangladesh").trim().toLowerCase() || "bangladesh",
     categoryColor: (row.category_color as string) ?? "#E50914",
     tags: Array.isArray(row.tags) ? (row.tags as string[]) : [],
@@ -242,7 +244,7 @@ async function queryArticles(options: ArticleQueryOptions = {}): Promise<Article
     if (options.breaking !== undefined) q = q.eq("breaking", options.breaking);
     if (options.trending !== undefined) q = q.eq("trending", options.trending);
     if (options.editorPick !== undefined) q = q.eq("editor_pick", options.editorPick);
-    if (options.tag) q = q.contains("tags", [options.tag]);
+    if (options.tag) q = q.contains("tags", JSON.stringify([options.tag]));
     if (options.search) {
       const term = options.search.replace(/[%_,]/g, " ").trim();
       if (term) q = q.or(`title.ilike.%${term}%,title_bn.ilike.%${term}%,excerpt.ilike.%${term}%,excerpt_en.ilike.%${term}%`);

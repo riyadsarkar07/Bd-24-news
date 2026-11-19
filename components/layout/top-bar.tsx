@@ -17,7 +17,7 @@ export function TopBar() {
 
   const locale = lang === "bn" ? "bn-BD" : "en-GB";
   const dateStr = now?.toLocaleDateString(locale, { timeZone: "Asia/Dhaka", dateStyle: "full" }) ?? "";
-  const timeStr = now?.toLocaleTimeString(locale, { timeZone: "Asia/Dhaka", hour12: true }) ?? "";
+  const timeStr = now?.toLocaleTimeString(locale, { timeZone: "Asia/Dhaka", hour12: lang === "en" }) ?? "";
 
   return (
     <div className="hidden border-b border-white/10 bg-navy-950 text-white lg:block">
@@ -33,7 +33,7 @@ export function TopBar() {
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success opacity-75" />
               <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-success" />
             </span>
-            {timeStr} GMT+6
+            {timeStr} {lang === "bn" ? "ঢাকা সময়" : "GMT+6"}
           </span>
         </div>
         <div className="flex items-center gap-1">
@@ -42,7 +42,7 @@ export function TopBar() {
             className="flex items-center gap-1.5 rounded-full bg-white/5 px-3 py-1 text-white/75 transition-colors hover:bg-white/10 hover:text-white"
           >
             <CloudSun className="h-3.5 w-3.5 text-warning" />
-            {lang === "bn" ? "নমুনা · ঢাকা" : "Sample · Dhaka"} {lang === "bn" ? toBanglaNumerals(weatherData[0]?.temp ?? 31) : weatherData[0]?.temp}°C
+            {lang === "bn" ? "নমুনা · ঢাকা" : "Sample · Dhaka"} {lang === "bn" ? toBanglaNumerals(weatherData[0]?.temp ?? 31) : weatherData[0]?.temp}°{lang === "bn" ? "সে" : "C"}
           </Link>
           <span className="mx-1 h-3 w-px bg-white/15" />
           <Button

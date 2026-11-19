@@ -122,7 +122,7 @@ export async function listAllArticles(): Promise<Article[]> {
   try {
     const { data } = await supabase.from("articles").select("*,article_editions(body_en,excerpt_en)").order("updated_at", { ascending: false });
     return (data ?? []).map((r) => {
-      const article = mapArticleRow(r as Record<string, unknown>);
+      const article = mapArticleRow(r as Record<string, unknown>, true);
       article.status = (r.status as ArticleStatus) ?? "published";
       return article;
     });

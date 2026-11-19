@@ -15,6 +15,7 @@ export function PrayerPage() {
   const { lang } = useLanguage();
   const now = useClock(1000);
 
+  const clock = (time = "") => lang === "bn" ? localizedDigits(lang, time).replace("AM", "পূর্বাহ্ণ").replace("PM", "অপরাহ্ণ") : time;
   const timeToMinutes = (t: string) => {
     const match = t.match(/^(\d+):(\d+)\s*(AM|PM)$/);
     if (!match) return 0;
@@ -43,7 +44,7 @@ export function PrayerPage() {
         <div className="relative flex flex-col items-center gap-2 text-center">
           <p className="font-bengali text-lg font-bold text-emerald-300">{lang === "bn" ? "পরবর্তী নামাজ" : "Next Prayer"}</p>
           <p className="font-bengali text-5xl font-black">{lang === "bn" ? next?.nameBn : next?.name}</p>
-          <p className="font-mono text-4xl font-black text-emerald-400">{next?.time}</p>
+          <p className="font-mono text-4xl font-black text-emerald-400">{clock(next?.time)}</p>
           <p className="text-sm text-white/50">
             {lang === "bn" ? "ঢাকা, বাংলাদেশ" : "Dhaka, Bangladesh"} ·{" "}
             {now ? `${localizedDigits(lang, now.getDate())}-${localizedDigits(lang, now.getMonth() + 1)}-${localizedDigits(lang, now.getFullYear())}` : ""}
@@ -68,12 +69,12 @@ export function PrayerPage() {
             >
               {isNext && (
                 <span className="absolute right-3 top-3 rounded-full bg-emerald-500 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-white">
-                  Next
+                  {lang === "bn" ? "পরবর্তী" : "Next"}
                 </span>
               )}
-              <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{p.name}</p>
+
               <p className="mt-1 font-bengali text-2xl font-black">{lang === "bn" ? p.nameBn : p.name}</p>
-              <p className="font-mono text-xl font-bold text-brand">{p.time}</p>
+              <p className="font-mono text-xl font-bold text-brand">{clock(p.time)}</p>
             </motion.div>
           );
         })}

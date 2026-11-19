@@ -4,7 +4,7 @@ import { siteConfig } from "@/config/site";
 
 export const metadata: Metadata = {
   title: "Terms of Service — ব্যবহারের শর্তাবলী",
-  description: `${siteConfig.name} এর ব্যবহারের শর্তাবলী।`,
+  description: `${siteConfig.nameBn} এর ব্যবহারের শর্তাবলী।`,
   alternates: { canonical: `${siteConfig.url}/terms` },
 };
 
@@ -12,7 +12,7 @@ export default function TermsPage() {
   return (
     <StaticPage title="Terms of Service" titleBn="ব্যবহারের শর্তাবলী" breadcrumb="শর্তাবলী">
       <p><Copy en={<>Please read these terms before using {siteConfig.name}. By using the website, you accept the following conditions.</>}>
-        {siteConfig.name} ওয়েবসাইট ব্যবহারের পূর্বে এই শর্তাবলী মনোযোগ সহকারে পড়ুন। এই সাইট ব্যবহার করার অর্থ আপনি নিচের
+        {siteConfig.nameBn} ওয়েবসাইট ব্যবহারের পূর্বে এই শর্তাবলী মনোযোগ সহকারে পড়ুন। এই সাইট ব্যবহার করার অর্থ আপনি নিচের
         শর্তগুলো মেনে নিচ্ছেন।
       </Copy></p>
       <h2 className="mt-8 font-bengali text-2xl font-bold"><Copy en={<>Use of content</>}>বিষয়বস্তুর ব্যবহার</Copy></h2>

@@ -110,9 +110,9 @@ export function Footer() {
               <NewsletterForm variant="footer" />
             </div>
             <div className="mt-6 space-y-3 text-sm text-white/60">
-              <p className="flex items-start gap-3"><MapPin className="mt-0.5 h-4 w-4 shrink-0 text-brand-400" />{siteConfig.address}</p>
+              <p className="flex items-start gap-3"><MapPin className="mt-0.5 h-4 w-4 shrink-0 text-brand-400" />{lang === "bn" ? siteConfig.addressBn : siteConfig.address}</p>
               <p className="flex items-center gap-3"><Mail className="h-4 w-4 shrink-0 text-brand-400" />{siteConfig.email}</p>
-              <p className="flex items-center gap-3"><Phone className="h-4 w-4 shrink-0 text-brand-400" />{siteConfig.phone}</p>
+              <p className="flex items-center gap-3"><Phone className="h-4 w-4 shrink-0 text-brand-400" />{lang === "bn" ? toBanglaNumerals(siteConfig.phone) : siteConfig.phone}</p>
             </div>
           </div>
         </div>
@@ -134,15 +134,15 @@ export function Footer() {
 
         <div className="mt-8 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-6 text-xs text-white/50 sm:flex-row">
           <p className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center sm:text-left">
-            <span>© {new Date().getFullYear()} {siteConfig.name} {t("allRightsReserved")}.</span>
+            <span>© {lang === "bn" ? toBanglaNumerals(new Date().getFullYear()) : new Date().getFullYear()} {lang === "bn" ? siteConfig.nameBn : siteConfig.name} {t("allRightsReserved")}.</span>
             <span>{lang === "bn" ? `প্রতিষ্ঠিত ${toBanglaNumerals(siteConfig.establishedYear)}` : `Est. ${siteConfig.establishedYear}`}</span>
             <span className="text-white/25">|</span>
-            <span>{lang === "bn" ? `ডেভেলপার: ${siteConfig.developer}` : `Developed by ${siteConfig.developer}`}</span>
+            <span>{lang === "bn" ? "ডেভেলপার: রিয়াদ" : `Developed by ${siteConfig.developer}`}</span>
           </p>
           <div className="flex items-center gap-4">
             <Link href="/terms" className="transition-colors hover:text-white">{lang === "bn" ? "শর্তাবলী" : "Terms"}</Link>
             <Link href="/about" className="transition-colors hover:text-white">{lang === "bn" ? "সম্পাদকীয় নীতি" : "Editorial Policy"}</Link>
-            <Link href="/sitemap.xml" className="transition-colors hover:text-white">Sitemap</Link>
+            <Link href="/sitemap.xml" className="transition-colors hover:text-white">{lang === "bn" ? "সাইটম্যাপ" : "Sitemap"}</Link>
           </div>
         </div>
       </div>

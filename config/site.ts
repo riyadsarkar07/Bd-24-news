@@ -26,6 +26,7 @@ export const siteConfig = {
   email: "bd24news@tensi.org",
   phone: "+8801700000011",
   developer: "Riyad",
+  addressBn: "১২ তলা, পান্থপথ, ঢাকা ১২০৫, বাংলাদেশ",
   address: "Level 12, Panthapath, Dhaka 1205, Bangladesh",
   establishedYear: 2015,
   adSenseId: "",

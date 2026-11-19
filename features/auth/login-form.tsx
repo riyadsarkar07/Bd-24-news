@@ -34,9 +34,9 @@ export function LoginForm() {
 
   const onSubmit = async (data: Schema) => {
     try {
-      await signInAdmin(data.email, data.password);
+      const destination = await signInAdmin(data.email, data.password);
       toast.success(lang === "bn" ? "সফলভাবে লগইন হয়েছে!" : "Logged in successfully!");
-      router.push("/admin");
+      router.push(destination);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Sign in failed";
       toast.error(lang === "bn" ? "লগইন ব্যর্থ হয়েছে" : message);

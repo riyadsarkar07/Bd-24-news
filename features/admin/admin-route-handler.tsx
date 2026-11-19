@@ -3,7 +3,7 @@
 import * as React from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
-import { onAuthStateChange, isAdminUid } from "@/services/authService";
+import { newsroomRoutes } from "@/services/authService";
 import { getSupabase } from "@/lib/supabase/client";
 import { AdminLayout } from "@/features/admin/admin-layout";
 
@@ -22,6 +22,7 @@ export function AdminRouteHandler({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const isLogin = pathname?.startsWith("/admin/login");
+  const [sections, setSections] = React.useState<string[]>([]);
   const [state, setState] = React.useState<"loading" | "authed" | "unauth">(isLogin ? "authed" : "loading");
 
   React.useEffect(() => {
@@ -30,30 +31,31 @@ export function AdminRouteHandler({ children }: { children: React.ReactNode }) {
       return;
     }
     let active = true;
-    const supabase = getSupabase();
-    if (supabase) {
-      supabase.auth
-        .getSession()
-        .then(({ data }) => {
-          if (active) {
-            const user = data.session?.user ?? null;
-            setState(user && isAdminUid(user.id) ? "authed" : "unauth");
+    let revision = 0;
+    setState("loading");
+    const client = getSupabase();
+    if (!client) { setState("unauth"); return; }
+    const { data } = client.auth.onAuthStateChange((_event, session) => {
+      const current = ++revision;
+      if (!session) { setState("unauth"); return; }
+      // Auth callbacks must return before invoking another auth API.
+      setTimeout(async () => {
+        try {
+          const allowed = await newsroomRoutes();
+          const target = allowed[0] ?? "/admin/login";
+          if (!active || current !== revision) return;
+          if (target === "/admin" || allowed.some((route) => pathname === route || pathname.startsWith(route + "/"))) {
+            setSections(allowed);
+            setState("authed");
+          } else {
+            setState("loading");
+            router.replace(target);
           }
-        })
-        .catch(() => {
-          if (active) setState("unauth");
-        });
-    } else {
-      setState("unauth");
-    }
-    const unsub = onAuthStateChange((user) => {
-      if (active) setState(user && isAdminUid(user.id) ? "authed" : "unauth");
+        } catch { if (active && current === revision) setState("unauth"); }
+      }, 0);
     });
-    return () => {
-      active = false;
-      unsub();
-    };
-  }, [isLogin]);
+    return () => { active = false; data.subscription.unsubscribe(); };
+  }, [isLogin, pathname, router]);
 
   React.useEffect(() => {
     if (!isLogin && state === "unauth") {
@@ -69,5 +71,5 @@ export function AdminRouteHandler({ children }: { children: React.ReactNode }) {
     return <FullScreenLoader />;
   }
 
-  return <AdminLayout>{children}</AdminLayout>;
+  return <AdminLayout sections={sections}>{children}</AdminLayout>;
 }

@@ -11,11 +11,11 @@ import { useLanguage } from "@/providers/language-provider";
 import { toBanglaNumerals } from "@/lib/utils";
 
 export function GalleryPage() {
-  const { data: galleries, isLoading } = useArticles({ limit: 15 });
+  const { data: galleries, isLoading } = useArticles({ media: "gallery", limit: 15 });
   const { lang } = useLanguage();
   const [lightbox, setLightbox] = React.useState<number | null>(null);
 
-  const items = galleries ?? [];
+  const items = (galleries ?? []).flatMap((g) => (g.images.length ? g.images : [g.coverImage]).filter(Boolean).map((url, index) => ({ ...g, id: g.id + "-" + index, coverImage: url })));
   const active = lightbox !== null ? items[lightbox] : null;
 
   return (

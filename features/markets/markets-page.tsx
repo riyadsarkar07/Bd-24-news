@@ -94,6 +94,7 @@ export function MarketsPage() {
   const { lang } = useLanguage();
   return (
     <div className="container-page py-8">
+      <p className="col-span-full text-sm text-muted-foreground">{lang === "bn" ? "নমুনা তথ্য · সরাসরি আপডেট হয় না" : "Sample data · no live updates"}</p>
       <Breadcrumb items={[{ label: lang === "bn" ? "বাজার" : "Markets" }]} />
       <div className="mt-4">
         <SectionHeading title="Markets Overview" titleBn="বাজার পরিস্থিতি" color="#059669" icon={<BarChart3 className="h-4 w-4" />} />

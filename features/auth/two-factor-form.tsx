@@ -2,6 +2,8 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
+import { newsroomDestination } from "@/services/authService";
+import { getSupabase } from "@/lib/supabase/client";
 import toast from "react-hot-toast";
 import { Loader2, ShieldCheck } from "lucide-react";
 import { AuthLayout } from "@/features/auth/auth-layout";
@@ -25,10 +27,18 @@ export function TwoFactorForm() {
 
   const submit = async () => {
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 900));
-    setLoading(false);
-    toast.success(lang === "bn" ? "2FA সফল!" : "2FA verified!");
-    router.push("/");
+    try {
+      const client = getSupabase();
+      if (!client) throw new Error("Authentication is unavailable.");
+      const factors = await client.auth.mfa.listFactors();
+      if (factors.error) throw factors.error;
+      const factor = factors.data.totp[0];
+      if (!factor) throw new Error("No verified authenticator found for this session.");
+      const { error } = await client.auth.mfa.challengeAndVerify({ factorId: factor.id, code: code.join("") });
+      if (error) throw error;
+      router.replace(await newsroomDestination());
+    } catch (error) { toast.error(error instanceof Error ? error.message : "Verification failed."); }
+    finally { setLoading(false); }
   };
 
   return (

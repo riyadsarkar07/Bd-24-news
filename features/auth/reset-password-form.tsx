@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { updateAdminPassword } from "@/services/authService";
 import toast from "react-hot-toast";
 import { Loader2, KeyRound, Eye, EyeOff } from "lucide-react";
 import { AuthLayout } from "@/features/auth/auth-layout";
@@ -25,8 +26,9 @@ export function ResetPasswordForm() {
   const [show, setShow] = React.useState(false);
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<Schema>({ resolver: zodResolver(schema) });
 
-  const onSubmit = async () => {
-    await new Promise((r) => setTimeout(r, 800));
+  const onSubmit = async (values: Schema) => {
+    try { await updateAdminPassword(values.password); }
+    catch (error) { toast.error(error instanceof Error ? error.message : "Password reset failed."); return; }
     toast.success(lang === "bn" ? "পাসওয়ার্ড পরিবর্তন হয়েছে!" : "Password updated!");
     router.push("/login");
   };

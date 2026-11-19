@@ -44,16 +44,6 @@ function useRealtimeArticles(queryKey: readonly unknown[], options: ArticleQuery
   }, [queryClient, JSON.stringify(queryKey), JSON.stringify(options)]);
 }
 
-function useRealtimeArticle(queryKey: readonly unknown[], slug: string) {
-  const queryClient = useQueryClient();
-  React.useEffect(() => {
-    if (typeof window === "undefined") return;
-    return subscribeArticles((all) => {
-      queryClient.setQueryData(queryKey, all.find((a) => a.slug === slug));
-    });
-  }, [queryClient, JSON.stringify(queryKey), slug]);
-}
-
 function useRealtimeRelated(queryKey: readonly unknown[], slug: string) {
   const queryClient = useQueryClient();
   React.useEffect(() => {
@@ -94,10 +84,11 @@ export function useArticles(options?: ArticleQueryOptions & { initialData?: Arti
 
 export function useArticle(slug: string, initialData?: Article | undefined) {
   const queryKey = newsKeys.article(slug);
-  useRealtimeArticle(queryKey, slug);
+
   return useQuery({
     queryKey,
-    queryFn: () => getArticleBySlug(slug),
+    queryFn: async () => (await getArticleBySlug(slug)) ?? null,
+    refetchInterval: 60000,
     staleTime: 5 * 60 * 1000,
     ...(initialData ? { initialData, placeholderData: initialData } : {}),
     refetchOnMount: initialData ? false : "always",

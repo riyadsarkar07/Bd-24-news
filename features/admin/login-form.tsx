@@ -11,7 +11,7 @@ import { Logo } from "@/components/shared/logo";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { signInAdmin, resetAdminPassword, ADMIN_EMAILS } from "@/services/authService";
+import { signInAdmin, resetAdminPassword } from "@/services/authService";
 
 const schema = z.object({
   email: z.string().email("Enter a valid email"),
@@ -32,9 +32,9 @@ export function AdminLoginForm() {
 
   const onSubmit = async (data: Schema) => {
     try {
-      await signInAdmin(data.email, data.password);
+      const destination = await signInAdmin(data.email, data.password);
       toast.success("Signed in successfully!");
-      router.replace("/admin");
+      router.replace(destination);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Sign in failed";
       toast.error(message);
@@ -42,7 +42,8 @@ export function AdminLoginForm() {
   };
 
   const onForgot = async () => {
-    const email = getValues("email") || ADMIN_EMAILS[0] || "bd24news@tensi.org";
+    const email = getValues("email")?.trim();
+    if (!email) { toast.error("Enter your email address first."); return; }
     try {
       await resetAdminPassword(email);
       toast.success("Password reset email sent. Check your inbox.");
@@ -76,7 +77,7 @@ export function AdminLoginForm() {
                 <Input
                   id="email"
                   type="email"
-                  placeholder={ADMIN_EMAILS[0]}
+                  placeholder="name@example.com"
                   className="border-white/10 bg-white/5 pl-9 text-white placeholder:text-white/30"
                   {...register("email")}
                 />

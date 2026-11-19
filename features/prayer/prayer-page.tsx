@@ -31,6 +31,7 @@ export function PrayerPage() {
 
   return (
     <div className="container-page py-8">
+      <p className="col-span-full text-sm text-muted-foreground">{lang === "bn" ? "নমুনা তথ্য · সরাসরি আপডেট হয় না" : "Sample data · no live updates"}</p>
       <Breadcrumb items={[{ label: lang === "bn" ? "নামাজের সময়সূচি" : "Prayer Times" }]} />
       <div className="mt-4">
         <SectionHeading title="Prayer Times" titleBn="নামাজের সময়সূচি" color="#16A34A" icon={<Sunrise className="h-4 w-4" />} />

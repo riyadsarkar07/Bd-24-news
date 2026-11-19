@@ -11,7 +11,7 @@ import { useLanguage } from "@/providers/language-provider";
 import { Images, PlayCircle, Camera } from "lucide-react";
 
 export function VideoSection({ initialData }: { initialData?: Article[] }) {
-  const { data: videoData, isLoading, isError } = useArticles({ category: "entertainment", limit: 4, initialData });
+  const { data: videoData, isLoading, isError } = useArticles({ media: "video", limit: 4, initialData });
   const videos = videoData ?? [];
   const showSkeleton = isLoading && videos.length === 0 && !isError;
 
@@ -37,7 +37,7 @@ export function VideoSection({ initialData }: { initialData?: Article[] }) {
 }
 
 export function GallerySection({ initialData }: { initialData?: Article[] }) {
-  const { data: galleryData, isLoading, isError } = useArticles({ category: "travel", limit: 5, initialData });
+  const { data: galleryData, isLoading, isError } = useArticles({ media: "gallery", limit: 5, initialData });
   const { lang } = useLanguage();
   const galleries = galleryData ?? [];
   const showSkeleton = isLoading && galleries.length === 0 && !isError;

@@ -18,6 +18,7 @@ import { useAdminCollection } from "@/features/admin/use-admin-collection";
 import { CollectionError, TableSkeleton } from "@/features/admin/collection-state";
 import {
   subscribeUsers,
+  listRoles,
   updateUser,
   saveUser,
   deleteUser,
@@ -30,6 +31,8 @@ const ROLES: UserRole[] = ["Admin", "Editor", "Journalist", "Subscriber"];
 
 export function UsersManager() {
   const { data, setData, loading, error } = useAdminCollection<AdminUserRow>(subscribeUsers);
+  const [roleOptions, setRoleOptions] = React.useState(ROLES);
+  React.useEffect(() => { void listRoles().then((rows) => setRoleOptions([...ROLES, ...rows.filter((r) => !r.system).map((r) => r.slug)])); }, []);
   const [search, setSearch] = React.useState("");
   const [addOpen, setAddOpen] = React.useState(false);
   const [deleting, setDeleting] = React.useState<AdminUserRow | null>(null);
@@ -114,7 +117,7 @@ export function UsersManager() {
         <Select value={r.role} onValueChange={(v) => changeRole(r, v as UserRole)}>
           <SelectTrigger className="h-8 w-36"><SelectValue /></SelectTrigger>
           <SelectContent>
-            {ROLES.map((role) => (
+            {roleOptions.map((role) => (
               <SelectItem key={role} value={role}>{role}</SelectItem>
             ))}
           </SelectContent>
@@ -175,7 +178,7 @@ export function UsersManager() {
               <Select value={newRole} onValueChange={(v) => setNewRole(v as UserRole)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {ROLES.map((role) => (
+                  {roleOptions.map((role) => (
                     <SelectItem key={role} value={role}>{role}</SelectItem>
                   ))}
                 </SelectContent>

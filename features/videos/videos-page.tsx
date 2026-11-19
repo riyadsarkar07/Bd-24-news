@@ -12,15 +12,8 @@ import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/providers/language-provider";
 import { timeAgo, toBanglaNumerals } from "@/lib/utils";
 
-const SAMPLE_STREAMS = [
-  "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-  "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
-  "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
-  "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
-];
-
 export function VideosPage() {
-  const { data: videos, isLoading } = useArticles({ category: "entertainment", limit: 12 });
+  const { data: videos, isLoading } = useArticles({ media: "video", limit: 12 });
   const { lang } = useLanguage();
   const [playing, setPlaying] = React.useState<number | null>(null);
 
@@ -73,7 +66,7 @@ export function VideosPage() {
                   {lang === "bn" ? v.titleBn : v.title}
                 </h3>
                 <p className="mt-1 text-[11px] text-white/60">
-                  {toBanglaNumerals((i + 1) * 2)}:30 · {timeAgo(v.publishedAt, lang)}
+                  {timeAgo(v.publishedAt, lang)}
                 </p>
               </div>
             </motion.button>
@@ -88,7 +81,7 @@ export function VideosPage() {
             <div className="aspect-video w-full">
               <video
                 key={playing}
-                src={SAMPLE_STREAMS[playing % SAMPLE_STREAMS.length]}
+                src={videos?.[playing]?.videoUrl ?? undefined}
                 controls
                 autoPlay
                 className="h-full w-full"

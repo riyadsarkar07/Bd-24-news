@@ -21,6 +21,8 @@ const COLLECTIONS = [
   "newsletters",
   "settings",
   "media",
+  "contact_messages",
+  "newsletter_deliveries",
 ];
 
 function formatBytes(bytes: number): string {
@@ -32,16 +34,22 @@ function formatBytes(bytes: number): string {
 
 export async function exportSnapshot(): Promise<Record<string, unknown[]>> {
   const supabase = getSupabase();
-  if (!supabase) return {};
+  if (!supabase) throw new Error("Supabase is not configured.");
   const snapshot: Record<string, unknown[]> = {};
   for (const table of COLLECTIONS) {
-    try {
-      const { data } = await supabase.from(table).select("*");
-      snapshot[table] = (data ?? []).map((r) => ({ _id: (r as Record<string, unknown>).id, ...(r as Record<string, unknown>) }));
-    } catch (err) {
-      console.error(`Failed to export ${table}:`, err);
-      snapshot[table] = [];
+    const rows: unknown[] = [];
+    const pageSize = 250;
+    for (let offset = 0; ; offset += pageSize) {
+      const query = supabase.from(table).select("*");
+      const ordered = table === "newsletter_deliveries"
+        ? query.order("campaign_id").order("email")
+        : query.order(table === "settings" ? "key" : "id");
+      const { data, error } = await ordered.range(offset, offset + pageSize - 1);
+      if (error) throw new Error(`Backup failed for ${table}: ${error.message}`);
+      rows.push(...data);
+      if (data.length < pageSize) break;
     }
+    snapshot[table] = rows;
   }
   return snapshot;
 }
@@ -59,7 +67,7 @@ export async function createBackup(label: string): Promise<BackupRow> {
     size: formatBytes(new Blob([json]).size),
     collections: COLLECTIONS,
   };
-  const { error } = await supabase.from("backups").insert({ ...row, data: JSON.parse(json) });
+  const { error } = await supabase.from("backups").insert({ id, label: row.label, size: row.size, collections: row.collections, created_at: row.createdAt, data: snapshot });
   if (error) throw error;
   return row;
 }
@@ -108,20 +116,7 @@ export async function restoreBackup(id: string): Promise<number> {
 export async function restoreSnapshot(snapshot: Record<string, unknown[]>): Promise<number> {
   const supabase = getSupabase();
   if (!supabase) throw new Error("Supabase is not configured.");
-  let written = 0;
-  for (const table of COLLECTIONS) {
-    const rows = snapshot[table];
-    if (!Array.isArray(rows) || rows.length === 0) continue;
-    const cleaned = rows.map((row) => {
-      const { _id, ...rest } = row as { _id?: string } & Record<string, unknown>;
-      return rest;
-    });
-    const { error } = await supabase.from(table).upsert(cleaned);
-    if (error) {
-      console.error(`Failed to restore ${table}:`, error);
-    } else {
-      written += cleaned.length;
-    }
-  }
-  return written;
+  const { data, error } = await supabase.rpc("restore_newsroom_snapshot", { snapshot });
+  if (error) throw new Error(error.message);
+  return Number(data);
 }

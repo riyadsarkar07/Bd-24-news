@@ -6,51 +6,43 @@ export const ADMIN_ACCOUNTS: Array<{ email: string; uid: string }> = [
   { email: "riyadsarkar1243@gmail.com", uid: "905e2a90-3e47-40ca-ad98-57d7d1fbd319" },
 ];
 
-export const ADMIN_EMAILS = ADMIN_ACCOUNTS.map((a) => a.email);
+const sectionPermissions: Record<string, string[]> = {
+  "/admin/news": ["news:write", "news:publish", "news:delete"],
+  "/admin/media": ["media:upload", "media:manage"],
+  "/admin/comments": ["comments:moderate"],
+};
 
-export const ADMIN_UIDS = ADMIN_ACCOUNTS.map((a) => a.uid);
-
-export const ADMIN_EMAIL = ADMIN_EMAILS[0] ?? "bd24news@tensi.org";
-
-export function isAdminEmail(email: string): boolean {
-  return ADMIN_EMAILS.includes(email.trim().toLowerCase());
+export async function newsroomRoutes(): Promise<string[]> {
+  const client = getSupabase();
+  if (!client) return [];
+  const { data: assurance, error } = await client.auth.mfa.getAuthenticatorAssuranceLevel();
+  if (error) throw error;
+  if (assurance.nextLevel === "aal2" && assurance.currentLevel !== "aal2") return ["/2fa"];
+  const permissions = await client.rpc("newsroom_capabilities");
+  if (permissions.error) throw permissions.error;
+  const grants: string[] = permissions.data;
+  if (grants.includes("*")) return ["/admin"];
+  return Object.keys(sectionPermissions).filter((section) =>
+    sectionPermissions[section]?.some((permission) => grants.includes(permission)));
 }
 
-export function isAdminUid(uid: string): boolean {
-  return ADMIN_UIDS.includes(uid);
+export async function newsroomDestination() {
+  return (await newsroomRoutes())[0] ?? "/admin/login";
 }
 
-export async function isRegisteredUser(email: string): Promise<boolean> {
-  const normalized = email.trim().toLowerCase();
-  if (isAdminEmail(normalized)) return true;
-  const supabase = getSupabase();
-  if (!supabase || typeof window === "undefined") return false;
-  try {
-    const { data } = await supabase
-      .from("profiles")
-      .select("id,status")
-      .eq("email", normalized)
-      .limit(1)
-      .maybeSingle();
-    return Boolean(data && data.status !== "banned");
-  } catch (err) {
-    console.error("Failed to check registered user:", err);
-    return false;
-  }
-}
-
-export async function signInAdmin(email: string, password: string): Promise<User> {
+export async function signInAdmin(email: string, password: string): Promise<string> {
   if (typeof window === "undefined") throw new Error("Authentication is only available in the browser.");
   const supabase = getSupabase();
   if (!supabase) throw new Error("Supabase is not configured. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY environment variables.");
   const normalized = email.trim().toLowerCase();
   const { data, error } = await supabase.auth.signInWithPassword({ email: normalized, password });
   if (error) throw new Error(error.message);
-  if (!data.user || !isAdminUid(data.user.id)) {
+  const destination = await newsroomDestination();
+  if (!data.user || destination === "/admin/login") {
     await supabase.auth.signOut();
     throw new Error("This account does not have access to the admin panel.");
   }
-  return data.user as User;
+  return destination;
 }
 
 export async function signOutAdmin(): Promise<void> {
@@ -82,11 +74,9 @@ export async function resetAdminPassword(email: string): Promise<void> {
   const supabase = getSupabase();
   if (!supabase) throw new Error("Supabase is not configured.");
   const normalized = email.trim().toLowerCase();
-  const allowed = await isRegisteredUser(normalized);
-  if (!allowed) {
-    throw new Error("This email is not registered on the admin panel.");
-  }
-  const { error } = await supabase.auth.resetPasswordForEmail(normalized);
+  const { error } = await supabase.auth.resetPasswordForEmail(normalized, {
+    redirectTo: window.location.origin + "/reset-password",
+  });
   if (error) throw new Error(error.message);
 }
 

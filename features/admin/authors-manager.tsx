@@ -1,5 +1,6 @@
 "use client";
 
+import { englishFields } from "@/lib/editor-translation";
 import * as React from "react";
 import { Plus, BadgeCheck, Pencil } from "lucide-react";
 import { PageHeader, Toolbar, AdminTable, ConfirmDialog, BoolBadge, type AdminColumn } from "@/features/admin/admin-table";
@@ -70,12 +71,15 @@ export function AuthorsManager() {
     }
     setSaving(true);
     try {
+      const [bioEn] = await englishFields([draft.bio ?? ""], [draft.bioEn ?? ""]);
       await saveAuthor(draft.id || draft.slug, {
         slug: draft.slug || draft.name,
         nameBn: draft.nameBn,
         name: draft.name,
         role: draft.role,
         avatar: draft.avatar,
+        bio: draft.bio ?? "",
+        bioEn,
         followers: draft.followers,
         verified: draft.verified,
         active: draft.active,
@@ -122,6 +126,12 @@ export function AuthorsManager() {
             <DialogDescription>Manage the author roster.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
+            <label className="block text-sm">Bengali biography
+              <Input value={draft.bio ?? ""} onChange={e => setDraft({ ...draft, bio: e.target.value, bioEn: "" })} />
+            </label>
+            <label className="block text-sm">English biography
+              <Input value={draft.bioEn ?? ""} placeholder="Translated on save" onChange={e => setDraft({ ...draft, bioEn: e.target.value })} />
+            </label>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label>Bengali name</Label>

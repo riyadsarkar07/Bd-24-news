@@ -38,6 +38,8 @@ export interface AdminTagRow {
 }
 
 export interface AdminAuthorRow {
+  bio?: string;
+  bioEn?: string;
   id: string;
   slug: string;
   nameBn: string;
@@ -311,6 +313,8 @@ export async function listAuthors(): Promise<AdminAuthorRow[]> {
         nameBn: str(d.name_bn),
         name: str(d.name),
         role: str(d.role),
+        bio: str(d.bio),
+        bioEn: str(d.bio_en),
         avatar: str(d.avatar),
         followers: num(d.followers),
         articlesCount: byAuthorSlug.get(slug) ?? num(d.articles_count),
@@ -328,12 +332,12 @@ export function subscribeAuthors(listener: (rows: AdminAuthorRow[]) => void, onE
   return startPolling(listAuthors, listener, onError);
 }
 
-export async function saveAuthor(id: string, input: { slug: string; nameBn: string; name: string; role: string; avatar: string; followers: number; verified: boolean; active: boolean }): Promise<void> {
+export async function saveAuthor(id: string, input: { bio?: string; bioEn?: string; slug: string; nameBn: string; name: string; role: string; avatar: string; followers: number; verified: boolean; active: boolean }): Promise<void> {
   const supabase = getSupabase();
   if (!supabase) throw new Error("Supabase is not configured.");
   const slug = slugify(input.slug) || slugify(input.name);
   const { error } = await supabase.from("authors").upsert(
-    { slug, name_bn: input.nameBn, name: input.name, role: input.role, avatar: input.avatar, followers: input.followers, verified: input.verified, active: input.active, updated_at: nowIso() },
+    { slug, name_bn: input.nameBn, name: input.name, role: input.role, bio: input.bio, bio_en: input.bioEn, avatar: input.avatar, followers: input.followers, verified: input.verified, active: input.active, updated_at: nowIso() },
     { onConflict: "slug" },
   );
   if (error) throw error;

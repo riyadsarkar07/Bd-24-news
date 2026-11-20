@@ -354,6 +354,7 @@ export function mapAuthorRow(row: Record<string, unknown>): Author {
     nameBn: (row.name_bn as string) ?? "",
     role: (row.role as string) ?? "",
     email: (row.email as string) ?? "",
+    bioEn: String(row.bio_en ?? ""),
     bio: (row.bio as string) ?? "",
     avatar: (row.avatar as string) ?? "",
     cover: (row.cover as string) ?? "",

@@ -1,6 +1,7 @@
 "use client";
 
 import { newsLabel } from "@/lib/bengali-news";
+import { useReaderTitle } from "@/hooks/use-reader-title";
 import { categoryLabel } from "@/constants/categories";
 import * as React from "react";
 import Link from "next/link";
@@ -71,9 +72,7 @@ export function ArticlePage({ article: initialArticle }: { article: Article }) {
   }, [lang]);
 
   const headline = article?.titleBn;
-  React.useEffect(() => {
-    if (headline) document.title = `${headline} | ${lang === "bn" ? siteConfig.nameBn : siteConfig.name}`;
-  }, [headline, lang]);
+  useReaderTitle(headline && `${headline} | ${lang === "bn" ? siteConfig.nameBn : siteConfig.name}`);
 
   const url = `${siteConfig.url}${pathname}`;
 

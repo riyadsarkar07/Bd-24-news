@@ -75,6 +75,7 @@ async function seedAuthors(): Promise<void> {
     role: a.role,
     email: a.email,
     bio: a.bio,
+    bio_en: a.bioEn,
     avatar: a.avatar,
     cover: a.cover,
     followers: a.followers,

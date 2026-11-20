@@ -125,6 +125,8 @@ const labels: Record<string, string> = {
   "lifestyle writer": "জীবনধারাবিষয়ক লেখক",
   "sports editor": "ক্রীড়া সম্পাদক",
   "technology writer": "প্রযুক্তিবিষয়ক লেখক",
+  "journalist": "সাংবাদিক",
+  "photojournalist": "ফটোসাংবাদিক",
   "chief editor": "প্রধান সম্পাদক"
 };
 

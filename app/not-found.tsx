@@ -1,6 +1,6 @@
 "use client";
 import { useLanguage } from "@/providers/language-provider";
-import { useEffect } from "react";
+import { useReaderTitle } from "@/hooks/use-reader-title";
 import Link from "next/link";
 import { Compass, Home, Newspaper, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,9 +8,7 @@ import { NotFoundSuggestions } from "@/features/not-found/not-found-suggestions"
 
 export default function NotFound() {
   const { lang } = useLanguage();
-  useEffect(() => {
-    document.title = lang === "bn" ? "পেজটি পাওয়া যায়নি | বিডি২৪ নিউজ" : "Page not found | BD24News";
-  }, [lang]);
+  useReaderTitle(lang === "bn" ? "পেজটি পাওয়া যায়নি | বিডি২৪ নিউজ" : "Page not found | BD24News");
   return (
     <div className="relative container-page flex min-h-[70vh] flex-col items-center justify-center py-16 text-center">
       <div className="bg-grid pointer-events-none absolute inset-0 opacity-30" />

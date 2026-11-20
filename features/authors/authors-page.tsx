@@ -57,7 +57,7 @@ export function AuthorsPage() {
                 </div>
                 <div className="-mt-10 px-5 pb-5 text-center">
                   <Avatar className="mx-auto h-20 w-20 border-4 border-background shadow-lg">
-                    <AvatarImage src={a.avatar} alt={a.name} />
+                    <AvatarImage src={a.avatar} alt={lang === "bn" ? a.nameBn : a.name} />
                     <AvatarFallback className="bg-brand text-white">{((lang === "bn" ? a.nameBn : a.name) || a.name || "?").slice(0, 2)}</AvatarFallback>
                   </Avatar>
                   <h3 className="mt-3 flex items-center justify-center gap-1.5 font-bengali text-lg font-bold">
@@ -65,7 +65,7 @@ export function AuthorsPage() {
                     {a.verified && <BadgeCheck className="h-4 w-4 text-accentblue" />}
                   </h3>
                   <p className="text-xs font-semibold text-brand">{newsLabel(a.role, lang)}</p>
-                  <p className="mt-2 line-clamp-2 text-xs text-muted-foreground">{a.bio}</p>
+                  <p className="mt-2 line-clamp-2 text-xs text-muted-foreground">{lang === "bn" ? a.bio : a.bioEn}</p>
                   <div className="mt-4 flex items-center justify-center gap-4 text-xs text-muted-foreground">
                     <span className="flex items-center gap-1">
                       <Newspaper className="h-3.5 w-3.5" />

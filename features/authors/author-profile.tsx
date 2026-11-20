@@ -1,4 +1,6 @@
 "use client";
+import { useReaderTitle } from "@/hooks/use-reader-title";
+import { siteConfig } from "@/config/site";
 import { newsLabel } from "@/lib/bengali-news";
 
 
@@ -22,6 +24,9 @@ export function AuthorProfile({ slug }: { slug: string }) {
   const { data: articles } = useAuthorArticles(slug);
   const { lang } = useLanguage();
   const [following, setFollowing] = React.useState(false);
+
+  const name = lang === "bn" ? author?.nameBn : author?.name;
+  useReaderTitle(name && `${name} | ${lang === "bn" ? siteConfig.nameBn : siteConfig.name}`);
 
   if (isLoading || !author) {
     return (
@@ -49,7 +54,7 @@ export function AuthorProfile({ slug }: { slug: string }) {
         </div>
         <div className="relative -mt-14 flex flex-col items-start gap-4 px-6 pb-6 sm:flex-row sm:items-end">
           <Avatar className="h-28 w-28 border-4 border-background shadow-2xl">
-            <AvatarImage src={author.avatar} alt={author.name} />
+            <AvatarImage src={author.avatar} alt={lang === "bn" ? author.nameBn : author.name} />
             <AvatarFallback className="bg-brand text-3xl text-white">{(lang === "bn" ? author.nameBn || author.name : author.name).slice(0, 2)}</AvatarFallback>
           </Avatar>
           <div className="flex-1">
@@ -58,7 +63,7 @@ export function AuthorProfile({ slug }: { slug: string }) {
               {author.verified && <BadgeCheck className="h-5 w-5 text-accentblue" />}
             </h1>
             <p className="text-sm font-bold text-brand">{newsLabel(author.role, lang)}</p>
-            <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{author.bio}</p>
+            <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{lang === "bn" ? author.bio : author.bioEn}</p>
             <div className="mt-3 flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
               <span className="flex items-center gap-1.5"><Newspaper className="h-3.5 w-3.5" />{formatNumber(author.articlesCount, lang)} {lang === "bn" ? "লেখা" : "stories"}</span>
               <span className="flex items-center gap-1.5"><Users className="h-3.5 w-3.5" />{formatNumber(author.followers, lang)} {lang === "bn" ? "অনুসারী" : "followers"}</span>

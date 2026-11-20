@@ -33,6 +33,7 @@ export interface Author {
   role: string;
   email: string;
   bio: string;
+  bioEn?: string;
   avatar: string;
   cover: string;
   followers: number;

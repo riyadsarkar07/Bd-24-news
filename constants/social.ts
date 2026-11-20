@@ -1,12 +1,12 @@
 export const socialLinks = [
-  { id: "facebook", label: "Facebook", href: "https://facebook.com", icon: "facebook", color: "#1877F2" },
-  { id: "youtube", label: "YouTube", href: "https://youtube.com", icon: "youtube", color: "#FF0000" },
-  { id: "instagram", label: "Instagram", href: "https://instagram.com", icon: "instagram", color: "#E4405F" },
-  { id: "tiktok", label: "TikTok", href: "https://tiktok.com", icon: "tiktok", color: "#000000" },
-  { id: "twitter", label: "Twitter / X", href: "https://twitter.com", icon: "twitter", color: "#1DA1F2" },
-  { id: "linkedin", label: "LinkedIn", href: "https://linkedin.com", icon: "linkedin", color: "#0A66C2" },
-  { id: "telegram", label: "Telegram", href: "https://telegram.org", icon: "send", color: "#26A5E4" },
-  { id: "whatsapp", label: "WhatsApp", href: "https://whatsapp.com", icon: "message-circle", color: "#25D366" },
+  { id: "facebook", label: "Facebook", labelBn: "ফেসবুক", href: "https://facebook.com", icon: "facebook", color: "#1877F2" },
+  { id: "youtube", label: "YouTube", labelBn: "ইউটিউব", href: "https://youtube.com", icon: "youtube", color: "#FF0000" },
+  { id: "instagram", label: "Instagram", labelBn: "ইনস্টাগ্রাম", href: "https://instagram.com", icon: "instagram", color: "#E4405F" },
+  { id: "tiktok", label: "TikTok", labelBn: "টিকটক", href: "https://tiktok.com", icon: "tiktok", color: "#000000" },
+  { id: "twitter", label: "Twitter / X", labelBn: "টুইটার / এক্স", href: "https://twitter.com", icon: "twitter", color: "#1DA1F2" },
+  { id: "linkedin", label: "LinkedIn", labelBn: "লিঙ্কডইন", href: "https://linkedin.com", icon: "linkedin", color: "#0A66C2" },
+  { id: "telegram", label: "Telegram", labelBn: "টেলিগ্রাম", href: "https://telegram.org", icon: "send", color: "#26A5E4" },
+  { id: "whatsapp", label: "WhatsApp", labelBn: "হোয়াটসঅ্যাপ", href: "https://whatsapp.com", icon: "message-circle", color: "#25D366" },
 ] as const;
 
 export const stockMarket = [

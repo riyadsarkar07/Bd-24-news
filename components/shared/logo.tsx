@@ -7,7 +7,7 @@ import { siteConfig } from "@/config/site";
 export function Logo({ className, compact = false }: { className?: string; compact?: boolean }) {
   const { lang } = useLanguage();
   return (
-    <Link href="/" className={cn("group inline-flex items-center gap-2", className)} aria-label={`${siteConfig.name} — হোম`}>
+    <Link href="/" className={cn("group inline-flex items-center gap-2", className)} aria-label={lang === "bn" ? `${siteConfig.nameBn} — হোম` : `${siteConfig.name} — Home`}>
       <span className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-brand to-brand-700 shadow-glow transition-transform duration-500 group-hover:rotate-[-8deg] group-hover:scale-105">
         <span className="font-bengali text-lg font-black text-white">{lang === "bn" ? "বি২৪" : "B24"}</span>
         <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/30 to-transparent transition-transform duration-700 group-hover:translate-x-full" />

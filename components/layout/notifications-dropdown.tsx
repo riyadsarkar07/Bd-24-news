@@ -17,7 +17,7 @@ export function NotificationsDropdown() {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative" aria-label="Notifications">
+        <Button variant="ghost" size="icon" className="relative" aria-label={lang === "bn" ? "বিজ্ঞপ্তি" : "Notifications"}>
           <Bell className="h-5 w-5" />
           <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-brand text-[9px] font-black text-white">
             4

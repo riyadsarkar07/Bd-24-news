@@ -22,10 +22,10 @@ export default async function LatestPage() {
       breadcrumb="সর্বশেষ"
       initialData={initialData}
       filters={[
-        { label: "সব", value: "all", opts: { sort: "latest" as const } },
-        { label: "ব্রেকিং", value: "breaking", opts: { breaking: true, sort: "latest" as const } },
-        { label: "ট্রেন্ডিং", value: "trending", opts: { trending: true, sort: "latest" as const } },
-        { label: "সম্পাদকের পছন্দ", value: "editors", opts: { editorPick: true, sort: "latest" as const } },
+        { label: "সব", labelEn: "All", value: "all", opts: { sort: "latest" as const } },
+        { label: "ব্রেকিং", labelEn: "Breaking", value: "breaking", opts: { breaking: true, sort: "latest" as const } },
+        { label: "ট্রেন্ডিং", labelEn: "Trending", value: "trending", opts: { trending: true, sort: "latest" as const } },
+        { label: "সম্পাদকের পছন্দ", labelEn: "Editor’s picks", value: "editors", opts: { editorPick: true, sort: "latest" as const } },
       ]}
     />
   );

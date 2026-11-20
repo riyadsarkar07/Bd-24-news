@@ -28,7 +28,7 @@ export function ForgotPasswordForm() {
       setSent(true);
       toast.success(lang === "bn" ? "রিসেট লিংক পাঠানো হয়েছে" : "Reset link sent");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to send reset link");
+      toast.error(lang === "bn" ? "রিসেট লিংক পাঠানো যায়নি।" : err instanceof Error ? err.message : "Failed to send reset link");
     }
   };
 
@@ -57,7 +57,7 @@ export function ForgotPasswordForm() {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
           <div className="space-y-2">
             <Label htmlFor="email">{lang === "bn" ? "ইমেইল" : "Email"}</Label>
-            <Input id="email" type="email" placeholder="you@example.com" {...register("email")} />
+            <Input id="email" type="email" placeholder={lang === "bn" ? "আপনার ইমেইল ঠিকানা" : "you@example.com"} {...register("email")} />
             {errors.email && <p className="text-xs font-medium text-danger">{lang === "bn" ? "সঠিক ইমেইল ঠিকানা দিন" : errors.email.message}</p>}
           </div>
           <Button type="submit" disabled={isSubmitting} className="w-full">

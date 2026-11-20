@@ -3,9 +3,11 @@
 import * as React from "react";
 import { AlertTriangle, RefreshCw, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/providers/language-provider";
 import Link from "next/link";
 
 export default function GlobalError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
+  const { lang } = useLanguage();
   React.useEffect(() => {
     console.error("Application error:", error);
   }, [error]);
@@ -16,21 +18,21 @@ export default function GlobalError({ error, reset }: { error: Error & { digest?
       <span className="relative flex h-20 w-20 items-center justify-center rounded-3xl bg-danger/10 text-danger shadow-sm">
         <AlertTriangle className="h-10 w-10" />
       </span>
-      <h1 className="relative mt-6 font-bengali text-3xl font-black">সার্ভার ত্রুটি</h1>
+      <h1 className="relative mt-6 font-bengali text-3xl font-black">{lang === "bn" ? "সার্ভার ত্রুটি" : "Server error"}</h1>
       <p className="relative mt-2 max-w-md text-pretty text-muted-foreground">
-        কিছু একটা ভুল হয়েছে। আমরা সমস্যাটি সমাধানে কাজ করছি। কিছুক্ষণ পরে আবার চেষ্টা করুন।
+        {lang === "bn" ? "কিছু একটা ভুল হয়েছে। আমরা সমস্যাটি সমাধানে কাজ করছি। কিছুক্ষণ পরে আবার চেষ্টা করুন।" : "Something went wrong. Please try again shortly."}
       </p>
       <div className="relative mt-6 flex items-center gap-3">
         <Button onClick={reset}>
-          <RefreshCw className="h-4 w-4" /> আবার চেষ্টা করুন
+          <RefreshCw className="h-4 w-4" /> {lang === "bn" ? "আবার চেষ্টা করুন" : "Try again"}
         </Button>
         <Link href="/">
           <Button variant="outline">
-            <Home className="h-4 w-4" /> হোম
+            <Home className="h-4 w-4" /> {lang === "bn" ? "হোম" : "Home"}
           </Button>
         </Link>
       </div>
-      <p className="relative mt-6 max-w-md break-words text-xs text-muted-foreground">Error: {error.message}</p>
+
     </div>
   );
 }

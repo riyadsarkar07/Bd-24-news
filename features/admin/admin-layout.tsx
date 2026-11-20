@@ -201,7 +201,7 @@ export function AdminLayout({ children, sections }: { children: React.ReactNode;
       <div className="min-w-0 flex-1">
         <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-background/80 px-4 backdrop-blur-xl sm:px-6">
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setMobileOpen(true)} aria-label="Open menu">
+            <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setMobileOpen(true)} aria-label={lang === "bn" ? "মেনু খুলুন" : "Open menu"}>
               <Menu className="h-5 w-5" />
             </Button>
             <p className="font-bengali text-sm font-bold">

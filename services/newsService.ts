@@ -41,6 +41,7 @@ export function mapArticleRow(row: ArticleRow, editorial = false): Article {
     body: display(localizeHeadline ? `ঢাকা, ${row.title_bn}।${body.slice(headline.length)}` : body),
     category: String(row.category ?? "bangladesh").trim().toLowerCase() || "bangladesh",
     categoryColor: (row.category_color as string) ?? "#E50914",
+    labelTranslations: (row.label_translations ?? {}) as Record<string, string>,
     tags: Array.isArray(row.tags) ? (row.tags as string[]) : [],
     author: (row.author as string) ?? "Riyad",
     authorNameBn: (row.author_name_bn as string) ?? "",
@@ -122,7 +123,7 @@ export function filterAndSort(articles: Article[], options: ArticleQueryOptions 
 }
 
 const LIST_COLUMNS =
-  "id,slug,title,title_bn,excerpt,excerpt_en,article_editions(excerpt_bn,excerpt_en),category,category_color,tags,author,author_name_bn,author_slug,author_avatar,author_role,cover_image,images,published_at,updated_at,views,likes,comments_count,reading_minutes,featured,breaking,trending,editor_pick,is_video,is_gallery,video_url,location,seo_title,seo_description,status";
+  "id,slug,title,title_bn,excerpt,excerpt_en,article_editions(excerpt_bn,excerpt_en),label_translations,category,category_color,tags,author,author_name_bn,author_slug,author_avatar,author_role,cover_image,images,published_at,updated_at,views,likes,comments_count,reading_minutes,featured,breaking,trending,editor_pick,is_video,is_gallery,video_url,location,seo_title,seo_description,status";
 
 const FETCH_TIMEOUT_MS = 8000;
 

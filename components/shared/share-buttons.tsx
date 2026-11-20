@@ -41,11 +41,11 @@ export function ShareButtons({ title, url, variant = "default" }: ShareButtonsPr
   };
 
   const buttons = [
-    { label: "Facebook", href: `https://www.facebook.com/sharer/sharer.php?u=${encoded}`, icon: Facebook, color: "#1877F2" },
-    { label: "Twitter / X", href: `https://twitter.com/intent/tweet?url=${encoded}&text=${text}`, icon: Twitter, color: "#000000" },
-    { label: "WhatsApp", href: `https://api.whatsapp.com/send?text=${text}%20${encoded}`, icon: MessageCircle, color: "#25D366" },
-    { label: "Telegram", href: `https://t.me/share/url?url=${encoded}&text=${text}`, icon: Send, color: "#26A5E4" },
-    { label: "Email", href: `mailto:?subject=${text}&body=${encoded}`, icon: Mail, color: "#64748B" },
+    { label: "Facebook", labelBn: "ফেসবুক", href: `https://www.facebook.com/sharer/sharer.php?u=${encoded}`, icon: Facebook, color: "#1877F2" },
+    { label: "Twitter / X", labelBn: "টুইটার / এক্স", href: `https://twitter.com/intent/tweet?url=${encoded}&text=${text}`, icon: Twitter, color: "#000000" },
+    { label: "WhatsApp", labelBn: "হোয়াটসঅ্যাপ", href: `https://api.whatsapp.com/send?text=${text}%20${encoded}`, icon: MessageCircle, color: "#25D366" },
+    { label: "Telegram", labelBn: "টেলিগ্রাম", href: `https://t.me/share/url?url=${encoded}&text=${text}`, icon: Send, color: "#26A5E4" },
+    { label: "Email", labelBn: "ইমেইল", href: `mailto:?subject=${text}&body=${encoded}`, icon: Mail, color: "#64748B" },
   ];
 
   return (
@@ -60,19 +60,19 @@ export function ShareButtons({ title, url, variant = "default" }: ShareButtonsPr
           style={{ ["--tw-shadow-color" as string]: b.color }}
           onMouseEnter={(e) => (e.currentTarget.style.background = b.color)}
           onMouseLeave={(e) => (e.currentTarget.style.background = "")}
-          aria-label={`Share on ${b.label}`}
+          aria-label={lang === "bn" ? `${b.labelBn} দিয়ে শেয়ার করুন` : `Share on ${b.label}`}
         >
           <a href={b.href} target="_blank" rel="noopener noreferrer">
             <b.icon className="h-4 w-4" />
           </a>
         </Button>
       ))}
-      <Button variant="outline" size="icon" onClick={copyLink} aria-label="Copy link">
+      <Button variant="outline" size="icon" onClick={copyLink} aria-label={lang === "bn" ? "লিংক কপি করুন" : "Copy link"}>
         {copied ? <Check className="h-4 w-4 text-success" /> : <Link2 className="h-4 w-4" />}
       </Button>
       <Popover>
         <PopoverTrigger asChild>
-          <Button variant="outline" size="icon" aria-label="QR code">
+          <Button variant="outline" size="icon" aria-label={lang === "bn" ? "কিউআর কোড" : "QR code"}>
             <QrCode className="h-4 w-4" />
           </Button>
         </PopoverTrigger>

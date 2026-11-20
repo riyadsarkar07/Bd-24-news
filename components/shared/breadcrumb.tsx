@@ -12,10 +12,10 @@ export interface Crumb {
 }
 
 export function Breadcrumb({ items, className }: { items: Crumb[]; className?: string }) {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   return (
     <nav
-      aria-label="Breadcrumb"
+      aria-label={lang === "bn" ? "পাতার অবস্থান" : "Breadcrumb"}
       className={cn(
         "no-scrollbar flex max-w-full items-center gap-1 overflow-x-auto whitespace-nowrap text-xs font-medium text-muted-foreground",
         className,

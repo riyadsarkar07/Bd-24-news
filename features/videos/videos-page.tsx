@@ -45,7 +45,7 @@ export function VideosPage() {
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={v.coverImage}
-                alt={v.titleBn}
+                alt={lang === "bn" ? v.titleBn : v.title}
                 className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
@@ -60,7 +60,7 @@ export function VideosPage() {
               </div>
               <div className="absolute inset-x-0 bottom-0 p-4">
                 <span className="mb-1 inline-block rounded bg-brand px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-white">
-                  HD
+                  {lang === "bn" ? "এইচডি" : "HD"}
                 </span>
                 <h3 className="line-clamp-2 text-sm font-bold leading-snug text-white">
                   {lang === "bn" ? v.titleBn : v.title}

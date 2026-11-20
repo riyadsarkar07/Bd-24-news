@@ -117,19 +117,27 @@ const labels: Record<string, string> = {
   "women-in-tech": "প্রযুক্তিতে নারী",
   "world-cup": "বিশ্বকাপ",
   "youth": "তরুণ সমাজ",
-  "Health Columnist": "স্বাস্থ্যবিষয়ক কলামিস্ট",
-  "Entertainment Reporter": "বিনোদন প্রতিবেদক",
-  "International Correspondent": "আন্তর্জাতিক সংবাদদাতা",
-  "Editor": "সম্পাদক",
-  "Senior Reporter": "জ্যেষ্ঠ প্রতিবেদক",
-  "Lifestyle Writer": "জীবনধারাবিষয়ক লেখক",
-  "Sports Editor": "ক্রীড়া সম্পাদক",
-  "Technology Writer": "প্রযুক্তিবিষয়ক লেখক",
-  "Chief Editor": "প্রধান সম্পাদক"
+  "health columnist": "স্বাস্থ্যবিষয়ক কলামিস্ট",
+  "entertainment reporter": "বিনোদন প্রতিবেদক",
+  "international correspondent": "আন্তর্জাতিক সংবাদদাতা",
+  "editor": "সম্পাদক",
+  "senior reporter": "জ্যেষ্ঠ প্রতিবেদক",
+  "lifestyle writer": "জীবনধারাবিষয়ক লেখক",
+  "sports editor": "ক্রীড়া সম্পাদক",
+  "technology writer": "প্রযুক্তিবিষয়ক লেখক",
+  "chief editor": "প্রধান সম্পাদক"
 };
 
-export function newsLabel(value: string, lang: "bn" | "en") {
-  return lang === "bn" ? labels[value] ?? value : value;
+export function labelLanguage(value: string) {
+  return /[\u0980-\u09ff]/u.test(value) ? "bn" : "en";
+}
+
+export function newsLabel(value: string, lang: "bn" | "en", translations?: Record<string, string>) {
+  if (labelLanguage(value) === lang) return value;
+  if (translations && Object.prototype.hasOwnProperty.call(translations, value) && typeof translations[value] === "string" && translations[value]) return translations[value]!;
+  if (value === "ঢাকা") return "Dhaka";
+  if (lang === "bn" && Object.prototype.hasOwnProperty.call(labels, value.toLowerCase())) return labels[value.toLowerCase()]!;
+  return value;
 }
 
 const terms: Record<string, string> = {

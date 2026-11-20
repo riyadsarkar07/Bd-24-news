@@ -1,5 +1,6 @@
 "use client";
 
+import { newsLabel, labelLanguage } from "@/lib/bengali-news";
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -82,6 +83,8 @@ export function NewsEditor({ id }: { id?: string }) {
   const [saving, setSaving] = React.useState<"draft" | "publish" | null>(null);
   const [tagInput, setTagInput] = React.useState("");
   const [tags, setTags] = React.useState<string[]>([]);
+  const [labelTranslations, setLabelTranslations] = React.useState<Record<string, string>>({});
+  const [authorNameBn, setAuthorNameBn] = React.useState("রিয়াদ");
   const [metaOpen, setMetaOpen] = React.useState(false);
   const [slug, setSlug] = React.useState("");
   const [location, setLocation] = React.useState("");
@@ -111,6 +114,8 @@ export function NewsEditor({ id }: { id?: string }) {
         if (!active) return;
         if (a) {
           setExisting(a);
+          setLabelTranslations(a.labelTranslations ?? {});
+          setAuthorNameBn(a.authorNameBn || "");
           setTags(a.tags ?? []);
           setSlug(a.slug ?? "");
           setLocation(a.location ?? "");
@@ -164,6 +169,7 @@ export function NewsEditor({ id }: { id?: string }) {
       category: values.category,
       categoryColor: categories.find((c) => c.slug === values.category)?.color ?? "#E50914",
       tags,
+      labelTranslations,
       featured,
       breaking,
       trending,
@@ -178,7 +184,7 @@ export function NewsEditor({ id }: { id?: string }) {
       seoTitle,
       seoDescription,
       author: author || existing?.author || "Riyad",
-      authorNameBn: existing?.authorNameBn ?? "রিয়াদ",
+      authorNameBn,
       authorAvatar: existing?.authorAvatar ?? "",
       authorRole: existing?.authorRole ?? "Editor",
       publishedAt: existing?.publishedAt,
@@ -270,7 +276,7 @@ export function NewsEditor({ id }: { id?: string }) {
 
           <div className="rounded-2xl border bg-background p-5">
             <div className="mb-4 flex items-center justify-between">
-              <Label>Content *</Label>
+              <Label>Bengali article *</Label>
               <div className="flex gap-1">
                 {richActions.map((a) => (
                   <button
@@ -287,7 +293,7 @@ export function NewsEditor({ id }: { id?: string }) {
             <Textarea
               id="body"
               rows={16}
-              placeholder="Write the full article content…"
+              placeholder="বাংলায় পুরো খবর লিখুন…"
               className="font-sans text-[15px] leading-relaxed"
               {...register("body")}
             />
@@ -329,8 +335,10 @@ export function NewsEditor({ id }: { id?: string }) {
             <Label className="mb-2 block">Publish settings</Label>
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="author">Author</Label>
+                <Label htmlFor="author">Author in English</Label>
                 <Input id="author" placeholder="Riyad" value={author} onChange={(e) => setAuthor(e.target.value)} />
+                <Label htmlFor="authorBn">Author in Bengali</Label>
+                <Input id="authorBn" value={authorNameBn} onChange={e => setAuthorNameBn(e.target.value)} />
               </div>
 
               <div className="space-y-2">
@@ -373,11 +381,21 @@ export function NewsEditor({ id }: { id?: string }) {
                   ))}
                 </div>
                 <div className="flex gap-2">
-                  <Input value={tagInput} onChange={(e) => setTagInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addTag())} placeholder="Add tag" />
+                  <Input value={tagInput} onChange={(e) => setTagInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addTag())} placeholder="Add a Bengali or English tag" />
                   <Button type="button" variant="outline" onClick={addTag}>Add</Button>
                 </div>
               </div>
 
+              {[...new Set([...tags, location].filter(Boolean))].map(label => {
+                const target = labelLanguage(label) === "bn" ? "en" : "bn";
+                const existingLabel = newsLabel(label, target, labelTranslations);
+                return <label key={label} className="block space-y-1 text-sm">
+                  <span>{target === "bn" ? "Bengali" : "English"} label for {label}</span>
+                  <Input value={existingLabel === label ? "" : existingLabel}
+                    placeholder={target === "en" ? "Translated on publish" : "Enter Bengali label"}
+                    onChange={e => setLabelTranslations(prev => ({ ...prev, [label]: e.target.value }))} />
+                </label>;
+              })}
               <div className="flex items-center justify-between">
                 <Label htmlFor="featured">Featured</Label>
                 <Switch id="featured" checked={featured} onCheckedChange={setFeatured} />

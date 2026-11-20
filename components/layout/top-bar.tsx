@@ -52,7 +52,7 @@ export function TopBar() {
             className="gap-1.5 text-white/75 hover:bg-white/10 hover:text-white"
           >
             <Languages className="h-3.5 w-3.5" />
-            {lang === "bn" ? "English" : "বাংলা"}
+            {lang === "bn" ? "ইংরেজি" : "Bangla"}
           </Button>
           <span className="mx-1 h-3 w-px bg-white/15" />
           <Button
@@ -60,7 +60,7 @@ export function TopBar() {
             size="icon-sm"
             onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
             className="text-white/75 hover:bg-white/10 hover:text-white"
-            aria-label="Toggle theme"
+            aria-label={lang === "bn" ? "থিম বদলান" : "Toggle theme"}
           >
             <Moon className="h-3.5 w-3.5" />
           </Button>

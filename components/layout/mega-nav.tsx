@@ -45,7 +45,7 @@ function CategoryDropdown({ category, onClose }: { category: Category; onClose: 
             <div className="relative aspect-[16/10] overflow-hidden rounded-xl">
               <ImageWithFallback
                 src={a.coverImage}
-                alt={a.titleBn}
+                alt={lang === "bn" ? a.titleBn : a.title}
                 fill
                 sizes="(max-width: 768px) 33vw, 200px"
                 className="transition-transform duration-500 group-hover:scale-110"
@@ -91,7 +91,7 @@ export function MegaNav() {
   return (
     <nav
       className="glass-nav sticky top-0 z-40 border-b"
-      aria-label="Primary"
+      aria-label={lang === "bn" ? "প্রধান মেনু" : "Primary"}
       onMouseLeave={() => setOpen(null)}
     >
       <div className="container-page flex h-12 items-center">

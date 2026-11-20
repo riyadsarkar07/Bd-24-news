@@ -2,10 +2,17 @@
 
 import * as React from "react";
 import { motion, useReducedMotion } from "framer-motion";
+import { useLanguage } from "@/providers/language-provider";
+import { readerPageTitle } from "@/lib/reader-page-title";
 import { usePathname } from "next/navigation";
 
 export function PageTransition({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const { lang } = useLanguage();
+  React.useEffect(() => {
+    const title = readerPageTitle(pathname, lang);
+    if (title) document.title = title;
+  }, [pathname, lang]);
   const reduce = useReducedMotion();
 
   React.useEffect(() => {

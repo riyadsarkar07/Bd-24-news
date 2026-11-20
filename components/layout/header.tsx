@@ -34,7 +34,7 @@ export function Header({ onOpenMobile }: { onOpenMobile: () => void }) {
           size="icon"
           className="lg:hidden"
           onClick={onOpenMobile}
-          aria-label="Open menu"
+          aria-label={lang === "bn" ? "মেনু খুলুন" : "Open menu"}
         >
           <Menu className="h-6 w-6" />
         </Button>
@@ -60,7 +60,7 @@ export function Header({ onOpenMobile }: { onOpenMobile: () => void }) {
             size="icon"
             className="lg:hidden"
             onClick={() => setOpen(true)}
-            aria-label="Search"
+            aria-label={lang === "bn" ? "অনুসন্ধান" : "Search"}
           >
             <Search className="h-5 w-5" />
           </Button>
@@ -82,10 +82,10 @@ export function Header({ onOpenMobile }: { onOpenMobile: () => void }) {
             <Newspaper className="h-4 w-4" />
             {t("subscribe")}
           </Button>
-          <button type="button" className="px-1.5 text-sm font-semibold lg:hidden" onClick={toggle}>{lang === "bn" ? "English" : "বাংলা"}</button>
+          <button type="button" className="px-1.5 text-sm font-semibold lg:hidden" onClick={toggle}>{lang === "bn" ? "ইংরেজি" : "Bangla"}</button>
           <NotificationsDropdown />
           <ThemeToggle />
-          <Link href="/login" aria-label="Account">
+          <Link href="/login" aria-label={lang === "bn" ? "অ্যাকাউন্ট" : "Account"}>
             <Button variant="ghost" size="icon" className="hidden sm:inline-flex">
               <UserRound className="h-5 w-5" />
             </Button>

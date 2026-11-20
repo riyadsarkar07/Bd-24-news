@@ -66,7 +66,7 @@ export function RegisterForm() {
         </div>
         <div className="space-y-2">
           <Label htmlFor="email">{lang === "bn" ? "ইমেইল" : "Email"}</Label>
-          <Input id="email" type="email" placeholder="you@example.com" {...register("email")} />
+          <Input id="email" type="email" placeholder={lang === "bn" ? "আপনার ইমেইল ঠিকানা" : "you@example.com"} {...register("email")} />
           {errors.email && <p className="text-xs font-medium text-danger">{lang === "bn" ? "সঠিক ইমেইল ঠিকানা দিন" : errors.email.message}</p>}
         </div>
         <div className="space-y-2">
@@ -77,7 +77,7 @@ export function RegisterForm() {
               type="button"
               onClick={() => setShow((v) => !v)}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-              aria-label="Toggle password visibility"
+              aria-label={lang === "bn" ? "পাসওয়ার্ড দেখান বা লুকান" : "Toggle password visibility"}
             >
               {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>

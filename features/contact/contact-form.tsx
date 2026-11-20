@@ -54,7 +54,7 @@ export function ContactForm() {
         </div>
         <div className="space-y-2">
           <Label htmlFor="email">{lang === "bn" ? "ইমেইল" : "Email"}</Label>
-          <Input id="email" type="email" {...register("email")} placeholder="you@example.com" />
+          <Input id="email" type="email" {...register("email")} placeholder={lang === "bn" ? "আপনার ইমেইল ঠিকানা" : "you@example.com"} />
           {errors.email && <p className="text-xs font-medium text-danger">{lang === "bn" ? "সঠিক ইমেইল ঠিকানা দিন" : errors.email.message}</p>}
         </div>
       </div>

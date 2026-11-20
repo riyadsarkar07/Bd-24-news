@@ -9,7 +9,7 @@ import type { Swiper as SwiperType } from "swiper";
 import { motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, PlayCircle, Images } from "lucide-react";
 import type { Article } from "@/types";
-import { formatNumber, timeAgo } from "@/lib/utils";
+import { formatNumber, timeAgo, toBanglaNumerals } from "@/lib/utils";
 import { ImageWithFallback } from "@/components/shared/image-with-fallback";
 import { useLanguage } from "@/providers/language-provider";
 import { useArticles } from "@/hooks/useNews";
@@ -30,7 +30,7 @@ export function HeroSlider({ articles }: { articles: Article[] }) {
   const side = source.slice(5, 9);
 
   return (
-    <section className="container-page grid gap-5 py-6 lg:grid-cols-3" aria-label="Top stories">
+    <section className="container-page grid gap-5 py-6 lg:grid-cols-3" aria-label={lang === "bn" ? "শীর্ষ সংবাদ" : "Top stories"}>
       <div className="group relative overflow-hidden rounded-3xl bg-navy-950 shadow-soft-lg ring-1 ring-black/5 lg:col-span-2">
         <Swiper
           modules={[Autoplay, EffectFade, Navigation, Pagination]}
@@ -47,7 +47,7 @@ export function HeroSlider({ articles }: { articles: Article[] }) {
               <Link href={`/article/${a.slug}`} className="group relative block h-[400px] w-full sm:h-[480px] md:h-[520px]">
                 <ImageWithFallback
                   src={a.coverImage}
-                  alt={a.titleBn}
+                  alt={lang === "bn" ? a.titleBn : a.title}
                   fill
                   priority
                   sizes="(max-width: 1024px) 100vw, 66vw"
@@ -118,14 +118,14 @@ export function HeroSlider({ articles }: { articles: Article[] }) {
         <button
           onClick={() => swiperRef.current?.slidePrev()}
           className="absolute left-4 top-1/2 z-20 hidden -translate-y-1/2 rounded-full bg-white/10 p-2.5 text-white opacity-0 backdrop-blur transition-all hover:bg-brand hover:shadow-glow focus-visible:opacity-100 group-hover:opacity-100 sm:block"
-          aria-label="Previous slide"
+          aria-label={lang === "bn" ? "আগের স্লাইড" : "Previous slide"}
         >
           <ChevronLeft className="h-5 w-5" />
         </button>
         <button
           onClick={() => swiperRef.current?.slideNext()}
           className="absolute right-4 top-1/2 z-20 hidden -translate-y-1/2 rounded-full bg-white/10 p-2.5 text-white opacity-0 backdrop-blur transition-all hover:bg-brand hover:shadow-glow focus-visible:opacity-100 group-hover:opacity-100 sm:block"
-          aria-label="Next slide"
+          aria-label={lang === "bn" ? "পরের স্লাইড" : "Next slide"}
         >
           <ChevronRight className="h-5 w-5" />
         </button>
@@ -135,7 +135,7 @@ export function HeroSlider({ articles }: { articles: Article[] }) {
             <button
               key={a.id}
               onClick={() => swiperRef.current?.slideTo(i)}
-              aria-label={`Go to slide ${i + 1}`}
+              aria-label={lang === "bn" ? `${toBanglaNumerals(i + 1)} নম্বর স্লাইড দেখুন` : `Go to slide ${i + 1}`}
               className={cn(
                 "h-1.5 rounded-full transition-all duration-300",
                 activeIndex === i ? "w-8 bg-brand" : "w-1.5 bg-white/40 hover:bg-white/70",
@@ -155,7 +155,7 @@ export function HeroSlider({ articles }: { articles: Article[] }) {
             <div className="relative h-36 w-full sm:h-44 lg:h-[120px] xl:h-[128px]">
               <ImageWithFallback
                 src={a.coverImage}
-                alt={a.titleBn}
+                alt={lang === "bn" ? a.titleBn : a.title}
                 fill
                 sizes="(max-width: 1024px) 50vw, 25vw"
                 className="transition-transform duration-500 group-hover:scale-110"

@@ -1,3 +1,5 @@
+"use client";
+import { useLanguage } from "@/providers/language-provider";
 import {
   Facebook,
   Youtube,
@@ -41,6 +43,7 @@ export function SocialIcon({ id, className }: { id: string; className?: string }
 }
 
 export function SocialLinks({ className, size = "md" }: { className?: string; size?: "sm" | "md" | "lg" }) {
+  const { lang } = useLanguage();
   const sizes = { sm: "h-7 w-7", md: "h-9 w-9", lg: "h-11 w-11" };
   const iconSizes = { sm: "h-3.5 w-3.5", md: "h-4 w-4", lg: "h-5 w-5" };
   return (
@@ -51,7 +54,7 @@ export function SocialLinks({ className, size = "md" }: { className?: string; si
           href={s.href}
           target="_blank"
           rel="noopener noreferrer"
-          aria-label={s.label}
+          aria-label={lang === "bn" ? s.labelBn : s.label}
           className={cn(
             "group inline-flex items-center justify-center rounded-full border border-border bg-background text-muted-foreground transition-all duration-300 hover:-translate-y-0.5 hover:border-transparent hover:text-white hover:shadow-lg",
             sizes[size],

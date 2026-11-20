@@ -70,7 +70,7 @@ export function CategoryPage({ slug, initialData }: { slug: string; initialData?
             <div className="flex items-center gap-2">
               <Select value={view} onValueChange={(v) => setView(v as typeof view)}>
                 <SelectTrigger className="w-40">
-                  <SelectValue placeholder="View" />
+                  <SelectValue placeholder={lang === "bn" ? "দেখার ধরন" : "View"} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="grid">
@@ -117,7 +117,7 @@ export function CategoryPage({ slug, initialData }: { slug: string; initialData?
                         <div className="relative aspect-[16/10] w-full shrink-0 overflow-hidden rounded-xl sm:aspect-[4/3] sm:w-56">
                           <ImageWithFallback
                             src={a.coverImage}
-                            alt={a.titleBn}
+                            alt={lang === "bn" ? a.titleBn : a.title}
                             fill
                             sizes="(max-width: 640px) 100vw, 224px"
                             className="transition-transform duration-500 group-hover:scale-105"

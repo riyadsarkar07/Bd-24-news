@@ -28,7 +28,7 @@ export function ResetPasswordForm() {
 
   const onSubmit = async (values: Schema) => {
     try { await updateAdminPassword(values.password); }
-    catch (error) { toast.error(error instanceof Error ? error.message : "Password reset failed."); return; }
+    catch (error) { toast.error(lang === "bn" ? "পাসওয়ার্ড পরিবর্তন করা যায়নি।" : error instanceof Error ? error.message : "Password reset failed."); return; }
     toast.success(lang === "bn" ? "পাসওয়ার্ড পরিবর্তন হয়েছে!" : "Password updated!");
     router.push("/login");
   };
@@ -49,7 +49,7 @@ export function ResetPasswordForm() {
           <Label htmlFor="password">{lang === "bn" ? "নতুন পাসওয়ার্ড" : "New password"}</Label>
           <div className="relative">
             <Input id="password" type={show ? "text" : "password"} placeholder="••••••••" {...register("password")} />
-            <button type="button" onClick={() => setShow((v) => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" aria-label="Toggle">
+            <button type="button" onClick={() => setShow((v) => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" aria-label={lang === "bn" ? "দেখান বা লুকান" : "Toggle"}>
               {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>

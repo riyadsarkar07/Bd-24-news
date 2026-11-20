@@ -22,6 +22,7 @@ interface NewsListingProps {
   breadcrumb: string;
   filters?: {
     label: string;
+    labelEn: string;
     value: string;
     opts: Parameters<typeof useArticles>[0];
   }[];
@@ -56,7 +57,7 @@ export function NewsListing({
 
   return (
     <div className="container-page py-8">
-      <Breadcrumb items={[{ label: breadcrumb }]} />
+      <Breadcrumb items={[{ label: lang === "bn" ? breadcrumb : title }]} />
       <div className="mt-4 flex flex-col gap-6 lg:flex-row">
         <div className="min-w-0 flex-1">
           <SectionHeading title={title} titleBn={titleBn} icon={icon} color={color} />
@@ -72,7 +73,7 @@ export function NewsListing({
                       : "rounded-full border border-border px-4 py-1.5 text-xs font-bold text-muted-foreground transition-all hover:border-brand hover:text-brand"
                   }
                 >
-                  {f.label}
+                  {lang === "bn" ? f.label : f.labelEn}
                 </button>
               ))}
             </div>

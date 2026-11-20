@@ -36,17 +36,17 @@ export function ArchivePage() {
         <div className="flex gap-2">
           <Select value={year} onValueChange={(v) => { setYear(v); setPage(0); }}>
             <SelectTrigger className="w-28">
-              <SelectValue placeholder="Year" />
+              <SelectValue placeholder={lang === "bn" ? "বছর" : "Year"} />
             </SelectTrigger>
             <SelectContent>
               {years.map((y) => (
-                <SelectItem key={y} value={y}>{y}</SelectItem>
+                <SelectItem key={y} value={y}>{lang === "bn" ? toBanglaNumerals(y) : y}</SelectItem>
               ))}
             </SelectContent>
           </Select>
           <Select value={month} onValueChange={(v) => { setMonth(v); setPage(0); }}>
             <SelectTrigger className="w-36">
-              <SelectValue placeholder="Month" />
+              <SelectValue placeholder={lang === "bn" ? "মাস" : "Month"} />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">{lang === "bn" ? "সব মাস" : "All months"}</SelectItem>

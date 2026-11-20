@@ -65,7 +65,7 @@ export function GallerySection({ initialData }: { initialData?: Article[] }) {
                 <div className={`relative h-full ${i === 0 ? "min-h-[300px] md:min-h-full" : "min-h-[150px]"}`}>
                   <ImageWithFallback
                     src={a.coverImage}
-                    alt={a.titleBn}
+                    alt={lang === "bn" ? a.titleBn : a.title}
                     fill
                     sizes={i === 0 ? "(max-width: 768px) 100vw, 50vw" : "25vw"}
                     className="object-cover transition-transform duration-700 group-hover:scale-110"

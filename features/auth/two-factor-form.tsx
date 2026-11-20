@@ -37,7 +37,7 @@ export function TwoFactorForm() {
       const { error } = await client.auth.mfa.challengeAndVerify({ factorId: factor.id, code: code.join("") });
       if (error) throw error;
       router.replace(await newsroomDestination());
-    } catch (error) { toast.error(error instanceof Error ? error.message : "Verification failed."); }
+    } catch (error) { toast.error(lang === "bn" ? "কোড যাচাই করা যায়নি। আবার চেষ্টা করুন।" : error instanceof Error ? error.message : "Verification failed."); }
     finally { setLoading(false); }
   };
 
@@ -67,7 +67,7 @@ export function TwoFactorForm() {
               onChange={(e) => handleChange(i, e.target.value)}
               inputMode="numeric"
               maxLength={1}
-              aria-label={`Digit ${i + 1}`}
+              aria-label={lang === "bn" ? `${(i + 1).toLocaleString("bn")} নম্বর অঙ্ক` : `Digit ${i + 1}`}
               className="h-14 w-12 rounded-xl border border-input bg-background text-center text-2xl font-black outline-none transition-all focus:border-brand focus:ring-2 focus:ring-brand/20"
             />
           ))}

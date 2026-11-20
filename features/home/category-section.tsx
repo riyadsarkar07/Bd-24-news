@@ -65,7 +65,7 @@ export function CategorySection({ slug, priority = false, initialData }: { slug:
           >
             <ImageWithFallback
               src={moreLink.coverImage}
-              alt={moreLink.titleBn}
+              alt={lang === "bn" ? moreLink.titleBn : moreLink.title}
               fill
               sizes="25vw"
               className="opacity-80 transition-all duration-700 group-hover:scale-105 group-hover:opacity-100"

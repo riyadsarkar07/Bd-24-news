@@ -7,6 +7,7 @@ import { useArticles } from "@/hooks/useNews";
 import { Breadcrumb } from "@/components/shared/breadcrumb";
 import { SectionHeading } from "@/components/shared/section-heading";
 import { Skeleton } from "@/components/ui/skeleton";
+import { categoryLabel } from "@/constants/categories";
 import { useLanguage } from "@/providers/language-provider";
 import { localizedDigits } from "@/lib/utils";
 
@@ -47,7 +48,7 @@ export function GalleryPage() {
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={g.coverImage}
-                  alt={g.titleBn}
+                  alt={lang === "bn" ? g.titleBn : g.title}
                   className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
                 />
               </div>
@@ -78,7 +79,7 @@ export function GalleryPage() {
             <button
               className="absolute right-5 top-5 rounded-full bg-white/10 p-2.5 text-white transition-colors hover:bg-brand"
               onClick={() => setLightbox(null)}
-              aria-label="Close lightbox"
+              aria-label={lang === "bn" ? "ছবি বন্ধ করুন" : "Close lightbox"}
             >
               <X className="h-5 w-5" />
             </button>
@@ -88,7 +89,7 @@ export function GalleryPage() {
                 e.stopPropagation();
                 setLightbox((lightbox + items.length - 1) % items.length);
               }}
-              aria-label="Previous image"
+              aria-label={lang === "bn" ? "আগের ছবি" : "Previous image"}
             >
               <ChevronLeft className="h-6 w-6" />
             </button>
@@ -98,30 +99,30 @@ export function GalleryPage() {
                 e.stopPropagation();
                 setLightbox((lightbox + 1) % items.length);
               }}
-              aria-label="Next image"
+              aria-label={lang === "bn" ? "পরের ছবি" : "Next image"}
             >
               <ChevronRight className="h-6 w-6" />
             </button>
 
             <div className="max-h-full max-w-5xl px-4" onClick={(e) => e.stopPropagation()}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={active.coverImage} alt={active.titleBn} className="max-h-[80vh] w-auto rounded-2xl object-contain shadow-2xl" />
+              <img src={active.coverImage} alt={lang === "bn" ? active.titleBn : active.title} className="max-h-[80vh] w-auto rounded-2xl object-contain shadow-2xl" />
               <div className="mt-4 flex items-center justify-between gap-4 text-white">
                 <div>
                   <p className="font-bengali text-lg font-bold">{lang === "bn" ? active.titleBn : active.title}</p>
                   <p className="text-xs text-white/60">
-                    {localizedDigits(lang, lightbox + 1)} / {localizedDigits(lang, items.length)} · {active.category}
+                    {localizedDigits(lang, lightbox + 1)} / {localizedDigits(lang, items.length)} · {categoryLabel(active.category, lang)}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button className="rounded-full bg-white/10 p-2.5 transition-colors hover:bg-brand" aria-label="Like">
+                  <button className="rounded-full bg-white/10 p-2.5 transition-colors hover:bg-brand" aria-label={lang === "bn" ? "পছন্দ করুন" : "Like"}>
                     <Heart className="h-4 w-4" />
                   </button>
                   <a
                     href={active.coverImage}
                     download
                     className="rounded-full bg-white/10 p-2.5 transition-colors hover:bg-brand"
-                    aria-label="Download"
+                    aria-label={lang === "bn" ? "ডাউনলোড" : "Download"}
                   >
                     <Download className="h-4 w-4" />
                   </a>

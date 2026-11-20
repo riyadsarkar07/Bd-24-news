@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useLanguage } from "@/providers/language-provider";
 import QRCodeLib from "qrcode";
 import { cn } from "@/lib/utils";
 
@@ -11,6 +12,7 @@ interface QRCodeProps {
 }
 
 export function QRCode({ value, className, size = 160 }: QRCodeProps) {
+  const { lang } = useLanguage();
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
 
   React.useEffect(() => {
@@ -24,5 +26,5 @@ export function QRCode({ value, className, size = 160 }: QRCodeProps) {
     }
   }, [value, size]);
 
-  return <canvas ref={canvasRef} className={cn("rounded-lg", className)} aria-label="QR code" />;
+  return <canvas ref={canvasRef} className={cn("rounded-lg", className)} aria-label={lang === "bn" ? "কিউআর কোড" : "QR code"} />;
 }

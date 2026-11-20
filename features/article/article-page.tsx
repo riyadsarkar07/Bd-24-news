@@ -42,10 +42,10 @@ import { recordArticleView } from "@/services/viewService";
 import { siteConfig } from "@/config/site";
 
 const FONT_SIZES = [
-  { label: "A", scale: "text-base", size: 16 },
-  { label: "A", scale: "text-lg", size: 18 },
-  { label: "A", scale: "text-xl", size: 20 },
-  { label: "A", scale: "text-2xl", size: 22 },
+  { scale: "text-base", size: 16 },
+  { scale: "text-lg", size: 18 },
+  { scale: "text-xl", size: 20 },
+  { scale: "text-2xl", size: 22 },
 ];
 
 export function ArticlePage({ article: initialArticle }: { article: Article }) {
@@ -54,7 +54,7 @@ export function ArticlePage({ article: initialArticle }: { article: Article }) {
   const router = useRouter();
   const { data: stored } = useArticle(initialArticle.slug, initialArticle);
   const article = stored && (lang === "bn" ? stored : {
-    ...stored, titleBn: stored.title, location: stored.location === "ঢাকা" ? "Dhaka" : stored.location, excerpt: stored.excerptEn ?? "", body: stored.bodyEn ?? "",
+    ...stored, titleBn: stored.title, excerpt: stored.excerptEn ?? "", body: stored.bodyEn ?? "",
   });
   const { data: related } = useRelatedArticles(initialArticle.slug, []);
   const { isBookmarked, toggleBookmark } = useBookmarks();
@@ -69,6 +69,11 @@ export function ArticlePage({ article: initialArticle }: { article: Article }) {
     window.speechSynthesis?.cancel();
     setSpeaking(false);
   }, [lang]);
+
+  const headline = article?.titleBn;
+  React.useEffect(() => {
+    if (headline) document.title = `${headline} | ${lang === "bn" ? siteConfig.nameBn : siteConfig.name}`;
+  }, [headline, lang]);
 
   const url = `${siteConfig.url}${pathname}`;
 
@@ -199,7 +204,7 @@ export function ArticlePage({ article: initialArticle }: { article: Article }) {
                 variant={liked ? "default" : "outline"}
                 size="sm"
                 onClick={() => setLiked((v) => !v)}
-                aria-label="Like article"
+                aria-label={lang === "bn" ? "খবরটি পছন্দ করুন" : "Like article"}
               >
                 <Heart className={cn("h-4 w-4", liked && "fill-current")} />
                 {formatNumber(article.likes + (liked ? 1 : 0), lang)}
@@ -225,16 +230,16 @@ export function ArticlePage({ article: initialArticle }: { article: Article }) {
                 {isBookmarked(article.slug) ? <BookmarkCheck className="h-4 w-4" /> : <Bookmark className="h-4 w-4" />}
                 <span className="hidden sm:inline">{lang === "bn" ? "বুকমার্ক" : "Bookmark"}</span>
               </Button>
-              <Button variant="outline" size="sm" onClick={() => window.print()} aria-label="Print">
+              <Button variant="outline" size="sm" onClick={() => window.print()} aria-label={lang === "bn" ? "প্রিন্ট করুন" : "Print"}>
                 <Printer className="h-4 w-4" />
               </Button>
-              <Button variant="outline" size="sm" onClick={toggleSpeech} aria-label="Read aloud">
+              <Button variant="outline" size="sm" onClick={toggleSpeech} aria-label={lang === "bn" ? "পড়ে শোনান" : "Read aloud"}>
                 {speaking ? <VolumeX className="h-4 w-4 text-brand" /> : <Volume2 className="h-4 w-4" />}
               </Button>
               <div className="relative">
-                <Button variant="outline" size="sm" onClick={() => setFontMenu((v) => !v)} aria-label="Font size">
+                <Button variant="outline" size="sm" onClick={() => setFontMenu((v) => !v)} aria-label={lang === "bn" ? "অক্ষরের আকার" : "Font size"}>
                   <Type className="h-4 w-4" />
-                  A
+                  {lang === "bn" ? "অ" : "A"}
                 </Button>
                 {fontMenu && (
                   <div className="absolute right-0 top-full z-30 mt-2 flex items-center gap-1 rounded-xl border bg-popover p-2 shadow-soft-lg">
@@ -247,9 +252,9 @@ export function ArticlePage({ article: initialArticle }: { article: Article }) {
                           fontSize === i ? "bg-brand text-white" : "hover:bg-muted",
                         )}
                         style={{ fontSize: f.size }}
-                        aria-label={`Font size ${f.size}`}
+                        aria-label={lang === "bn" ? `অক্ষরের আকার ${toBanglaNumerals(f.size)}` : `Font size ${f.size}`}
                       >
-                        A
+                        {lang === "bn" ? "অ" : "A"}
                       </button>
                     ))}
                   </div>
@@ -262,7 +267,7 @@ export function ArticlePage({ article: initialArticle }: { article: Article }) {
         <div className="relative mt-6 overflow-hidden rounded-3xl shadow-card ring-1 ring-black/5">
           <ImageWithFallback
             src={article.coverImage}
-            alt={article.titleBn}
+            alt={lang === "bn" ? article.titleBn : article.title}
             width={1200}
             height={675}
             priority
@@ -272,7 +277,7 @@ export function ArticlePage({ article: initialArticle }: { article: Article }) {
           {article.location && (
             <span className="absolute bottom-3 left-3 flex items-center gap-1 rounded-full bg-black/60 px-3 py-1 text-xs font-semibold text-white backdrop-blur">
               <MapPin className="h-3.5 w-3.5 text-brand-400" />
-              {article.location}
+              {newsLabel(article.location, lang, article.labelTranslations)}
             </span>
           )}
         </div>
@@ -294,7 +299,7 @@ export function ArticlePage({ article: initialArticle }: { article: Article }) {
                   href={`/search?tag=${encodeURIComponent(tag)}`}
                   className="rounded-full border border-border bg-muted/40 px-3 py-1 text-xs font-semibold text-muted-foreground transition-all hover:border-brand hover:text-brand"
                 >
-                  #{newsLabel(tag, lang)}
+                  #{newsLabel(tag, lang, article.labelTranslations)}
                 </Link>
               ))}
             </div>

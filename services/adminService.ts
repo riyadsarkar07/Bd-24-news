@@ -1,4 +1,5 @@
 import { articles as seedArticles } from "@/data/articles";
+import { labelLanguage, newsLabel } from "@/lib/bengali-news";
 import { englishFields } from "@/lib/editor-translation";
 import type { Article } from "@/types";
 import { getSupabase } from "@/lib/supabase/client";
@@ -30,6 +31,7 @@ export interface ArticleInput {
   category: string;
   categoryColor?: string;
   tags: string[];
+  labelTranslations?: Record<string, string>;
   featured: boolean;
   breaking: boolean;
   trending: boolean;
@@ -151,6 +153,23 @@ export async function getArticleById(id: string): Promise<Article | undefined> {
   }
 }
 
+async function publishedFields(source: string[], supplied: string[], tags: string[], location: string, overrides: Record<string, string> = {}) {
+  const labels = [...new Set([...tags, location].filter(Boolean))];
+  const bengali = labels.filter(label => labelLanguage(label) === "bn");
+  const pairs: [string, string][] = [];
+  for (const label of labels.filter(value => labelLanguage(value) === "en")) {
+    const translated = newsLabel(label, "bn", overrides);
+    if (/[a-z]/i.test(translated)) throw new Error(`Enter a Bengali label for “${label}” before publishing.`);
+    pairs.push([label, translated]);
+  }
+  const english = await englishFields([...source, ...bengali], [...supplied, ...bengali.map(label => {
+    const saved = newsLabel(label, "en", overrides);
+    return saved === label ? "" : saved;
+  })]);
+  bengali.forEach((label, index) => pairs.push([label, english[source.length + index]!]));
+  return { text: english.slice(0, source.length), labels: Object.fromEntries(pairs) };
+}
+
 export async function saveArticle(input: ArticleInput, existingId?: string): Promise<{ id: string; slug: string }> {
   const supabase = getSupabase();
   if (!supabase) throw new Error("Supabase is not configured. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY environment variables.");
@@ -158,10 +177,14 @@ export async function saveArticle(input: ArticleInput, existingId?: string): Pro
   if (existingId && !existing) throw new Error("Article could not be loaded.");
   const source = [input.titleBn, input.excerpt, input.body];
   const supplied = [input.title, input.excerptEn ?? "", input.bodyEn ?? ""];
-  const translated = input.status === "published" ? await englishFields(source, supplied) : supplied;
+  const editions = input.status === "published"
+    ? await publishedFields(source, supplied, input.tags, input.location ?? "", input.labelTranslations ?? existing?.labelTranslations)
+    : { text: supplied, labels: input.labelTranslations ?? existing?.labelTranslations ?? {} };
+  const translated = editions.text;
   const payload = buildArticlePayload({ ...input, title: translated[0]! }, existing);
   payload.excerpt_en = translated[1];
   payload.body_en = translated[2];
+  payload.label_translations = editions.labels;
 
   if (existing) {
     delete payload.views;
@@ -223,12 +246,14 @@ export async function setArticlesStatus(ids: string[], status: ArticleStatus): P
       const article = await getArticleById(id);
       if (!article) throw new Error("Article unavailable.");
       if (article.status === "published") continue;
-      const [title, excerpt_en, body_en] = await englishFields(
+      const editions = await publishedFields(
         [article.titleBn, article.excerpt, article.body],
         [article.title, article.excerptEn ?? "", article.bodyEn ?? ""],
+        article.tags, article.location ?? "", article.labelTranslations,
       );
+      const [title, excerpt_en, body_en] = editions.text;
       const { error } = await supabase.from("articles")
-        .update({ title, excerpt_en, body_en, status, published_at: article.publishedAt || new Date().toISOString() })
+        .update({ title, excerpt_en, body_en, label_translations: editions.labels, status, published_at: article.publishedAt || new Date().toISOString() })
         .eq("id", article.id).eq("status", "draft").eq("updated_at", article.updatedAt).select("id").single();
       if (error) throw error;
     }
@@ -279,6 +304,7 @@ export async function duplicateArticle(id: string): Promise<{ id: string; slug: 
       category: existing.category,
       categoryColor: existing.categoryColor,
       tags: existing.tags,
+      labelTranslations: existing.labelTranslations,
       featured: existing.featured,
       breaking: existing.breaking,
       trending: existing.trending,

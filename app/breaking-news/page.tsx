@@ -23,9 +23,9 @@ export default async function BreakingNewsPage() {
       breadcrumb="ব্রেকিং নিউজ"
       initialData={initialData}
       filters={[
-        { label: "সব", value: "all", opts: { breaking: true } },
-        { label: "সর্বশেষ", value: "latest", opts: { breaking: true, sort: "latest" as const } },
-        { label: "জনপ্রিয়", value: "popular", opts: { breaking: true, sort: "popular" as const } },
+        { label: "সব", labelEn: "All", value: "all", opts: { breaking: true } },
+        { label: "সর্বশেষ", labelEn: "Latest", value: "latest", opts: { breaking: true, sort: "latest" as const } },
+        { label: "জনপ্রিয়", labelEn: "Popular", value: "popular", opts: { breaking: true, sort: "popular" as const } },
       ]}
     />
   );

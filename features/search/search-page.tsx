@@ -48,7 +48,7 @@ export function SearchPage() {
       <Breadcrumb items={[{ label: lang === "bn" ? "অনুসন্ধান" : "Search" }]} />
 
       <div className="mx-auto mt-6 max-w-2xl">
-        {tag && !debounced && <p className="mb-2 font-bold">#{newsLabel(tag, lang)}</p>}
+        {tag && !debounced && <p className="mb-2 font-bold">#{newsLabel(tag, lang, results?.find(article => article.tags.includes(tag))?.labelTranslations)}</p>}
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -73,7 +73,7 @@ export function SearchPage() {
           <SlidersHorizontal className="h-4 w-4 text-muted-foreground" />
           <Select value={category} onValueChange={setCategory}>
             <SelectTrigger className="h-9 w-40">
-              <SelectValue placeholder="Category" />
+              <SelectValue placeholder={lang === "bn" ? "বিভাগ" : "Category"} />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">{lang === "bn" ? "সব বিভাগ" : "All categories"}</SelectItem>
@@ -84,7 +84,7 @@ export function SearchPage() {
           </Select>
           <Select value={sort} onValueChange={(v) => setSort(v as typeof sort)}>
             <SelectTrigger className="h-9 w-36">
-              <SelectValue placeholder="Sort" />
+              <SelectValue placeholder={lang === "bn" ? "সাজান" : "Sort"} />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="latest">{lang === "bn" ? "সর্বশেষ" : "Latest"}</SelectItem>

@@ -24,7 +24,7 @@ export function BreakingSpotlight({ initialData }: { initialData?: Article[] }) 
   const rest = breaking.slice(1, 5);
 
   return (
-    <section className="container-page py-8" aria-label="Breaking news spotlight">
+    <section className="container-page py-8" aria-label={lang === "bn" ? "গুরুত্বপূর্ণ ব্রেকিং সংবাদ" : "Breaking news spotlight"}>
       <div className="relative overflow-hidden rounded-3xl bg-navy-950 p-6 text-white shadow-soft-lg ring-1 ring-white/5 sm:p-8">
         <div className="bg-grid pointer-events-none absolute inset-0 opacity-30" />
         <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-brand/30 blur-[90px]" />

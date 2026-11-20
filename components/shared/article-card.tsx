@@ -52,7 +52,7 @@ export function ArticleCard({ article, variant = "default", priority, className 
         <div className="relative h-20 w-28 shrink-0 overflow-hidden rounded-xl">
           <ImageWithFallback
             src={article.coverImage}
-            alt={article.titleBn}
+            alt={lang === "bn" ? article.titleBn : article.title}
             fill
             sizes="(max-width: 640px) 112px, 112px"
             className="transition-transform duration-500 group-hover:scale-110"
@@ -87,7 +87,7 @@ export function ArticleCard({ article, variant = "default", priority, className 
       <Link href={`/article/${article.slug}`} className={cn("group relative block h-full w-full overflow-hidden rounded-2xl", className)}>
         <ImageWithFallback
           src={article.coverImage}
-          alt={article.titleBn}
+          alt={lang === "bn" ? article.titleBn : article.title}
           fill
           sizes="(max-width: 768px) 100vw, 50vw"
           className="transition-transform duration-700 group-hover:scale-110"
@@ -115,7 +115,7 @@ export function ArticleCard({ article, variant = "default", priority, className 
       <Link href={`/article/${article.slug}`} className={cn("group relative block aspect-video overflow-hidden rounded-2xl shadow-card", className)}>
         <ImageWithFallback
           src={article.coverImage}
-          alt={article.titleBn}
+          alt={lang === "bn" ? article.titleBn : article.title}
           fill
           sizes="(max-width: 768px) 100vw, 33vw"
           className="transition-transform duration-700 group-hover:scale-110"
@@ -151,7 +151,7 @@ export function ArticleCard({ article, variant = "default", priority, className 
       <div className="relative aspect-[16/10] overflow-hidden">
         <ImageWithFallback
           src={article.coverImage}
-          alt={article.titleBn}
+          alt={lang === "bn" ? article.titleBn : article.title}
           fill
           priority={priority}
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"

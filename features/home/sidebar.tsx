@@ -18,7 +18,7 @@ export function Sidebar({ initialData }: { initialData?: { trending?: Article[];
   const { t, lang } = useLanguage();
 
   return (
-    <aside className="space-y-8" aria-label="Sidebar">
+    <aside className="space-y-8" aria-label={lang === "bn" ? "পার্শ্ববর্তী অংশ" : "Sidebar"}>
       <section>
         <SectionHeading title="Trending" titleBn="ট্রেন্ডিং" icon={<Flame className="h-4 w-4" />} hot />
         <div className="space-y-1">

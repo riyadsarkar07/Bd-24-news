@@ -145,7 +145,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     document.documentElement.lang = value;
     try { localStorage.setItem("bd24news_lang", value); } catch { /* Storage may be disabled. */ }
   }, []);
-  React.useEffect(() => {
+  React.useLayoutEffect(() => {
     try { setLang(localStorage.getItem("bd24news_lang") === "en" ? "en" : "bn"); } catch { setLang("bn"); }
   }, [setLang]);
   const toggle = React.useCallback(() => setLang(lang === "bn" ? "en" : "bn"), [lang, setLang]);

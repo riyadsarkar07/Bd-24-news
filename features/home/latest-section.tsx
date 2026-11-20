@@ -72,7 +72,7 @@ export function LatestSection({ initialData }: { initialData?: { latest?: Articl
                 <div className="relative h-16 w-20 shrink-0 overflow-hidden rounded-lg">
                   <ImageWithFallback
                     src={a.coverImage}
-                    alt={a.titleBn}
+                    alt={lang === "bn" ? a.titleBn : a.title}
                     fill
                     sizes="80px"
                     className="transition-transform duration-500 group-hover:scale-110"

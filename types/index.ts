@@ -59,6 +59,7 @@ export interface Article {
   category: string;
   categoryColor: string;
   tags: string[];
+  labelTranslations?: Record<string, string>;
   author: string;
   authorNameBn?: string;
   authorSlug?: string;

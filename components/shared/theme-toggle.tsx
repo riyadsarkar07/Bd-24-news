@@ -1,12 +1,14 @@
 "use client";
 
 import * as React from "react";
+import { useLanguage } from "@/providers/language-provider";
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export function ThemeToggle({ className }: { className?: string }) {
+  const { lang } = useLanguage();
   const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = React.useState(false);
 
@@ -20,7 +22,7 @@ export function ThemeToggle({ className }: { className?: string }) {
       size="icon"
       onClick={toggle}
       className={cn("relative overflow-hidden", className)}
-      aria-label={resolvedTheme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+      aria-label={lang === "bn" ? "থিম বদলান" : "Switch theme"}
     >
       {mounted && (
         <>

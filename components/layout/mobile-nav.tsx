@@ -41,14 +41,14 @@ export function MobileNav({ open, onClose }: { open: boolean; onClose: () => voi
             transition={{ type: "spring", damping: 30, stiffness: 300 }}
             className="fixed inset-y-0 left-0 z-50 flex w-[85%] max-w-sm flex-col bg-background shadow-2xl lg:hidden"
             role="dialog"
-            aria-label="Mobile navigation"
+            aria-label={lang === "bn" ? "মোবাইল মেনু" : "Mobile navigation"}
           >
             <div className="flex items-center justify-between border-b p-4">
               <Logo compact />
               <button
                 onClick={onClose}
                 className="rounded-full p-2 transition-colors hover:bg-muted"
-                aria-label="Close menu"
+                aria-label={lang === "bn" ? "মেনু বন্ধ করুন" : "Close menu"}
               >
                 <X className="h-5 w-5" />
               </button>
@@ -80,7 +80,7 @@ export function MobileNav({ open, onClose }: { open: boolean; onClose: () => voi
                     <button
                       onClick={() => setExpanded(expanded === cat.slug ? null : cat.slug)}
                       className="rounded-lg p-2 text-muted-foreground hover:bg-muted"
-                      aria-label={`Toggle ${cat.name}`}
+                      aria-label={lang === "bn" ? `${cat.nameBn} মেনু খুলুন বা বন্ধ করুন` : `Toggle ${cat.name}`}
                     >
                       <ChevronRight className={cn("h-4 w-4 transition-transform", expanded === cat.slug && "rotate-90")} />
                     </button>

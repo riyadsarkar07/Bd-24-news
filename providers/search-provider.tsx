@@ -146,7 +146,7 @@ export function SearchProvider({ children }: { children: React.ReactNode }) {
                           i === 0 && "border-brand bg-brand text-white hover:text-white",
                         )}
                       >
-                        {i + 1}. {s}
+                        {(i + 1).toLocaleString(lang)}. {s}
                       </button>
                     ))}
                   </div>
